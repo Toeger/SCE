@@ -20,10 +20,14 @@ QMAKE_CXXFLAGS += -std=c++1z
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        tests/test_mainwindow.cpp \
+        tests/test.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+        tests/test_mainwindow.h \
+        tests/test.h
 
 FORMS += \
         mainwindow.ui
