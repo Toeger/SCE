@@ -15,8 +15,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = SCE
 TEMPLATE = app
 
-DEFINES += QT_DEPRECATED_WARNINGS
-
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
 QMAKE_CXXFLAGS += -std=c++1z
 
