@@ -29,3 +29,6 @@ HEADERS += \
 
 FORMS += \
         mainwindow.ui
+
+OTHER_FILES += \
+        .travis.yml
