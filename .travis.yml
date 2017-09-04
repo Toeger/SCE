@@ -26,5 +26,6 @@ before_script:
 script:
   - qmake
   - make -j8 release
-  - make -j8 clean debug
+  - make clean
+  - make -j8 debug
   - ./SCE test
