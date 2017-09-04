@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "settings.h"
 #include "ui_mainwindow.h"
 
 #include <QFile>
@@ -7,7 +8,6 @@
 #include <QFontDialog>
 #include <QFontMetrics>
 #include <QPlainTextEdit>
-#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
@@ -21,7 +21,7 @@ MainWindow::~MainWindow() { //required for destructors of otherwise incomplete t
 	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
 		filename_list << ui->file_tabs->tabBar()->tabText(tab_index);
 	}
-	QSettings{}.setValue("files", filename_list);
+	Settings::set(Settings::files, filename_list);
 }
 
 void MainWindow::on_actionOpen_File_triggered() {
@@ -35,7 +35,7 @@ void MainWindow::on_file_tabs_tabCloseRequested(int index) {
 }
 
 void MainWindow::load_last_files() {
-	for (const auto &filename : QSettings{}.value("files").toStringList()) {
+	for (const auto &filename : Settings::get(Settings::files).toStringList()) {
 		add_file_tab(filename);
 	}
 }
@@ -50,7 +50,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 		file_edit->setPlaceholderText(tr("Failed reading file %1").arg(filename));
 	}
 	QFont font;
-	font.fromString(QSettings{}.value("Font", "monospace").toString());
+	font.fromString(Settings::get(Settings::font, "monospace").toString());
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);
@@ -79,6 +79,6 @@ void MainWindow::on_action_Font_triggered() {
 	if (success == false) {
 		return;
 	}
-	QSettings{}.setValue("Font", font.toString());
+	Settings::set(Settings::font, font.toString());
 	apply_to_all_tabs([&font](QPlainTextEdit *edit) { edit->setFont(font); });
 }

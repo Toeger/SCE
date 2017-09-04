@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT += core gui
 
 CONFIG -= warn
 CONFIG += c++1z
@@ -17,21 +17,22 @@ TARGET = SCE
 TEMPLATE = app
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
-QMAKE_CXXFLAGS += -std=c++1z
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-        tests/test_mainwindow.cpp \
-        tests/test.cpp
+    main.cpp \
+    mainwindow.cpp \
+    tests/test_mainwindow.cpp \
+    tests/test.cpp \
+    settings.cpp
 
 HEADERS += \
-        mainwindow.h \
-        tests/test_mainwindow.h \
-        tests/test.h
+    mainwindow.h \
+    tests/test_mainwindow.h \
+    tests/test.h \
+    settings.h
 
 FORMS += \
-        mainwindow.ui
+    mainwindow.ui
 
 OTHER_FILES += \
-        .travis.yml
+    .travis.yml
