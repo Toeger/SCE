@@ -17,6 +17,7 @@ class MainWindow : public QMainWindow {
 
 	protected slots:
 	void on_actionOpen_File_triggered();
+	void on_action_Font_triggered();
 	void on_file_tabs_tabCloseRequested(int index);
 
 	protected:

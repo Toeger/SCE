@@ -3,7 +3,11 @@
 
 #include <QFile>
 #include <QFileDialog>
+#include <QFont>
+#include <QFontDialog>
 #include <QPlainTextEdit>
+#include <QSettings>
+#include <QFontMetrics>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
@@ -32,5 +36,18 @@ void MainWindow::add_file_tab(const QString &filename) {
 	} else {
 		file_edit->setPlaceholderText(tr("Failed reading file %1").arg(filename));
 	}
+	QFont font;
+	font.fromString(QSettings{}.value("Font", "monospace").toString());
+	file_edit->setFont(font);
+	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	ui->file_tabs->addTab(file_edit.release(), filename);
+}
+
+void MainWindow::on_action_Font_triggered() {
+	bool success;
+	auto font = QFontDialog::getFont(&success, this);
+	if (success == false) {
+		return;
+	}
+	QSettings{}.setValue("Font", font.toString());
 }

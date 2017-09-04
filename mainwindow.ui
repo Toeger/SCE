@@ -43,7 +43,15 @@
     <addaction name="actionOpen_Project_Folder"/>
     <addaction name="actionOpen_File"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>&amp;Settings</string>
+    </property>
+    <addaction name="action_Font"/>
+    <addaction name="action_Tab_Width"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -61,6 +69,16 @@
   <action name="actionOpen_File">
    <property name="text">
     <string>Open &amp;File</string>
+   </property>
+  </action>
+  <action name="action_Font">
+   <property name="text">
+    <string>&amp;Font</string>
+   </property>
+  </action>
+  <action name="action_Tab_Width">
+   <property name="text">
+    <string>&amp;Tab Width</string>
    </property>
   </action>
  </widget>
