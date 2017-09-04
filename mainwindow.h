@@ -24,9 +24,10 @@ class MainWindow : public QMainWindow {
 	void on_file_tabs_tabCloseRequested(int index);
 
 	protected:
+	void load_last_files();
 	void add_file_tab(const QString &filename);
 	void wheelEvent(QWheelEvent *we) override;
-	void apply_to_all_tabs(const std::function<void(QPlainTextEdit *)> function);
+	void apply_to_all_tabs(const std::function<void(QPlainTextEdit *)> &function);
 
 	std::unique_ptr<Ui::MainWindow> ui;
 	Ui::MainWindow *_; //Qt Designer only works correctly if it finds this string

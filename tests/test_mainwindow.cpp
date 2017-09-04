@@ -16,6 +16,7 @@ struct MainWindowTester : MainWindow {
 		test_add_file_tab();
 	}
 	void test_add_file_tab() {
+		ui->file_tabs->clear();
 		{ //check behavior when loading a file that we cannot access
 			assert_equal(ui->file_tabs->count(), 0);
 			const constexpr auto non_existing_filename = "not-existing-file";
@@ -45,6 +46,10 @@ int main(){
 			auto edit = dynamic_cast<QPlainTextEdit *>(ui->file_tabs->currentWidget());
 			assert(edit);
 			assert_equal(edit->toPlainText(), tempfile_contents);
+		}
+		{ //restore state
+			ui->file_tabs->clear();
+			load_last_files();
 		}
 	}
 };

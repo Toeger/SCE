@@ -13,9 +13,16 @@ MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
 	, ui{std::make_unique<Ui::MainWindow>()} {
 	ui->setupUi(this);
+	load_last_files();
 }
 
-MainWindow::~MainWindow() {} //required for destructors of otherwise incomplete type Ui::MainWindow
+MainWindow::~MainWindow() { //required for destructors of otherwise incomplete type Ui::MainWindow
+	QStringList filename_list;
+	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
+		filename_list << ui->file_tabs->tabBar()->tabText(tab_index);
+	}
+	QSettings{}.setValue("files", filename_list);
+}
 
 void MainWindow::on_actionOpen_File_triggered() {
 	for (const auto &filename : QFileDialog::getOpenFileNames(this, tr("Select File(s) to open"))) {
@@ -25,6 +32,12 @@ void MainWindow::on_actionOpen_File_triggered() {
 
 void MainWindow::on_file_tabs_tabCloseRequested(int index) {
 	ui->file_tabs->removeTab(index);
+}
+
+void MainWindow::load_last_files() {
+	for (const auto &filename : QSettings{}.value("files").toStringList()) {
+		add_file_tab(filename);
+	}
 }
 
 void MainWindow::add_file_tab(const QString &filename) {
