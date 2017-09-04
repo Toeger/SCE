@@ -40,8 +40,8 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionOpen_Project_Folder"/>
     <addaction name="actionOpen_File"/>
+    <addaction name="actionOpen_Project_Folder"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -62,6 +62,9 @@
    </attribute>
   </widget>
   <action name="actionOpen_Project_Folder">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Open &amp;Project Folder</string>
    </property>
@@ -77,6 +80,9 @@
    </property>
   </action>
   <action name="action_Tab_Width">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Tab Width</string>
    </property>
