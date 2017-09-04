@@ -1,21 +1,23 @@
 language: cpp
 compiler: gcc
-dist: zesty
+dist: trusty
 
 before_install:
   # C++17
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  # Qt 5.9
+  - sudo add-apt-repository -y ppa:beineri/opt-qt59-trusty
   - sudo apt-get update -qq
 
 install:
   # C++17
   - sudo apt-get install -qq g++-7
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
-  # other stuff we need
-  - sudo apt-get install -qq qt5-default
+  # Qt 5.9
+  - sudo apt-get install -qq qt59base
+  - source /opt/qt59/bin/qt59-env.sh
 
 script:
   - qmake
-  - qmake --version
   - make -j8
   - ./SCE test
