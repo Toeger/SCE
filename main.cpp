@@ -3,11 +3,12 @@
 
 #include <QApplication>
 #include <cstring>
+#include <cassert>
 
 int main(int argc, char *argv[]) {
 	QApplication a(argc, argv);
+	assert((test(), true));
 	if (argc == 2 && std::strcmp(argv[1], "test") == 0) {
-		test();
 		return 0;
 	}
 	MainWindow w;
