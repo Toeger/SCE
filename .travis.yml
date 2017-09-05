@@ -5,9 +5,9 @@ dist: trusty
 addons:
     apt:
         sources:
-            - debian-sid
+            - ubuntu-toolchain-r-test
         packages:
-            - qt5-default
+            - g++-7
 
 before_install:
   # Qt 5.9
