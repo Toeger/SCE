@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "edit_window.h"
 #include "settings.h"
 #include "ui_mainwindow.h"
 
@@ -7,7 +8,6 @@
 #include <QFont>
 #include <QFontDialog>
 #include <QFontMetrics>
-#include <QPlainTextEdit>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
@@ -41,7 +41,7 @@ void MainWindow::load_last_files() {
 }
 
 void MainWindow::add_file_tab(const QString &filename) {
-	auto file_edit = std::make_unique<QPlainTextEdit>();
+	auto file_edit = std::make_unique<Edit_window>();
 	QFile file{filename};
 	file.open(QFile::ReadOnly);
 	if (file.isOpen()) {
@@ -53,22 +53,13 @@ void MainWindow::add_file_tab(const QString &filename) {
 	font.fromString(Settings::get(Settings::font, "monospace").toString());
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
-	file_edit->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);
+	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
 	ui->file_tabs->addTab(file_edit.release(), filename);
 }
 
-void MainWindow::wheelEvent(QWheelEvent *we) {
-	if (we->modifiers() == Qt::ControlModifier) {
-		auto zoom = we->delta() / QWheelEvent::DefaultDeltasPerStep;
-		apply_to_all_tabs([zoom](QPlainTextEdit *edit) { edit->zoomIn(zoom); });
-		we->accept();
-	}
-	we->ignore();
-}
-
-void MainWindow::apply_to_all_tabs(const std::function<void(QPlainTextEdit *)> &function) {
+void MainWindow::apply_to_all_tabs(const std::function<void(Edit_window *)> &function) {
 	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
-		auto edit = dynamic_cast<QPlainTextEdit *>(ui->file_tabs->widget(tab_index));
+		auto edit = dynamic_cast<Edit_window *>(ui->file_tabs->widget(tab_index));
 		function(edit);
 	}
 }
@@ -80,5 +71,5 @@ void MainWindow::on_action_Font_triggered() {
 		return;
 	}
 	Settings::set(Settings::font, font.toString());
-	apply_to_all_tabs([&font](QPlainTextEdit *edit) { edit->setFont(font); });
+	apply_to_all_tabs([&font](Edit_window *edit) { edit->setFont(font); });
 }

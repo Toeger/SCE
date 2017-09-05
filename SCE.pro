@@ -24,14 +24,16 @@ SOURCES += \
     tests/test_mainwindow.cpp \
     tests/test.cpp \
     settings.cpp \
-    tests/test_settings.cpp
+    tests/test_settings.cpp \
+    edit_window.cpp
 
 HEADERS += \
     mainwindow.h \
     tests/test_mainwindow.h \
     tests/test.h \
     settings.h \
-    tests/test_settings.h
+    tests/test_settings.h \
+    edit_window.h
 
 FORMS += \
     mainwindow.ui

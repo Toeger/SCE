@@ -9,7 +9,7 @@ namespace Ui {
 	class MainWindow;
 }
 
-class QPlainTextEdit;
+class Edit_window;
 
 class MainWindow : public QMainWindow {
 	Q_OBJECT
@@ -26,8 +26,7 @@ class MainWindow : public QMainWindow {
 	protected:
 	void load_last_files();
 	void add_file_tab(const QString &filename);
-	void wheelEvent(QWheelEvent *we) override;
-	void apply_to_all_tabs(const std::function<void(QPlainTextEdit *)> &function);
+	void apply_to_all_tabs(const std::function<void(Edit_window *)> &function);
 
 	std::unique_ptr<Ui::MainWindow> ui;
 	Ui::MainWindow *_; //Qt Designer only works correctly if it finds this string
