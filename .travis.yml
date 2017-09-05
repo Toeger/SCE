@@ -5,7 +5,7 @@ dist: trusty
 addons:
     apt:
         sources:
-            - ubuntu-toolchain-r-test
+            - debian-sid
         packages:
             - g++-7
 
