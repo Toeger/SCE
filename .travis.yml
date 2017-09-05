@@ -29,7 +29,7 @@ before_script:
 
 script:
   - qmake
-  - make -j8 release
+  - make -j release
   - make clean
-  - make -j8 debug
+  - make -j debug
   - ./SCE test
