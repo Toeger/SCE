@@ -7,7 +7,7 @@ addons:
         sources:
             - debian-sid
         packages:
-            - g++-7
+            - qt5-default
 
 before_install:
   # Qt 5.9
