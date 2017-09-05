@@ -1,15 +1,11 @@
 #include "test_mainwindow.h"
 #include "mainwindow.h"
+#include "settings.h"
+#include "test.h"
 #include "ui_mainwindow.h"
 
 #include <QPlainTextEdit>
 #include <QTemporaryFile>
-#include <cassert>
-
-template <class T, class U>
-void assert_equal(const T &t, const U &u) {
-	assert(t == u);
-}
 
 struct MainWindowTester : MainWindow {
 	void test() {
@@ -47,13 +43,10 @@ int main(){
 			assert(edit);
 			assert_equal(edit->toPlainText(), tempfile_contents);
 		}
-		{ //restore state
-			ui->file_tabs->clear();
-			load_last_files();
-		}
 	}
 };
 
 void test_mainwindow() {
+	Settings::Keeper keeper;
 	MainWindowTester{}.test();
 }
