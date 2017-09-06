@@ -25,6 +25,7 @@ class MainWindow : public QMainWindow {
 
 	protected:
 	void load_last_files();
+	void save_last_files();
 	void add_file_tab(const QString &filename);
 	void apply_to_all_tabs(const std::function<void(Edit_window *)> &function);
 

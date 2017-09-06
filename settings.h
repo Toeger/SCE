@@ -7,6 +7,7 @@
 
 namespace Settings {
 	constexpr auto files = "files";
+	constexpr auto current_file = "current_file";
 	constexpr auto font = "font";
 	QVariant get(const QString &key, QVariant default_value = {});
 	void set(const QString &key, const QVariant &value);
