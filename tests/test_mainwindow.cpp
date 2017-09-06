@@ -1,6 +1,6 @@
 #include "test_mainwindow.h"
-#include "mainwindow.h"
-#include "settings.h"
+#include "ui/mainwindow.h"
+#include "logic/settings.h"
 #include "test.h"
 #include "ui_mainwindow.h"
 

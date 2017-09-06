@@ -7,8 +7,7 @@ namespace Ui {
 	class Tool_editor_widget;
 }
 
-class Tool_editor_widget : public QWidget
-{
+class Tool_editor_widget : public QWidget {
 	Q_OBJECT
 
 	public:

@@ -1,5 +1,5 @@
 #include "test_settings.h"
-#include "settings.h"
+#include "logic/settings.h"
 #include "test.h"
 
 #include <QSettings>

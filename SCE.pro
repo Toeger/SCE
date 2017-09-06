@@ -19,27 +19,27 @@ TEMPLATE = app
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
 
 SOURCES += \
+    logic/settings.cpp \
     main.cpp \
-    mainwindow.cpp \
-    tests/test_mainwindow.cpp \
     tests/test.cpp \
-    settings.cpp \
+    tests/test_mainwindow.cpp \
     tests/test_settings.cpp \
-    edit_window.cpp \
-    tool_editor_widget.cpp
+    ui/edit_window.cpp \
+    ui/mainwindow.cpp \
+    ui/tool_editor_widget.cpp
 
 HEADERS += \
-    mainwindow.h \
-    tests/test_mainwindow.h \
+    logic/settings.h \
     tests/test.h \
-    settings.h \
+    tests/test_mainwindow.h \
     tests/test_settings.h \
-    edit_window.h \
-    tool_editor_widget.h
+    ui/edit_window.h \
+    ui/mainwindow.h \
+    ui/tool_editor_widget.h
 
 FORMS += \
-    mainwindow.ui \
-    tool_editor_widget.ui
+    ui/mainwindow.ui \
+    ui/tool_editor_widget.ui
 
 OTHER_FILES += \
     .travis.yml

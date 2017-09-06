@@ -5,14 +5,6 @@
 #include <iterator>
 #include <vector>
 
-QVariant Settings::get(const QString &key, QVariant default_value) {
-	return QSettings{}.value(key, default_value);
-}
-
-void Settings::set(const QString &key, const QVariant &value) {
-	QSettings{}.setValue(key, value);
-}
-
 Settings::Keeper::Keeper() {
 	QSettings settings{};
 	keys = settings.allKeys();

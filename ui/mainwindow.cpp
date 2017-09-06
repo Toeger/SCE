@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "edit_window.h"
-#include "settings.h"
+#include "logic/settings.h"
 #include "tool_editor_widget.h"
 #include "ui_mainwindow.h"
 
@@ -9,6 +9,7 @@
 #include <QFont>
 #include <QFontDialog>
 #include <QFontMetrics>
+#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
@@ -36,10 +37,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::load_last_files() {
-	for (const auto &filename : Settings::get(Settings::files).toStringList()) {
+	for (const auto &filename : QSettings{}.value(Settings::Keys::files).toStringList()) {
 		add_file_tab(filename);
 	}
-	ui->file_tabs->setCurrentIndex(Settings::get(Settings::current_file).toInt());
+	ui->file_tabs->setCurrentIndex(QSettings{}.value(Settings::Keys::current_file).toInt());
 }
 
 void MainWindow::save_last_files() {
@@ -47,8 +48,8 @@ void MainWindow::save_last_files() {
 	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
 		filename_list << ui->file_tabs->tabBar()->tabText(tab_index);
 	}
-	Settings::set(Settings::files, filename_list);
-	Settings::set(Settings::current_file, ui->file_tabs->currentIndex());
+	QSettings{}.setValue(Settings::Keys::files, filename_list);
+	QSettings{}.setValue(Settings::Keys::current_file, ui->file_tabs->currentIndex());
 }
 
 void MainWindow::add_file_tab(const QString &filename) {
@@ -61,7 +62,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 		file_edit->setPlaceholderText(tr("Failed reading file %1").arg(filename));
 	}
 	QFont font;
-	font.fromString(Settings::get(Settings::font, "monospace").toString());
+	font.fromString(QSettings{}.value(Settings::Keys::font, "monospace").toString());
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
@@ -81,7 +82,7 @@ void MainWindow::on_action_Font_triggered() {
 	if (success == false) {
 		return;
 	}
-	Settings::set(Settings::font, font.toString());
+	QSettings{}.setValue(Settings::Keys::font, font.toString());
 	apply_to_all_tabs([&font](Edit_window *edit) { edit->setFont(font); });
 }
 
