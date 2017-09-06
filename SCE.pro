@@ -25,7 +25,8 @@ SOURCES += \
     tests/test.cpp \
     settings.cpp \
     tests/test_settings.cpp \
-    edit_window.cpp
+    edit_window.cpp \
+    tool_editor_widget.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -33,10 +34,12 @@ HEADERS += \
     tests/test.h \
     settings.h \
     tests/test_settings.h \
-    edit_window.h
+    edit_window.h \
+    tool_editor_widget.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    tool_editor_widget.ui
 
 OTHER_FILES += \
     .travis.yml
