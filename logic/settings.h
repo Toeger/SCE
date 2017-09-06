@@ -5,9 +5,10 @@
 #include <QVariant>
 #include <vector>
 
+//helpers for QSettings' persistent storage
 namespace Settings {
-	//helpers for QSettings' persistent storage
-	namespace Keys { //use these key names instead of hardcoding strings to avoid typos and having a list of all settings available
+	//use these key names instead of hardcoding strings to avoid typos and having a list of all settings available
+	namespace Keys {
 		constexpr auto files = "files";
 		constexpr auto current_file = "current_file";
 		constexpr auto font = "font";

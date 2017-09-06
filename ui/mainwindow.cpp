@@ -69,7 +69,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 	ui->file_tabs->addTab(file_edit.release(), filename);
 }
 
-void MainWindow::apply_to_all_tabs(const std::function<void(Edit_window *)> &function) {
+void MainWindow::apply_to_all_edit_windows(const std::function<void(Edit_window *)> &function) {
 	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
 		auto edit = dynamic_cast<Edit_window *>(ui->file_tabs->widget(tab_index));
 		function(edit);
@@ -83,7 +83,7 @@ void MainWindow::on_action_Font_triggered() {
 		return;
 	}
 	QSettings{}.setValue(Settings::Keys::font, font.toString());
-	apply_to_all_tabs([&font](Edit_window *edit) { edit->setFont(font); });
+	apply_to_all_edit_windows([&font](Edit_window *edit) { edit->setFont(font); });
 }
 
 void MainWindow::on_action_Edit_triggered() {

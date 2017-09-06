@@ -7,6 +7,4 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	ui->setupUi(this);
 }
 
-Tool_editor_widget::~Tool_editor_widget() {
-	delete ui;
-}
+Tool_editor_widget::~Tool_editor_widget() {}
