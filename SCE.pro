@@ -17,6 +17,7 @@ TARGET = SCE
 TEMPLATE = app
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
+QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
 SOURCES += \
     logic/settings.cpp \
