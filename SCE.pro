@@ -20,19 +20,25 @@ QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
 
 SOURCES += \
     logic/settings.cpp \
+    logic/tool.cpp \
     main.cpp \
     tests/test.cpp \
     tests/test_mainwindow.cpp \
     tests/test_settings.cpp \
+    tests/test_tool.cpp \
+    tests/test_tool_editor_widget.cpp \
     ui/edit_window.cpp \
     ui/mainwindow.cpp \
     ui/tool_editor_widget.cpp
 
 HEADERS += \
     logic/settings.h \
+    logic/tool.h \
     tests/test.h \
     tests/test_mainwindow.h \
     tests/test_settings.h \
+    tests/test_tool.h \
+    tests/test_tool_editor_widget.h \
     ui/edit_window.h \
     ui/mainwindow.h \
     ui/tool_editor_widget.h
