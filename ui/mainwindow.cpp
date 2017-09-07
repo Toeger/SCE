@@ -9,7 +9,6 @@
 #include <QFont>
 #include <QFontDialog>
 #include <QFontMetrics>
-#include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
@@ -37,10 +36,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::load_last_files() {
-	for (const auto &filename : QSettings{}.value(Settings::Keys::files).toStringList()) {
+	for (const auto &filename : Settings::get<Settings::Key::files>()) {
 		add_file_tab(filename);
 	}
-	ui->file_tabs->setCurrentIndex(QSettings{}.value(Settings::Keys::current_file).toInt());
+	ui->file_tabs->setCurrentIndex(Settings::get<Settings::Key::current_file>());
 }
 
 void MainWindow::save_last_files() {
@@ -48,8 +47,8 @@ void MainWindow::save_last_files() {
 	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
 		filename_list << ui->file_tabs->tabBar()->tabText(tab_index);
 	}
-	QSettings{}.setValue(Settings::Keys::files, filename_list);
-	QSettings{}.setValue(Settings::Keys::current_file, ui->file_tabs->currentIndex());
+	Settings::set<Settings::Key::files>(filename_list);
+	Settings::set<Settings::Key::current_file>(ui->file_tabs->currentIndex());
 }
 
 void MainWindow::add_file_tab(const QString &filename) {
@@ -62,7 +61,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 		file_edit->setPlaceholderText(tr("Failed reading file %1").arg(filename));
 	}
 	QFont font;
-	font.fromString(QSettings{}.value(Settings::Keys::font, "monospace").toString());
+	font.fromString(Settings::get<Settings::Key::font>("monospace"));
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
@@ -82,7 +81,7 @@ void MainWindow::on_action_Font_triggered() {
 	if (success == false) {
 		return;
 	}
-	QSettings{}.setValue(Settings::Keys::font, font.toString());
+	Settings::set<Settings::Key::font>(font.toString());
 	apply_to_all_edit_windows([&font](Edit_window *edit) { edit->setFont(font); });
 }
 

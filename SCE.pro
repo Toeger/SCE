@@ -6,7 +6,7 @@
 
 QT += core gui
 
-CONFIG -= warn
+CONFIG += warn_off
 CONFIG += c++1z
 CONFIG += strict_c++
 CONFIG += debug_and_release
@@ -17,6 +17,7 @@ TARGET = SCE
 TEMPLATE = app
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
+QMAKE_CXXFLAGS += -Wno-missing-braces
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
 SOURCES += \

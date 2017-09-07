@@ -1,8 +1,11 @@
 #ifndef TOOL_EDITOR_WIDGET_H
 #define TOOL_EDITOR_WIDGET_H
 
+#include "logic/tool.h"
+
 #include <QWidget>
 #include <memory>
+#include <vector>
 
 namespace Ui {
 	class Tool_editor_widget;
@@ -17,9 +20,13 @@ class Tool_editor_widget : public QWidget {
 	~Tool_editor_widget();
 
 	protected:
+	void load_tools_from_settings();
+	void save_tools_to_settings();
+
+	std::vector<Tool> tools;
 	std::unique_ptr<Ui::Tool_editor_widget> ui;
 
-	protected:
+	private:
 	Ui::Tool_editor_widget *_; //Qt Designer only works correctly if it finds this string
 };
 
