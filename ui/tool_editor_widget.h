@@ -21,7 +21,7 @@ class Tool_editor_widget : public QWidget {
 
 	protected:
 	void load_tools_from_settings();
-	void save_tools_to_settings();
+	void save_tools_to_settings() const;
 
 	std::vector<Tool> tools;
 	std::unique_ptr<Ui::Tool_editor_widget> ui;

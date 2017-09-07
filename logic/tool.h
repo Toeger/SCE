@@ -20,8 +20,8 @@ class Tool {
 	Tool_output_target error{};
 	Activation activation{}; //todo: add context menu and menu entry
 
-	QByteArray to_string() const;
-	static Tool from_string(const QByteArray &data);
+	QString to_string() const;
+	static Tool from_string(const QString &data);
 
 	private:
 	void write(const QString &data, const QString &name, QJsonObject &json) const;

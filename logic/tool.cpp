@@ -4,7 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-QByteArray Tool::to_string() const {
+QString Tool::to_string() const {
 	QJsonObject object;
 #define WRITE(X) write(X, #X, object)
 	WRITE(path);
@@ -15,12 +15,12 @@ QByteArray Tool::to_string() const {
 	WRITE(activation);
 #undef WRITE
 	QJsonDocument json{object};
-	return json.toJson();
+	return QString::fromUtf8(json.toJson());
 }
 
-Tool Tool::from_string(const QByteArray &data) {
+Tool Tool::from_string(const QString &data) {
 	Tool tool;
-	auto json = QJsonDocument::fromJson(data).object();
+	auto json = QJsonDocument::fromJson(data.toUtf8()).object();
 #define READ(X) read(tool.X, #X, json)
 	READ(path);
 	READ(arguments);

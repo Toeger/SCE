@@ -16,18 +16,20 @@ namespace Settings {
 			files,
 			current_file,
 			font,
+			tools,
 		};
 	}
-	using Key_types = std::tuple<QStringList /*files*/, int /*current_file*/, QString /*font*/>;
+	using Key_types = std::tuple<QStringList /*files*/, int /*current_file*/, QString /*font*/, QStringList /*tools*/>;
 	const std::array Key_names = {
 		"files",
 		"current_file",
 		"font",
+		"tools",
 	};
 
 	//get and set values in a semi-type-safe manner
 	template <Key::Key key, class Return_type = std::tuple_element_t<key, Key_types>>
-	Return_type get() {
+	auto get() {
 		if constexpr (std::is_same<Return_type, int>::value) {
 			return QSettings{}.value(Key_names[key]).toInt();
 		} else if constexpr (std::is_same<Return_type, QStringList>::value) {
@@ -37,7 +39,7 @@ namespace Settings {
 		}
 	}
 	template <Key::Key key, class Default_type, class Return_type = std::tuple_element_t<key, Key_types>>
-	Return_type get(const Default_type &default_value) {
+	auto get(const Default_type &default_value) {
 		if constexpr (std::is_same<Return_type, int>::value) {
 			return QSettings{}.value(Key_names[key], default_value).toInt();
 		} else if constexpr (std::is_same<Return_type, QStringList>::value) {
