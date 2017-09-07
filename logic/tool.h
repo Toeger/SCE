@@ -7,17 +7,20 @@
 
 class QJsonObject;
 
+//A Tool_output_target
+namespace Tool_output_target {
+	enum Type { ignore, paste, console, popup };
+}
 //A Tool specifies how to use an external tool such as a compiler. It specifies input, output, how to activate the tool and so on.
 class Tool {
 	public:
-	enum class Tool_output_target { ignore, paste, console, popup };
 	using Activation = QKeySequence; //probably will have to add more ways later
 
 	QString path{};
 	QString arguments{};
 	QString input{};
-	Tool_output_target output{};
-	Tool_output_target error{};
+	Tool_output_target::Type output{};
+	Tool_output_target::Type error{};
 	Activation activation{}; //todo: add context menu and menu entry
 
 	QString to_string() const;
@@ -25,10 +28,10 @@ class Tool {
 
 	private:
 	void write(const QString &data, const QString &name, QJsonObject &json) const;
-	void write(const Tool_output_target &data, const QString &name, QJsonObject &json) const;
+	void write(const Tool_output_target::Type &data, const QString &name, QJsonObject &json) const;
 	void write(const Activation &data, const QString &name, QJsonObject &json) const;
 	static void read(QString &data, const QString &name, QJsonObject &json);
-	static void read(Tool_output_target &data, const QString &name, QJsonObject &json);
+	static void read(Tool_output_target::Type &data, const QString &name, QJsonObject &json);
 	static void read(Activation &data, const QString &name, QJsonObject &json);
 };
 

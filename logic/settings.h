@@ -53,7 +53,7 @@ namespace Settings {
 		return get<key>(QVariant{});
 	}
 
-	template <Key::Key key, class T = std::tuple_element_t<static_cast<int>(key), Key_types>>
+	template <Key::Key key, class T = std::tuple_element_t<key, Key_types>>
 	void set(const T &t) {
 		QSettings{}.setValue(Key_names[key], t);
 	}

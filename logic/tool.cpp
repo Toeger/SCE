@@ -36,8 +36,8 @@ void Tool::write(const QString &data, const QString &name, QJsonObject &json) co
 	json[name] = data;
 }
 
-void Tool::write(const Tool::Tool_output_target &data, const QString &name, QJsonObject &json) const {
-	json[name] = static_cast<int>(data);
+void Tool::write(const Tool_output_target::Type &data, const QString &name, QJsonObject &json) const {
+	json[name] = data;
 }
 
 void Tool::write(const Tool::Activation &data, const QString &name, QJsonObject &json) const {
@@ -48,8 +48,8 @@ void Tool::read(QString &data, const QString &name, QJsonObject &json) {
 	data = json[name].toString();
 }
 
-void Tool::read(Tool::Tool_output_target &data, const QString &name, QJsonObject &json) {
-	data = static_cast<Tool::Tool_output_target>(json[name].toInt());
+void Tool::read(Tool_output_target::Type &data, const QString &name, QJsonObject &json) {
+	data = static_cast<Tool_output_target::Type>(json[name].toInt());
 }
 
 void Tool::read(Tool::Activation &data, const QString &name, QJsonObject &json) {

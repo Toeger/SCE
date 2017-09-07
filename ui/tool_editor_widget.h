@@ -11,6 +11,8 @@ namespace Ui {
 	class Tool_editor_widget;
 }
 
+struct QComboBox;
+
 //This window is to specify how to use external tools such as compilers.
 class Tool_editor_widget : public QWidget {
 	Q_OBJECT
@@ -19,6 +21,10 @@ class Tool_editor_widget : public QWidget {
 	explicit Tool_editor_widget(QWidget *parent = 0);
 	~Tool_editor_widget();
 
+	public slots:
+	void update_tools_list();
+	void update_current_tool();
+
 	protected:
 	void load_tools_from_settings();
 	void save_tools_to_settings() const;
@@ -26,7 +32,15 @@ class Tool_editor_widget : public QWidget {
 	std::vector<Tool> tools;
 	std::unique_ptr<Ui::Tool_editor_widget> ui;
 
+	protected slots:
+	void on_add_pushButton_clicked();
+	void on_tools_listWidget_currentRowChanged(int currentRow);
+	void on_remove_pushButton_clicked();
+	void on_path_browse_pushButton_clicked();
+
 	private:
+	void fill_output_list(QComboBox *combobox);
+
 	Ui::Tool_editor_widget *_; //Qt Designer only works correctly if it finds this string
 };
 
