@@ -10,6 +10,14 @@
 
 //helpers for QSettings' persistent storage
 namespace Settings {
+	/* Note: If you need to add a setting you need to do 3 things:
+		1. Add a value to the Key enum.
+		2. Add a name to the Key_names.
+		3. Add the type of the value to Key_types.
+		The indexes must match (Key_names[key] must produce the correct name for that key and tuple_element_t<key, Key_types> must give us the right type).
+		TODO: Someone figure out how to do this in 1 step without overhead or ugly macros.
+	*/
+
 	//use these key names instead of hardcoding strings to avoid typos and having a list of all settings available
 	namespace Key {
 		enum Key {
@@ -19,34 +27,30 @@ namespace Settings {
 			tools,
 		};
 	}
-	using Key_types = std::tuple<QStringList /*files*/, int /*current_file*/, QString /*font*/, QStringList /*tools*/>;
 	const std::array Key_names = {
 		"files",
 		"current_file",
 		"font",
 		"tools",
 	};
+	using Key_types = std::tuple<QStringList /*files*/, int /*current_file*/, QString /*font*/, QStringList /*tools*/>;
 
 	//get and set values in a semi-type-safe manner
-	template <Key::Key key, class Return_type = std::tuple_element_t<key, Key_types>>
-	auto get() {
-		if constexpr (std::is_same<Return_type, int>::value) {
-			return QSettings{}.value(Key_names[key]).toInt();
-		} else if constexpr (std::is_same<Return_type, QStringList>::value) {
-			return QSettings{}.value(Key_names[key]).toStringList();
-		} else if constexpr (std::is_same<Return_type, QString>::value) {
-			return QSettings{}.value(Key_names[key]).toString();
-		}
-	}
 	template <Key::Key key, class Default_type, class Return_type = std::tuple_element_t<key, Key_types>>
-	auto get(const Default_type &default_value) {
+	Return_type get(const Default_type &default_value) {
 		if constexpr (std::is_same<Return_type, int>::value) {
 			return QSettings{}.value(Key_names[key], default_value).toInt();
 		} else if constexpr (std::is_same<Return_type, QStringList>::value) {
 			return QSettings{}.value(Key_names[key], default_value).toStringList();
 		} else if constexpr (std::is_same<Return_type, QString>::value) {
 			return QSettings{}.value(Key_names[key], default_value).toString();
+		} else {
+			static_assert("Missing code to deal with this Return_type");
 		}
+	}
+	template <Key::Key key, class Return_type = std::tuple_element_t<key, Key_types>>
+	Return_type get() {
+		return get<key>(QVariant{});
 	}
 
 	template <Key::Key key, class T = std::tuple_element_t<static_cast<int>(key), Key_types>>
