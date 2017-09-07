@@ -7,7 +7,17 @@
 #include <cassert>
 #include <vector>
 
-void test_settings() {
+void test_unique_key_names() {
+	auto names = Settings::Key_names;
+	std::sort(std::begin(names), std::end(names));
+	assert_equal(std::adjacent_find(std::begin(names), std::end(names)), std::end(names));
+}
+
+void test_name_type_length_match() {
+	assert_equal(Settings::Key_names.size(), std::tuple_size<Settings::Key_types>::value);
+}
+
+void test_keeper() {
 	auto get_sorted_keys = [] {
 		auto keys = QSettings{}.allKeys();
 		std::sort(std::begin(keys), std::end(keys));
@@ -44,4 +54,10 @@ void test_settings() {
 	for (int key_index = 0; key_index < keys.size(); key_index++) {                     //
 		assert_equal(QSettings{}.value(keys[key_index]), values[key_index]);            //make sure the values are the same
 	}
+}
+
+void test_settings() {
+	test_unique_key_names();
+	test_name_type_length_match();
+	test_keeper();
 }
