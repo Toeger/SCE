@@ -20,6 +20,7 @@ class Tool_editor_widget : public QWidget {
 	public:
 	explicit Tool_editor_widget(QWidget *parent = 0);
 	~Tool_editor_widget();
+	void closeEvent(QCloseEvent *event) override;
 
 	public slots:
 	void update_tools_list();
@@ -28,6 +29,7 @@ class Tool_editor_widget : public QWidget {
 	protected:
 	void load_tools_from_settings();
 	void save_tools_to_settings() const;
+	bool need_to_save();
 
 	std::vector<Tool> tools;
 	std::unique_ptr<Ui::Tool_editor_widget> ui;
@@ -37,6 +39,8 @@ class Tool_editor_widget : public QWidget {
 	void on_tools_listWidget_currentRowChanged(int currentRow);
 	void on_remove_pushButton_clicked();
 	void on_path_browse_pushButton_clicked();
+	void on_buttonBox_accepted();
+	void on_buttonBox_rejected();
 
 	private:
 	void fill_output_list(QComboBox *combobox);

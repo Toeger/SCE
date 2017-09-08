@@ -3,7 +3,9 @@
 #include "tests/test.h"
 #include "ui_tool_editor_widget.h"
 
+#include <QCloseEvent>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <QStringList>
 
 Tool_editor_widget::Tool_editor_widget(QWidget *parent)
@@ -16,8 +18,26 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	update_tools_list();
 }
 
-Tool_editor_widget::~Tool_editor_widget() {
-	save_tools_to_settings();
+Tool_editor_widget::~Tool_editor_widget() {}
+
+void Tool_editor_widget::closeEvent(QCloseEvent *event) {
+	if (need_to_save()) {
+		const auto decision = QMessageBox::question(this, tr("Save changes?"), tr("Settings for some tools have been changed. Should they be saved?"),
+													QMessageBox::SaveAll | QMessageBox::Ignore | QMessageBox::Cancel);
+		switch (decision) {
+			case QMessageBox::SaveAll:
+				event->accept();
+				on_buttonBox_accepted();
+				return;
+			case QMessageBox::Ignore:
+				event->accept();
+				on_buttonBox_rejected();
+				return;
+			case QMessageBox::Cancel:
+				event->ignore();
+				return;
+		}
+	}
 }
 
 void Tool_editor_widget::load_tools_from_settings() {
@@ -35,6 +55,16 @@ void Tool_editor_widget::save_tools_to_settings() const {
 		tool_list << tool.to_string();
 	}
 	Settings::set<Settings::Key::tools>(tool_list);
+}
+
+bool Tool_editor_widget::need_to_save() {
+	auto old_tools = std::move(tools);
+	load_tools_from_settings();
+	if (tools == old_tools) {
+		return false;
+	}
+	swap(old_tools, tools);
+	return true;
 }
 
 void Tool_editor_widget::update_tools_list() {
@@ -56,7 +86,7 @@ void Tool_editor_widget::update_current_tool() {
 	current_tool.input = ui->input_lineEdit->text();
 	current_tool.output = static_cast<Tool_output_target::Type>(ui->output_comboBox->currentIndex());
 	current_tool.error = static_cast<Tool_output_target::Type>(ui->errors_comboBox->currentIndex());
-	current_tool.activation;
+	current_tool.activation = ui->activation_keySequenceEdit->keySequence();
 	update_tools_list();
 }
 
@@ -91,6 +121,7 @@ void Tool_editor_widget::on_tools_listWidget_currentRowChanged(int currentRow) {
 	ui->input_lineEdit->setText(current_tool.input);
 	ui->output_comboBox->setCurrentIndex(current_tool.output);
 	ui->errors_comboBox->setCurrentIndex(current_tool.error);
+	ui->activation_keySequenceEdit->setKeySequence(current_tool.activation);
 }
 
 void Tool_editor_widget::on_remove_pushButton_clicked() {
@@ -112,4 +143,13 @@ void Tool_editor_widget::on_path_browse_pushButton_clicked() {
 		return;
 	}
 	ui->path_lineEdit->setText(file_name);
+}
+
+void Tool_editor_widget::on_buttonBox_accepted() {
+	save_tools_to_settings();
+	close();
+}
+
+void Tool_editor_widget::on_buttonBox_rejected() {
+	close();
 }
