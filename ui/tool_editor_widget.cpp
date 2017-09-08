@@ -21,6 +21,7 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 Tool_editor_widget::~Tool_editor_widget() {}
 
 void Tool_editor_widget::closeEvent(QCloseEvent *event) {
+	update_current_tool();
 	if (need_to_save()) {
 		const auto decision = QMessageBox::question(this, tr("Save changes?"), tr("Settings for some tools have been changed. Should they be saved?"),
 													QMessageBox::SaveAll | QMessageBox::Ignore | QMessageBox::Cancel);
@@ -70,9 +71,12 @@ bool Tool_editor_widget::need_to_save() {
 void Tool_editor_widget::update_tools_list() {
 	const int old_index = std::max(ui->tools_listWidget->currentRow(), 0);
 	ui->tools_listWidget->clear();
-	for (const auto &tool : tools) {
+	auto old_tools = std::move(tools);
+	tools.clear();
+	for (const auto &tool : old_tools) {
 		ui->tools_listWidget->addItem(tool.path.split("/").last());
 	}
+	tools = std::move(old_tools);
 	ui->tools_listWidget->setCurrentRow(old_index);
 }
 
@@ -87,7 +91,13 @@ void Tool_editor_widget::update_current_tool() {
 	current_tool.output = static_cast<Tool_output_target::Type>(ui->output_comboBox->currentIndex());
 	current_tool.error = static_cast<Tool_output_target::Type>(ui->errors_comboBox->currentIndex());
 	current_tool.activation = ui->activation_keySequenceEdit->keySequence();
-	update_tools_list();
+	update_current_tool_name();
+}
+
+void Tool_editor_widget::update_current_tool_name() {
+	const auto current_path = tools[ui->tools_listWidget->currentRow()].path;
+	auto current_tool_name = current_path.split('/').back();
+	ui->tools_listWidget->currentItem()->setText(current_tool_name);
 }
 
 void Tool_editor_widget::on_add_pushButton_clicked() {
@@ -112,10 +122,12 @@ void Tool_editor_widget::fill_output_list(QComboBox *combobox) {
 }
 
 void Tool_editor_widget::on_tools_listWidget_currentRowChanged(int currentRow) {
-	if (currentRow == -1) {
+	if (currentRow == -1 || tools.empty()) {
 		return;
 	}
-	auto &current_tool = tools[currentRow];
+	const auto current_tool = tools[currentRow]; //This copy is important because setting GUI elements will trigger reading the current tool properties from the
+												 //incomplete GUI, which would corrupt our properties. Making a copy keeps the current_tool unchanged from
+												 //whatever the GUI does.
 	ui->path_lineEdit->setText(current_tool.path);
 	ui->arguments_lineEdit->setText(current_tool.arguments);
 	ui->input_lineEdit->setText(current_tool.input);

@@ -25,6 +25,7 @@ class Tool_editor_widget : public QWidget {
 	public slots:
 	void update_tools_list();
 	void update_current_tool();
+	void update_current_tool_name();
 
 	protected:
 	void load_tools_from_settings();
