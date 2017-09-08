@@ -27,6 +27,9 @@ before_script:
     - source /opt/qt59/bin/qt59-env.sh
     # gcc 7
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    # print versions
+    - qmake --version
+    - g++ --version
 
 script:
     - qmake
