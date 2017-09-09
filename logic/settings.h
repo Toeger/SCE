@@ -1,6 +1,8 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include "tool.h"
+
 #include <QSettings>
 #include <QStringList>
 #include <QVariant>
@@ -39,18 +41,24 @@ namespace Settings {
 		"font",
 		"tools",
 	};
-	using Key_types = std::tuple<QStringList /*files*/, int /*current_file*/, QString /*font*/, QStringList /*tools*/>;
+	using Key_types = std::tuple<QStringList /*files*/, int /*current_file*/, QString /*font*/, std::vector<Tool> /*tools*/>;
 
 	//get and set values in a semi-type-safe manner
 	template <Key::Key key, class Default_type, class Return_type = std::tuple_element_t<key, Key_types>>
 	Return_type get(const Default_type &default_value) {
 		static_assert(has_type<Return_type, Key_types>::value, "Missing code to deal with this Return_type");
-		if constexpr (std::is_same<Return_type, int>::value) {
+		if constexpr (std::is_same_v<Return_type, int>) {
 			return QSettings{}.value(Key_names[key], default_value).toInt();
-		} else if constexpr (std::is_same<Return_type, QStringList>::value) {
+		} else if constexpr (std::is_same_v<Return_type, QStringList>) {
 			return QSettings{}.value(Key_names[key], default_value).toStringList();
-		} else if constexpr (std::is_same<Return_type, QString>::value) {
+		} else if constexpr (std::is_same_v<Return_type, QString>) {
 			return QSettings{}.value(Key_names[key], default_value).toString();
+		} else if constexpr (std::is_same_v<Return_type, std::vector<Tool>>) {
+			std::vector<Tool> retval;
+			for (const auto &tool_string : QSettings{}.value(Key_names[key], default_value).toStringList()) {
+				retval.push_back(Tool::from_string(tool_string));
+			}
+			return retval;
 		}
 	}
 	template <Key::Key key, class Return_type = std::tuple_element_t<key, Key_types>>
@@ -60,7 +68,15 @@ namespace Settings {
 
 	template <Key::Key key, class T = std::tuple_element_t<key, Key_types>>
 	void set(const T &t) {
-		QSettings{}.setValue(Key_names[key], t);
+		if constexpr (std::is_same_v<T, std::vector<Tool>>) {
+			QStringList string_list;
+			for (const auto &e : t) {
+				string_list << e.to_string();
+			}
+			QSettings{}.setValue(Key_names[key], string_list);
+		} else {
+			QSettings{}.setValue(Key_names[key], t);
+		}
 	}
 
 	/* Keeper saves the current settings when constructed and restore them when destroyed so that setting changes between construction and destruction have

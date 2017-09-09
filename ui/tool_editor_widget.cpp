@@ -42,20 +42,11 @@ void Tool_editor_widget::closeEvent(QCloseEvent *event) {
 }
 
 void Tool_editor_widget::load_tools_from_settings() {
-	const auto tool_list = Settings::get<Settings::Key::tools>();
-	tools.clear();
-	tools.reserve(tool_list.size());
-	for (const auto &tool : tool_list) {
-		tools.push_back(Tool::from_string(tool));
-	}
+	tools = Settings::get<Settings::Key::tools>();
 }
 
 void Tool_editor_widget::save_tools_to_settings() const {
-	QStringList tool_list;
-	for (const auto &tool : tools) {
-		tool_list << tool.to_string();
-	}
-	Settings::set<Settings::Key::tools>(tool_list);
+	Settings::set<Settings::Key::tools>(tools);
 }
 
 bool Tool_editor_widget::need_to_save() {
