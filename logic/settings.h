@@ -8,6 +8,12 @@
 #include <tuple>
 #include <vector>
 
+template <typename T, typename Tuple>
+struct has_type;
+
+template <typename T, typename... Us>
+struct has_type<T, std::tuple<Us...>> : std::disjunction<std::is_same<T, Us>...> {};
+
 //helpers for QSettings' persistent storage
 namespace Settings {
 	/* Note: If you need to add a setting you need to do 3 things:
@@ -38,14 +44,13 @@ namespace Settings {
 	//get and set values in a semi-type-safe manner
 	template <Key::Key key, class Default_type, class Return_type = std::tuple_element_t<key, Key_types>>
 	Return_type get(const Default_type &default_value) {
+		static_assert(has_type<Return_type, Key_types>::value, "Missing code to deal with this Return_type");
 		if constexpr (std::is_same<Return_type, int>::value) {
 			return QSettings{}.value(Key_names[key], default_value).toInt();
 		} else if constexpr (std::is_same<Return_type, QStringList>::value) {
 			return QSettings{}.value(Key_names[key], default_value).toStringList();
 		} else if constexpr (std::is_same<Return_type, QString>::value) {
 			return QSettings{}.value(Key_names[key], default_value).toString();
-		} else {
-			static_assert("Missing code to deal with this Return_type");
 		}
 	}
 	template <Key::Key key, class Return_type = std::tuple_element_t<key, Key_types>>
