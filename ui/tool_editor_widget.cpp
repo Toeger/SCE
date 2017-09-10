@@ -82,6 +82,7 @@ void Tool_editor_widget::update_current_tool() {
 	current_tool.output = static_cast<Tool_output_target::Type>(ui->output_comboBox->currentIndex());
 	current_tool.error = static_cast<Tool_output_target::Type>(ui->errors_comboBox->currentIndex());
 	current_tool.activation = ui->activation_keySequenceEdit->keySequence();
+	current_tool.working_directory = ui->working_dir_lineEdit->text();
 	update_current_tool_name();
 }
 
@@ -125,6 +126,7 @@ void Tool_editor_widget::on_tools_listWidget_currentRowChanged(int currentRow) {
 	ui->output_comboBox->setCurrentIndex(current_tool.output);
 	ui->errors_comboBox->setCurrentIndex(current_tool.error);
 	ui->activation_keySequenceEdit->setKeySequence(current_tool.activation);
+	ui->working_dir_lineEdit->setText(current_tool.working_directory);
 }
 
 void Tool_editor_widget::on_remove_pushButton_clicked() {
@@ -149,6 +151,7 @@ void Tool_editor_widget::on_path_browse_pushButton_clicked() {
 }
 
 void Tool_editor_widget::on_buttonBox_accepted() {
+	update_current_tool();
 	save_tools_to_settings();
 	close();
 }

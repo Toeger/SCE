@@ -19,12 +19,14 @@ class Tool {
 	QString path{};
 	QString arguments{};
 	QString input{};
+	QString working_directory{};
 	Tool_output_target::Type output{};
 	Tool_output_target::Type error{};
 	Activation activation{}; //todo: add context menu and menu entry
 
 	QString to_string() const;
 	static Tool from_string(const QString &data);
+	QString get_name() const;
 
 	private:
 	void write(const QString &data, const QString &name, QJsonObject &json) const;
@@ -36,13 +38,13 @@ class Tool {
 };
 
 inline bool operator==(const Tool &lhs, const Tool &rhs) {
-	return std::tie(lhs.path, lhs.arguments, lhs.input, lhs.output, lhs.error, lhs.activation) ==
-		   std::tie(rhs.path, rhs.arguments, rhs.input, rhs.output, rhs.error, rhs.activation);
+	return std::tie(lhs.path, lhs.arguments, lhs.input, lhs.output, lhs.error, lhs.activation, lhs.working_directory) ==
+		   std::tie(rhs.path, rhs.arguments, rhs.input, rhs.output, rhs.error, rhs.activation, rhs.working_directory);
 }
 
 inline bool operator<(const Tool &lhs, const Tool &rhs) {
-	return std::tie(lhs.path, lhs.arguments, lhs.input, lhs.output, lhs.error, lhs.activation) <
-		   std::tie(rhs.path, rhs.arguments, rhs.input, rhs.output, rhs.error, rhs.activation);
+	return std::tie(lhs.path, lhs.arguments, lhs.input, lhs.output, lhs.error, lhs.activation, lhs.working_directory) <
+		   std::tie(rhs.path, rhs.arguments, rhs.input, rhs.output, rhs.error, rhs.activation, rhs.working_directory);
 }
 
 #endif // TOOL_H

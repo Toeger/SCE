@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStringList>
 
 QString Tool::to_string() const {
 	QJsonObject object;
@@ -13,6 +14,7 @@ QString Tool::to_string() const {
 	WRITE(output);
 	WRITE(error);
 	WRITE(activation);
+	WRITE(working_directory);
 #undef WRITE
 	QJsonDocument json{object};
 	return QString::fromUtf8(json.toJson());
@@ -28,8 +30,13 @@ Tool Tool::from_string(const QString &data) {
 	READ(output);
 	READ(error);
 	READ(activation);
+	READ(working_directory);
 #undef READ
 	return tool;
+}
+
+QString Tool::get_name() const {
+	return path.split('/').last();
 }
 
 void Tool::write(const QString &data, const QString &name, QJsonObject &json) const {
