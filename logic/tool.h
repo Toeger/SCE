@@ -41,12 +41,26 @@ class Tool {
 	static void read(Activation &data, const QString &name, QJsonObject &json);
 };
 
-template <std::size_t index = 0>
-bool operator==(const Tool &lhs, const Tool &rhs) {
+struct Equal { //should find a way to use std::equal_to
+	template <class T>
+	bool operator()(const T &lhs, const T &rhs) {
+		return lhs == rhs;
+	}
+};
+
+struct Less { //should find a way to use std::less
+	template <class T>
+	bool operator()(const T &lhs, const T &rhs) {
+		return lhs < rhs;
+	}
+};
+
+template <class Comparer, std::size_t index = 0>
+bool compare(const Tool &lhs, const Tool &rhs) {
 	if constexpr (index < std::tuple_size<decltype(Tool::get_persistent_members())>()) {
 		const auto members = Tool::get_persistent_members();
-		if (lhs.*std::get<index>(members) == rhs.*std::get<index>(members)) {
-			return operator==<index + 1>(lhs, rhs);
+		if (Comparer{}(lhs.*std::get<index>(members), rhs.*std::get<index>(members))) {
+			return compare<Comparer, index + 1>(lhs, rhs);
 		} else {
 			return false;
 		}
@@ -54,17 +68,12 @@ bool operator==(const Tool &lhs, const Tool &rhs) {
 	return true;
 }
 
-template <std::size_t index = 0>
-bool operator<(const Tool &lhs, const Tool &rhs) {
-	if constexpr (index < std::tuple_size<decltype(Tool::get_persistent_members())>()) {
-		const auto members = Tool::get_persistent_members();
-		if (lhs.*std::get<index>(members) < rhs.*std::get<index>(members)) {
-			return operator< <index + 1>(lhs, rhs);
-		} else {
-			return false;
-		}
-	}
-	return true;
+inline bool operator==(const Tool &lhs, const Tool &rhs) {
+	return compare<Equal>(lhs, rhs);
+}
+
+inline bool operator<(const Tool &lhs, const Tool &rhs) {
+	return compare<Less>(lhs, rhs);
 }
 
 #endif // TOOL_H
