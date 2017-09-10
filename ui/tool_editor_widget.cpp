@@ -7,6 +7,59 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStringList>
+#include <tuple>
+
+//this lists the association between ui elements and Tool members
+static auto get_ui_inputs_tool_attributes(Ui::Tool_editor_widget *ui) {
+	return std::make_tuple(ui->path_lineEdit, &Tool::path,                    //
+						   ui->arguments_lineEdit, &Tool::arguments,          //
+						   ui->input_lineEdit, &Tool::input,                  //
+						   ui->output_comboBox, &Tool::output,                //
+						   ui->errors_comboBox, &Tool::error,                 //
+						   ui->activation_keySequenceEdit, &Tool::activation, //
+						   ui->working_dir_lineEdit, &Tool::working_directory //
+	);
+}
+//set ui elements based on a Tool member
+static void tool_to_ui(QLineEdit *line_edit, QString Tool::*member, const Tool &tool) {
+	line_edit->setText(tool.*member);
+}
+static void tool_to_ui(QComboBox *combo_box, Tool_output_target::Type Tool::*member, const Tool &tool) {
+	combo_box->setCurrentIndex(tool.*member);
+}
+static void tool_to_ui(QKeySequenceEdit *key_edit, QKeySequence Tool::*member, const Tool &tool) {
+	key_edit->setKeySequence(tool.*member);
+}
+
+//set all ui elements to the value of a Tool
+template <class Tuple, std::size_t... indexes>
+static void tool_to_ui(Tuple tuple, std::index_sequence<indexes...>, const Tool &tool) {
+	(tool_to_ui(std::get<indexes * 2>(tuple), std::get<indexes * 2 + 1>(tuple), tool), ...);
+}
+static void tool_to_ui(Ui::Tool_editor_widget *ui, const Tool &tool) {
+	auto ui_tuple = get_ui_inputs_tool_attributes(ui);
+	tool_to_ui(std::move(ui_tuple), std::make_index_sequence<std::tuple_size<decltype(ui_tuple)>() / 2>(), tool);
+}
+
+//set tool values from ui
+static void ui_to_tool(QLineEdit *line_edit, QString Tool::*member, Tool &tool) {
+	tool.*member = line_edit->text();
+}
+static void ui_to_tool(QComboBox *combo_box, Tool_output_target::Type Tool::*member, Tool &tool) {
+	tool.*member = static_cast<Tool_output_target::Type>(combo_box->currentIndex());
+}
+static void ui_to_tool(QKeySequenceEdit *key_edit, QKeySequence Tool::*member, Tool &tool) {
+	tool.*member = key_edit->keySequence();
+}
+
+template <class Tuple, std::size_t... indexes>
+static void ui_to_tool(Tuple tuple, std::index_sequence<indexes...>, Tool &tool) {
+	(ui_to_tool(std::get<indexes * 2>(tuple), std::get<indexes * 2 + 1>(tuple), tool), ...);
+}
+static void ui_to_tool(Ui::Tool_editor_widget *ui, Tool &tool) {
+	auto ui_tuple = get_ui_inputs_tool_attributes(ui);
+	ui_to_tool(std::move(ui_tuple), std::make_index_sequence<std::tuple_size<decltype(ui_tuple)>() / 2>(), tool);
+}
 
 Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	: QWidget(parent)
@@ -76,13 +129,7 @@ void Tool_editor_widget::update_current_tool() {
 		return;
 	}
 	auto &current_tool = tools[ui->tools_listWidget->currentRow()];
-	current_tool.path = ui->path_lineEdit->text();
-	current_tool.arguments = ui->arguments_lineEdit->text();
-	current_tool.input = ui->input_lineEdit->text();
-	current_tool.output = static_cast<Tool_output_target::Type>(ui->output_comboBox->currentIndex());
-	current_tool.error = static_cast<Tool_output_target::Type>(ui->errors_comboBox->currentIndex());
-	current_tool.activation = ui->activation_keySequenceEdit->keySequence();
-	current_tool.working_directory = ui->working_dir_lineEdit->text();
+	ui_to_tool(ui.get(), current_tool);
 	update_current_tool_name();
 }
 
@@ -120,13 +167,7 @@ void Tool_editor_widget::on_tools_listWidget_currentRowChanged(int currentRow) {
 	const auto current_tool = tools[currentRow]; //This copy is important because setting GUI elements will trigger reading the current tool properties from the
 												 //incomplete GUI, which would corrupt our properties. Making a copy keeps the current_tool unchanged from
 												 //whatever the GUI does.
-	ui->path_lineEdit->setText(current_tool.path);
-	ui->arguments_lineEdit->setText(current_tool.arguments);
-	ui->input_lineEdit->setText(current_tool.input);
-	ui->output_comboBox->setCurrentIndex(current_tool.output);
-	ui->errors_comboBox->setCurrentIndex(current_tool.error);
-	ui->activation_keySequenceEdit->setKeySequence(current_tool.activation);
-	ui->working_dir_lineEdit->setText(current_tool.working_directory);
+	tool_to_ui(ui.get(), current_tool);
 }
 
 void Tool_editor_widget::on_remove_pushButton_clicked() {
