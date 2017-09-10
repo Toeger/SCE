@@ -24,6 +24,10 @@ class Tool {
 	Tool_output_target::Type error{};
 	Activation activation{}; //todo: add context menu and menu entry
 
+	static constexpr auto get_persistent_members() { //this may some day be replacable with reflection
+		return std::make_tuple(&Tool::path, &Tool::arguments, &Tool::input, &Tool::working_directory, &Tool::output, &Tool::error, &Tool::activation);
+	}
+
 	QString to_string() const;
 	static Tool from_string(const QString &data);
 	QString get_name() const;
@@ -37,14 +41,30 @@ class Tool {
 	static void read(Activation &data, const QString &name, QJsonObject &json);
 };
 
-inline bool operator==(const Tool &lhs, const Tool &rhs) {
-	return std::tie(lhs.path, lhs.arguments, lhs.input, lhs.output, lhs.error, lhs.activation, lhs.working_directory) ==
-		   std::tie(rhs.path, rhs.arguments, rhs.input, rhs.output, rhs.error, rhs.activation, rhs.working_directory);
+template <std::size_t index = 0>
+bool operator==(const Tool &lhs, const Tool &rhs) {
+	if constexpr (index < std::tuple_size<decltype(Tool::get_persistent_members())>()) {
+		const auto members = Tool::get_persistent_members();
+		if (lhs.*std::get<index>(members) == rhs.*std::get<index>(members)) {
+			return operator==<index + 1>(lhs, rhs);
+		} else {
+			return false;
+		}
+	}
+	return true;
 }
 
-inline bool operator<(const Tool &lhs, const Tool &rhs) {
-	return std::tie(lhs.path, lhs.arguments, lhs.input, lhs.output, lhs.error, lhs.activation, lhs.working_directory) <
-		   std::tie(rhs.path, rhs.arguments, rhs.input, rhs.output, rhs.error, rhs.activation, rhs.working_directory);
+template <std::size_t index = 0>
+bool operator<(const Tool &lhs, const Tool &rhs) {
+	if constexpr (index < std::tuple_size<decltype(Tool::get_persistent_members())>()) {
+		const auto members = Tool::get_persistent_members();
+		if (lhs.*std::get<index>(members) < rhs.*std::get<index>(members)) {
+			return operator< <index + 1>(lhs, rhs);
+		} else {
+			return false;
+		}
+	}
+	return true;
 }
 
 #endif // TOOL_H
