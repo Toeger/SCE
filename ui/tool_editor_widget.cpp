@@ -1,5 +1,6 @@
 #include "tool_editor_widget.h"
 #include "logic/settings.h"
+#include "logic/tool_actions.h"
 #include "tests/test.h"
 #include "ui_tool_editor_widget.h"
 
@@ -194,6 +195,7 @@ void Tool_editor_widget::on_path_browse_pushButton_clicked() {
 void Tool_editor_widget::on_buttonBox_accepted() {
 	update_current_tool();
 	save_tools_to_settings();
+	Tool_actions::set_actions(tools);
 	close();
 }
 
