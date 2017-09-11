@@ -4,7 +4,6 @@
 #include <QKeySequence>
 #include <QString>
 #include <tuple>
-#include <type_traits>
 
 class QJsonObject;
 
@@ -42,50 +41,32 @@ class Tool {
 	static void read(Activation &data, const QString &name, QJsonObject &json);
 };
 
-struct Equal { //should find a way to use std::equal_to
-	template <class T>
-	bool operator()(const T &lhs, const T &rhs) {
-		return lhs == rhs;
-	}
-};
-
-struct Less { //should find a way to use std::less
-	template <class T>
-	bool operator()(const T &lhs, const T &rhs) {
-		return lhs < rhs;
-	}
-};
-
-template <class Comparer, std::size_t index = 0>
-bool compare(const Tool &lhs, const Tool &rhs) {
+template <std::size_t index = 0>
+bool operator==(const Tool &lhs, const Tool &rhs) {
 	if constexpr (index < std::tuple_size<decltype(Tool::get_persistent_members())>()) {
 		constexpr auto members = Tool::get_persistent_members();
-		if constexpr (std::is_same_v<Comparer, Equal>) {
-			if (Equal{}(lhs.*std::get<index>(members), rhs.*std::get<index>(members))) {
-				return compare<Equal, index + 1>(lhs, rhs);
-			} else {
-				return false;
-			}
-		} else {
-			if (Comparer{}(lhs.*std::get<index>(members), rhs.*std::get<index>(members))) {
-				return true;
-			} else if (Comparer{}(rhs.*std::get<index>(members), lhs.*std::get<index>(members))) {
-				return false;
-			} else {
-				return compare<Comparer, index + 1>(lhs, rhs);
-			}
+		if (lhs.*std::get<index>(members) == rhs.*std::get<index>(members)) {
+			return operator==<index + 1>(lhs, rhs);
 		}
-	} else {
-		return std::is_same_v<Comparer, Equal>;
+		return false;
 	}
+	return true;
 }
 
-inline bool operator==(const Tool &lhs, const Tool &rhs) {
-	return compare<Equal>(lhs, rhs);
-}
-
-inline bool operator<(const Tool &lhs, const Tool &rhs) {
-	return compare<Less>(lhs, rhs);
+template <std::size_t index = 0>
+bool operator<(const Tool &lhs, const Tool &rhs) {
+	if constexpr (index < std::tuple_size<decltype(Tool::get_persistent_members())>()) {
+		constexpr auto members = Tool::get_persistent_members();
+		if (lhs.*std::get<index>(members) < rhs.*std::get<index>(members)) {
+			return true;
+		} else if (rhs.*std::get<index>(members) < lhs.*std::get<index>(members)) {
+			return false;
+		} else {
+			return operator< //clang-format 5.0 bug
+				<index + 1>(lhs, rhs);
+		}
+	}
+	return false;
 }
 
 #endif // TOOL_H
