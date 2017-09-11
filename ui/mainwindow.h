@@ -19,6 +19,7 @@ class MainWindow : public QMainWindow {
 	public:
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
+	static Edit_window *get_current_edit_window();
 
 	protected slots:
 	void on_actionOpen_File_triggered();

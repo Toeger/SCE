@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "edit_window.h"
 #include "logic/settings.h"
+#include "logic/tool_actions.h"
 #include "tool_editor_widget.h"
 #include "ui_mainwindow.h"
 
@@ -10,15 +11,23 @@
 #include <QFontDialog>
 #include <QFontMetrics>
 
+static MainWindow *main_window{};
+
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
 	, ui{std::make_unique<Ui::MainWindow>()} {
+	main_window = this;
 	ui->setupUi(this);
 	load_last_files();
+	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
 }
 
 MainWindow::~MainWindow() { //required for destructors of otherwise incomplete type Ui::MainWindow
 	save_last_files();
+}
+
+Edit_window *MainWindow::get_current_edit_window() {
+	return dynamic_cast<Edit_window *>(main_window->ui->file_tabs->currentWidget());
 }
 
 void MainWindow::on_actionOpen_File_triggered() {

@@ -23,6 +23,7 @@ QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 SOURCES += \
     logic/settings.cpp \
     logic/tool.cpp \
+    logic/tool_actions.cpp \
     main.cpp \
     tests/test.cpp \
     tests/test_mainwindow.cpp \
@@ -36,6 +37,7 @@ SOURCES += \
 HEADERS += \
     logic/settings.h \
     logic/tool.h \
+    logic/tool_actions.h \
     tests/test.h \
     tests/test_mainwindow.h \
     tests/test_settings.h \
