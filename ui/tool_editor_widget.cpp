@@ -154,6 +154,7 @@ void Tool_editor_widget::fill_output_list(QComboBox *combobox) {
 		{Tool_output_target::paste, tr("Paste into editor")},
 		{Tool_output_target::console, tr("Display in console")},
 		{Tool_output_target::popup, tr("Display in popup window")},
+		{Tool_output_target::replace_document, tr("Replace document")},
 	};
 	for (const auto &dropdown_entry : dropdown_entries) {
 		assert_equal(dropdown_entry.target, &dropdown_entry - dropdown_entries);
