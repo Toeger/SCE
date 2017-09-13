@@ -30,6 +30,11 @@ Edit_window *MainWindow::get_current_edit_window() {
 	return dynamic_cast<Edit_window *>(main_window->ui->file_tabs->currentWidget());
 }
 
+QString MainWindow::get_current_path() {
+	const auto tab_bar = main_window->ui->file_tabs->tabBar();
+	return tab_bar->tabText(tab_bar->currentIndex());
+}
+
 void MainWindow::on_actionOpen_File_triggered() {
 	for (const auto &filename : QFileDialog::getOpenFileNames(this, tr("Select File(s) to open"))) {
 		add_file_tab(filename);

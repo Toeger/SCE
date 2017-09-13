@@ -7,7 +7,7 @@
 
 class QJsonObject;
 
-//A Tool_output_target
+//A Tool_output_target specifies what to do with the output of a Tool
 namespace Tool_output_target {
 	enum Type { ignore, paste, console, popup, replace_document };
 }

@@ -20,6 +20,7 @@ class MainWindow : public QMainWindow {
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
 	static Edit_window *get_current_edit_window();
+	static QString get_current_path();
 
 	protected slots:
 	void on_actionOpen_File_triggered();

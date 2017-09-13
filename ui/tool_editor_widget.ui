@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>639</width>
-    <height>589</height>
+    <width>486</width>
+    <height>379</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Tools Setup</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
@@ -74,16 +74,43 @@
          <item row="0" column="1">
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <widget class="QLineEdit" name="path_lineEdit"/>
+            <widget class="QLineEdit" name="path_lineEdit">
+             <property name="placeholderText">
+              <string>Path to executable</string>
+             </property>
+            </widget>
            </item>
            <item>
             <widget class="QPushButton" name="path_browse_pushButton">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
-              <string>Browse...</string>
+              <string>...</string>
              </property>
             </widget>
            </item>
           </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="working_dir_label">
+           <property name="text">
+            <string>Working Dir</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="working_dir_lineEdit">
+           <property name="placeholderText">
+            <string>Where to run the tool</string>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item row="2" column="0">
           <widget class="QLabel" name="arguments_label">
@@ -93,7 +120,14 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLineEdit" name="arguments_lineEdit"/>
+          <widget class="QLineEdit" name="arguments_lineEdit">
+           <property name="placeholderText">
+            <string>Command line arguments</string>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item row="3" column="0">
           <widget class="QLabel" name="input_label">
@@ -103,7 +137,14 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QLineEdit" name="input_lineEdit"/>
+          <widget class="QLineEdit" name="input_lineEdit">
+           <property name="placeholderText">
+            <string>Standard input</string>
+           </property>
+           <property name="clearButtonEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item row="4" column="0">
           <widget class="QLabel" name="output_label">
@@ -135,15 +176,49 @@
          <item row="6" column="1">
           <widget class="QKeySequenceEdit" name="activation_keySequenceEdit"/>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="working_dir_label">
+         <item row="7" column="0" colspan="2">
+          <widget class="QLabel" name="variables_label">
            <property name="text">
-            <string>Working Dir</string>
+            <string>Variables</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="working_dir_lineEdit"/>
+         <item row="8" column="0">
+          <widget class="QLabel" name="current_file_path_placeholder_label">
+           <property name="text">
+            <string>$FilePath</string>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLabel" name="current_file_path_explanation_label">
+           <property name="text">
+            <string>Full path to current file</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="current_file_path_placeholder_label_2">
+           <property name="text">
+            <string>$Selection</string>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLabel" name="current_file_path_explanation_label_2">
+           <property name="text">
+            <string>Currently selected text</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
