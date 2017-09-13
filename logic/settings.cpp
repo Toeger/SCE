@@ -10,9 +10,7 @@ Settings::Keeper::Keeper() {
 	keys = settings.allKeys();
 	std::sort(std::begin(keys), std::end(keys));
 	values.reserve(keys.size());
-	for (const auto &key : keys) {
-		values.push_back(settings.value(key));
-	}
+	std::transform(std::begin(keys), std::end(keys), std::back_inserter(values), [&settings](const auto &key) { return settings.value(key); });
 }
 
 Settings::Keeper::~Keeper() {

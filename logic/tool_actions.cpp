@@ -7,6 +7,7 @@
 #include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProcess>
+#include <algorithm>
 #include <cassert>
 #include <memory>
 
@@ -69,7 +70,7 @@ static QString resolve_placeholders(QString string) {
 }
 
 static QStringList create_arguments_list(const QString &args_string) {
-	//TODO: Warn about unbalanced parenthesis
+	//TODO: Warn about unbalanced quotation marks
 	QStringList arguments{""};
 	for (auto &args : args_string.split(' ')) {
 		if (args.isEmpty()) {
@@ -105,14 +106,14 @@ static void run_action(const Tool &tool) {
 }
 
 void Tool_actions::set_actions(const std::vector<Tool> &tools) {
-	actions.clear(); //disconnects all connections
-	for (const auto &tool : tools) {
-		actions.push_back(std::make_unique<QAction>());
-		auto &action = *actions.back();
-		action.setShortcut(tool.activation);
-		QObject::connect(&action, &QAction::triggered, [tool] { run_action(tool); });
+	actions.resize(tools.size());
+	std::transform(std::begin(tools), std::end(tools), std::begin(actions), [](const Tool &tool) {
+		auto action = std::make_unique<QAction>();
+		action->setShortcut(tool.activation);
+		QObject::connect(action.get(), &QAction::triggered, [tool] { run_action(tool); });
 		for (auto &widget : widgets) {
-			widget->addAction(&action);
+			widget->addAction(action.get());
 		}
-	}
+		return action;
+	});
 }

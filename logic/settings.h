@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QStringList>
 #include <QVariant>
+#include <algorithm>
 #include <array>
 #include <tuple>
 #include <vector>
@@ -54,10 +55,11 @@ namespace Settings {
 		} else if constexpr (std::is_same_v<Return_type, QString>) {
 			return QSettings{}.value(Key_names[key], default_value).toString();
 		} else if constexpr (std::is_same_v<Return_type, std::vector<Tool>>) {
+			const auto stringlist = QSettings{}.value(Key_names[key], default_value).toStringList();
 			std::vector<Tool> retval;
-			for (const auto &tool_string : QSettings{}.value(Key_names[key], default_value).toStringList()) {
-				retval.push_back(Tool::from_string(tool_string));
-			}
+			retval.reserve(stringlist.size());
+			std::transform(std::begin(stringlist), std::end(stringlist), std::back_inserter(retval),
+						   [](const QString &string) { return Tool::from_string(string); });
 			return retval;
 		}
 	}
