@@ -1,0 +1,6 @@
+#list of libraries expected to leak
+leak:libdbus-1.so
+leak:libQt5DBus.so
+leak:libfontconfig.so
+leak:libQt5Core.so
+leak:libQt5Gui.so

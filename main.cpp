@@ -6,7 +6,7 @@
 #include <cassert>
 
 int main(int argc, char *argv[]) {
-	QApplication a(argc, argv);
+	QApplication a{argc, argv};
 	assert((test(), true)); //don't run tests in debug mode
 	if (argc == 2 && std::strcmp(argv[1], "test") == 0) {
 		return 0;

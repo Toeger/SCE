@@ -19,6 +19,8 @@ TEMPLATE = app
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
 QMAKE_CXXFLAGS += -Wno-missing-braces
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
+QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
+QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 
 SOURCES += \
     logic/settings.cpp \
@@ -53,3 +55,6 @@ FORMS += \
 
 OTHER_FILES += \
     .travis.yml
+
+DISTFILES += \
+    lsan.supp

@@ -27,6 +27,8 @@ before_script:
     - source /opt/qt59/bin/qt59-env.sh
     # gcc 7
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    # ignore Qt's memory leaks
+    - export LSAN_OPTIONS=suppressions=lsan.supp
     # print versions
     - qmake --version
     - g++ --version
