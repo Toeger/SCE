@@ -6,7 +6,6 @@
 
 #include <QAction>
 #include <QMessageBox>
-#include <QProcess>
 #include <memory>
 
 Edit_window::Edit_window()

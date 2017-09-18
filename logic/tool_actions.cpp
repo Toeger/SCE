@@ -1,13 +1,10 @@
 #include "tool_actions.h"
-#include "tool.h"
+#include "logic/process_reader.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
 
 #include <QAction>
 #include <QMessageBox>
-#include <QPlainTextEdit>
-#include <QProcess>
-#include <algorithm>
 #include <cassert>
 #include <memory>
 
@@ -51,58 +48,10 @@ static void show_output(const QString &output, Tool_output_target::Type output_t
 	}
 }
 
-static QString resolve_placeholders(QString string) {
-	const auto edit_window = MainWindow::get_current_edit_window();
-	if (edit_window == nullptr) {
-		return string;
-	}
-	struct Placeholder_value {
-		QString placeholder;
-		QString value;
-	} const placeholder_values[] = {
-		{"$FilePath", MainWindow::get_current_path()},                                    //
-		{"$Selection", edit_window->textCursor().selectedText().replace("\u2029", "\n")}, //
-	};
-	for (const auto &placeholder_value : placeholder_values) {
-		string.replace(placeholder_value.placeholder, placeholder_value.value);
-	}
-	return string;
-}
-
-static QStringList create_arguments_list(const QString &args_string) {
-	//TODO: Warn about unbalanced quotation marks
-	QStringList arguments{""};
-	for (auto &args : args_string.split(' ')) {
-		if (args.isEmpty()) {
-			continue;
-		}
-		if (arguments.last().startsWith('"') && arguments.last().endsWith('"') == false) {
-			arguments.last().push_back(' ');
-			arguments.last() += args;
-		} else {
-			arguments << args;
-		}
-	}
-	arguments.pop_front();
-	return arguments;
-}
-
 static void run_action(const Tool &tool) {
-	QProcess process;
-	process.setWorkingDirectory(tool.working_directory);
-	process.start(tool.path, create_arguments_list(resolve_placeholders(tool.arguments)));
-	const auto selection = resolve_placeholders(tool.input).toUtf8();
-	const auto bytes_written = process.write(selection);
-	assert(selection.size() == bytes_written);
-	process.closeWriteChannel();
-	if (process.waitForFinished(3000)) { //TODO: Make this timeout a tools' argument.
-		const auto output = process.readAllStandardOutput();
-		show_output(output, tool.output, tool.get_name(), false, MainWindow::get_current_edit_window());
-		const auto error = process.readAllStandardError();
-		show_output(error, tool.error, tool.get_name(), true, MainWindow::get_current_edit_window());
-	} else {
-		assert(false); //TODO: handle timeouts
-	}
+	Process_reader p{tool};
+	show_output(p.get_output(), tool.output, tool.get_name(), false, MainWindow::get_current_edit_window());
+	show_output(p.get_error(), tool.error, tool.get_name(), true, MainWindow::get_current_edit_window());
 }
 
 void Tool_actions::set_actions(const std::vector<Tool> &tools) {

@@ -23,6 +23,7 @@ QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
 QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 
 SOURCES += \
+    logic/process_reader.cpp \
     logic/settings.cpp \
     logic/syntax_highligher.cpp \
     logic/tool.cpp \
@@ -38,6 +39,7 @@ SOURCES += \
     ui/tool_editor_widget.cpp
 
 HEADERS += \
+    logic/process_reader.h \
     logic/settings.h \
     logic/syntax_highligher.h \
     logic/tool.h \
