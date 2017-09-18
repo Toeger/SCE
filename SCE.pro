@@ -24,6 +24,7 @@ QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 
 SOURCES += \
     logic/settings.cpp \
+    logic/syntax_highligher.cpp \
     logic/tool.cpp \
     logic/tool_actions.cpp \
     main.cpp \
@@ -38,6 +39,7 @@ SOURCES += \
 
 HEADERS += \
     logic/settings.h \
+    logic/syntax_highligher.h \
     logic/tool.h \
     logic/tool_actions.h \
     tests/test.h \

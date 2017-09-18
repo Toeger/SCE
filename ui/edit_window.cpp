@@ -1,5 +1,6 @@
 #include "edit_window.h"
 #include "logic/settings.h"
+#include "logic/syntax_highligher.h"
 #include "logic/tool.h"
 #include "logic/tool_actions.h"
 
@@ -8,7 +9,8 @@
 #include <QProcess>
 #include <memory>
 
-Edit_window::Edit_window() {
+Edit_window::Edit_window()
+	: syntax_highlighter{std::make_unique<Syntax_highligher>(document())} {
 	Tool_actions::add_widget(this);
 }
 

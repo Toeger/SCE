@@ -8,6 +8,7 @@
 #include <vector>
 
 class QAction;
+class QSyntaxHighlighter;
 
 //Widget for code editing
 class Edit_window : public QPlainTextEdit {
@@ -22,6 +23,7 @@ class Edit_window : public QPlainTextEdit {
 
 	int zoom_remainder{};
 	std::vector<std::unique_ptr<QAction>> actions;
+	std::unique_ptr<QSyntaxHighlighter> syntax_highlighter;
 };
 
 #endif // EDIT_WINDOW_H
