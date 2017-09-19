@@ -35,6 +35,10 @@ QString MainWindow::get_current_path() {
 	return tab_bar->tabText(tab_bar->currentIndex());
 }
 
+MainWindow *MainWindow::get_main_window() {
+	return main_window;
+}
+
 void MainWindow::on_actionOpen_File_triggered() {
 	for (const auto &filename : QFileDialog::getOpenFileNames(this, tr("Select File(s) to open"))) {
 		add_file_tab(filename);

@@ -6,7 +6,6 @@
 #include <QProcess>
 #include <cassert>
 #include <initializer_list>
-#include <iostream>
 
 #ifdef __linux
 #include <pty.h>
@@ -179,11 +178,16 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 			}
 		}
 	} else if (selected == 0) { //timeout occured
-								//TODO: handle timeout
-		//error += QObject::tr("Timeout occured while executing %1").arg(tool.path);
+								//TODO: handle timeout properly
+		for (auto &read_pipe : read_pipes) {
+			read_pipe.first->close_read_channel();
+		}
+		for (auto &write_pipe : write_pipes) {
+			write_pipe.first->close_write_channel();
+		}
 		return;
 	} else { //error occured
-		//throw std::runtime_error("Select failed");
+		throw std::runtime_error("Select failed");
 		return;
 	}
 }
@@ -263,6 +267,7 @@ Process_reader::Process_reader(const Tool &tool) {
 			   "au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*"
 			   ".opus=00;36:*.spx=00;36:*.xspf=00;36:",
 			   true);
+		setenv("TERM", "xterm-256color", true);
 		execvp(tool.path.toStdString().c_str(), char_p_arguments.data());
 		perror("failed to execute command");
 		exit(0);
@@ -345,7 +350,7 @@ static void process_control_sequence_text(std::string_view text, Control_sequenc
 					control_sequence_size++;
 				}
 				control_sequence_size++; //control_sequence_finisher is part of the escape sequence
-				control_sequence_callback(text.substr(2, control_sequence_size - 2));
+				control_sequence_callback(text.substr(2, control_sequence_size - 3));
 				text.remove_prefix(control_sequence_size);
 			} else { //got a single character escape sequence?
 				assert(!"TODO");
@@ -354,11 +359,14 @@ static void process_control_sequence_text(std::string_view text, Control_sequenc
 	}
 }
 
-static void set_format(QTextCharFormat &format, char ansi_code) {
+static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
+	if (ansi_code.empty()) {
+		return;
+	}
 	const auto default_foreground_color = Qt::black;
 	const auto default_background_color = Qt::white;
 	//source: https://en.wikipedia.org/wiki/ANSI_escape_code SGR (Select Graphic Rendition) parameters
-	switch (ansi_code) {
+	switch (ansi_code.front()) {
 		case 0: //reset to normal
 			format.setFontItalic(false);
 			format.setFontOverline(false);
@@ -523,7 +531,52 @@ static void set_format(QTextCharFormat &format, char ansi_code) {
 			format.setForeground(Qt::white);
 			break;
 		case 48: //Reserved for extended set background color
-			//TODO: RGB support
+			/*
+			 * I can't find documentation for this. If there is an undefined color used try something like printf '\033[\060\061;\063\071mTest' in the
+			 * shell to figure out what color it is
+			 */
+			if (ansi_code.size() == 1) { //clear color
+				format.setForeground(default_foreground_color);
+				format.setBackground(default_background_color);
+			} else {                                         //set color
+				if (ansi_code.substr(1, 3) == "\061;\063") { //I don't know what that sequence means, but it makes colors in zsh
+					switch (ansi_code[4]) {
+						case 48: //gray
+							format.setForeground(Qt::gray);
+							break;
+						case 49: //red
+							format.setForeground(Qt::red);
+							break;
+						case 50: //green
+							format.setForeground(Qt::green);
+							break;
+						case 51: //yellow
+							format.setForeground(Qt::yellow);
+							break;
+						case 52: //blue
+							format.setForeground(Qt::blue);
+							break;
+						case 53: //magenta
+							format.setForeground(Qt::magenta);
+							break;
+						case 54: //cyan
+							format.setForeground(Qt::cyan);
+							break;
+						case 55: //white
+							format.setForeground(Qt::white);
+							break;
+						case 56: //black
+							format.setForeground(Qt::black);
+							break;
+						default:
+							//something else
+							assert(!"unsupported color");
+							break;
+					}
+				} else {
+					assert(!"unsupported color code");
+				}
+			}
 			break;
 		case 49: //Default background color
 			format.setBackground(default_background_color);
@@ -580,20 +633,12 @@ void Process_reader::set_text(QPlainTextEdit *text_edit, std::string_view text) 
 	process_control_sequence_text(text,
 								  [text_edit](std::string_view escape_sequence) {
 									  QTextCharFormat format;
-									  std::cout << "Control Sequence: ";
-									  for (const auto &c : escape_sequence) {
-										  std::cout << static_cast<int>(c) << ' ';
-										  set_format(format, c);
-									  }
-									  std::cout << '\n';
-									  std::cout << "\033[" << escape_sequence;
-									  text_edit->textCursor().setCharFormat(format);
+									  set_format(format, escape_sequence);
+									  auto cursor = text_edit->textCursor();
+									  cursor.setCharFormat(format);
+									  text_edit->setTextCursor(cursor);
 								  },
-								  [text_edit](auto plaintext) {
-									  std::cout << plaintext;
-									  text_edit->textCursor().insertText(QString::fromUtf8(plaintext.data(), plaintext.size()));
-								  });
-	std::cout << std::flush;
+								  [text_edit](auto plaintext) { text_edit->textCursor().insertText(QString::fromUtf8(plaintext.data(), plaintext.size())); });
 }
 
 QString Process_reader::strip_control_sequences_text(std::string_view text) {

@@ -1,10 +1,11 @@
 #include "tool_actions.h"
-#include "logic/process_reader.h"
+#include "process_reader.h"
+#include "settings.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
 
 #include <QAction>
-#include <QMessageBox>
+#include <QPlainTextEdit>
 #include <cassert>
 #include <memory>
 
@@ -27,18 +28,30 @@ void Tool_actions::remove_widget(QWidget *widget) {
 	widgets.erase(pos);
 }
 
-static void show_output(const std::string &output, Tool_output_target::Type output_target, const QString &title, bool is_error,
-						Edit_window *current_edit_window) {
+static void show_output(std::string_view output, Tool_output_target::Type output_target, const QString &title, bool is_error) {
 	switch (output_target) {
 		case Tool_output_target::ignore:
 			break;
-		case Tool_output_target::popup:
-			if (is_error) {
-				QMessageBox::critical(current_edit_window, title, Process_reader::strip_control_sequences_text(output));
-			} else {
-				QMessageBox::information(current_edit_window, title, Process_reader::strip_control_sequences_text(output));
-			}
+		case Tool_output_target::popup: {
+			auto edit = new QPlainTextEdit(MainWindow::get_main_window());
+			/* Note: in theory the mainwindow owns the edit window and cleans up resources when it is closed.
+			 * In practice if you close the mainwindow before the edit window this actually works.
+			 * If you close the edit window first, however, LeakSanitizer reports 64 bytes leaked in 2 objects.
+			 * I don't want to and probably can't fix Qt, so I'll just accept it as the price one has to pay for Qt.
+			 */
+			edit->setWindowFlag(Qt::WindowType::Window);
+			edit->setWindowTitle((is_error ? "Error: " : "Output: ") + title);
+			edit->setReadOnly(true);
+			edit->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);
+			edit->setFont(Settings::get<Settings::Key::font>());
+			Process_reader::set_text(edit, output);
+			auto cursor = edit->textCursor();
+			cursor.movePosition(QTextCursor::Start);
+			edit->setTextCursor(cursor);
+			edit->resize(MainWindow::get_current_edit_window()->size()); //TODO: make the edit window exactly as big as it needs to be
+			edit->show();
 			break;
+		} break;
 		case Tool_output_target::paste:
 			MainWindow::get_current_edit_window()->insertPlainText(Process_reader::strip_control_sequences_text(output));
 			break;
@@ -51,8 +64,8 @@ static void show_output(const std::string &output, Tool_output_target::Type outp
 
 static void run_action(const Tool &tool) {
 	Process_reader p{tool};
-	show_output(p.get_output(), tool.output, tool.get_name(), false, MainWindow::get_current_edit_window());
-	show_output(p.get_error(), tool.error, tool.get_name(), true, MainWindow::get_current_edit_window());
+	show_output(p.get_output(), tool.output, tool.get_name(), false);
+	show_output(p.get_error(), tool.error, tool.get_name(), true);
 }
 
 void Tool_actions::set_actions(const std::vector<Tool> &tools) {
