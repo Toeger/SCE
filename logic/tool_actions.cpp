@@ -27,22 +27,23 @@ void Tool_actions::remove_widget(QWidget *widget) {
 	widgets.erase(pos);
 }
 
-static void show_output(const QString &output, Tool_output_target::Type output_target, const QString &title, bool is_error, Edit_window *current_edit_window) {
+static void show_output(const std::string &output, Tool_output_target::Type output_target, const QString &title, bool is_error,
+						Edit_window *current_edit_window) {
 	switch (output_target) {
 		case Tool_output_target::ignore:
 			break;
 		case Tool_output_target::popup:
 			if (is_error) {
-				QMessageBox::critical(current_edit_window, title, output);
+				QMessageBox::critical(current_edit_window, title, Process_reader::strip_control_sequences_text(output));
 			} else {
-				QMessageBox::information(current_edit_window, title, output);
+				QMessageBox::information(current_edit_window, title, Process_reader::strip_control_sequences_text(output));
 			}
 			break;
 		case Tool_output_target::paste:
-			MainWindow::get_current_edit_window()->insertPlainText(output);
+			MainWindow::get_current_edit_window()->insertPlainText(Process_reader::strip_control_sequences_text(output));
 			break;
 		case Tool_output_target::replace_document:
-			MainWindow::get_current_edit_window()->setPlainText(output);
+			Process_reader::set_text(MainWindow::get_current_edit_window(), output);
 			break;
 			//TODO: handle other cases
 	}

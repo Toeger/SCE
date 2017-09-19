@@ -4,22 +4,24 @@
 #include "tool.h"
 
 #include <QProcess>
-#include <QString>
-#include <chrono>
-#include <string_view>
-#include <vector>
+#include <string>
+
+class QPlainTextEdit;
+class QString;
 
 class Process_reader {
 	public:
 	Process_reader(const Tool &tool);
 	bool has_finished() const;
-	const QString &get_output() const;
-	const QString &get_error() const;
+	const std::string &get_output() const;
+	const std::string &get_error() const;
 	void cancel();
+	static void set_text(QPlainTextEdit *text_edit, std::string_view text);
+	static QString strip_control_sequences_text(std::string_view text);
 
 	private:
-	QString output;
-	QString error;
+	std::string output;
+	std::string error;
 	QProcess process;
 };
 
