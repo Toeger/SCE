@@ -21,6 +21,7 @@ QMAKE_CXXFLAGS += -Wno-missing-braces
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
 QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
+unix: LIBS += -lutil
 
 SOURCES += \
     logic/process_reader.cpp \
