@@ -9,6 +9,10 @@
 class QPlainTextEdit;
 class QString;
 
+namespace detail {
+	QStringList create_arguments_list(const QString &args_string);
+}
+
 class Process_reader {
 	public:
 	Process_reader(const Tool &tool);

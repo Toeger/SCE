@@ -29,6 +29,9 @@ void Tool_actions::remove_widget(QWidget *widget) {
 }
 
 static void show_output(std::string_view output, Tool_output_target::Type output_target, const QString &title, bool is_error) {
+	if (output.empty()) {
+		return;
+	}
 	switch (output_target) {
 		case Tool_output_target::ignore:
 			break;
@@ -43,7 +46,7 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 			edit->setWindowTitle((is_error ? "Error: " : "Output: ") + title);
 			edit->setReadOnly(true);
 			edit->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);
-			edit->setFont(Settings::get<Settings::Key::font>());
+			edit->setFont(Settings::get<Settings::Key::font>("console"));
 			Process_reader::set_text(edit, output);
 			auto cursor = edit->textCursor();
 			cursor.movePosition(QTextCursor::Start);

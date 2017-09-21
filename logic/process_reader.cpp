@@ -30,18 +30,22 @@ static QString resolve_placeholders(QString string) {
 	return string;
 }
 
-static QStringList create_arguments_list(const QString &args_string) {
+QStringList detail::create_arguments_list(const QString &args_string) {
 	//TODO: Warn about unbalanced quotation marks
 	QStringList arguments{""};
 	for (auto &args : args_string.split(' ')) {
 		if (args.isEmpty()) {
 			continue;
 		}
-		if (arguments.last().startsWith('"') && arguments.last().endsWith('"') == false) {
+		if (arguments.last().startsWith('"')) {
 			arguments.last().push_back(' ');
 			arguments.last() += args;
 		} else {
 			arguments << args;
+		}
+		if (arguments.last().endsWith('"')) {
+			arguments.last().chop(1);
+			arguments.last().remove(0, 1);
 		}
 	}
 	arguments.pop_front();
@@ -192,9 +196,7 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 	}
 }
 
-Process_reader::Process_reader(const Tool &tool) {
-#ifdef __linux
-	int master;
+static termios get_termios_settings() {
 	termios terminal_settings{};
 	terminal_settings.c_iflag = ICRNL | IXOFF | IXON | IUTF8;
 	terminal_settings.c_oflag = OPOST | ONLCR;
@@ -221,16 +223,36 @@ Process_reader::Process_reader(const Tool &tool) {
 	terminal_settings.c_line = 0;
 	terminal_settings.c_ospeed = B38400;
 
-	winsize size{};
-	size.ws_row = 160;
-	size.ws_col = 80;
-	size.ws_xpixel = 160 * 8;
-	size.ws_ypixel = 80 * 10;
+	return terminal_settings;
+}
+
+static void set_environment() {
+	setenv("LS_COLORS",
+		   "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st="
+		   "37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.la=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:"
+		   "*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;"
+		   "31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*"
+		   ".alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*"
+		   ".bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*."
+		   "mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*."
+		   "vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl="
+		   "01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;"
+		   "36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:",
+		   true);
+	setenv("TERM", "xterm-256color", true);
+	setenv("COLORTERM", "truecolor", true);
+}
+
+Process_reader::Process_reader(const Tool &tool) {
+#ifdef __linux
+	termios terminal_settings = get_termios_settings();
+	winsize size{.ws_row = 160, .ws_col = 80, .ws_xpixel = 160 * 8, .ws_ypixel = 80 * 10};
 
 	Pipe standard_input;
 	Pipe standard_output;
 	Pipe standard_error;
 
+	int master;
 	int child = forkpty(&master, nullptr, &terminal_settings, &size);
 	if (child == -1) {
 		error = QObject::tr("Executing program %1 failed with error code %2.").arg(tool.path, QString::number(errno)).toStdString();
@@ -244,33 +266,27 @@ Process_reader::Process_reader(const Tool &tool) {
 		standard_error.set_standard_error();
 
 		chdir(tool.working_directory.toStdString().c_str());
-		auto qlist_arguments = create_arguments_list(resolve_placeholders(tool.arguments));
+		auto qlist_arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
 		qlist_arguments.push_front(tool.path);
 		std::vector<std::string> string_arguments;
 		string_arguments.reserve(qlist_arguments.size());
 		std::transform(std::begin(qlist_arguments), std::end(qlist_arguments), std::back_inserter(string_arguments),
 					   [](const QString &arg) { return arg.toStdString(); });
 		std::vector<char *> char_p_arguments;
-		char_p_arguments.reserve(qlist_arguments.size());
+		char_p_arguments.reserve(qlist_arguments.size() + 1);
 		std::transform(std::begin(string_arguments), std::end(string_arguments), std::back_inserter(char_p_arguments),
 					   [](std::string &arg) { return arg.data(); });
-		setenv("LS_COLORS",
-			   "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:"
-			   "st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.la=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*."
-			   "txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;"
-			   "31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar="
-			   "01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*."
-			   "mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;"
-			   "35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*."
-			   "mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*"
-			   ".fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*."
-			   "au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*"
-			   ".opus=00;36:*.spx=00;36:*.xspf=00;36:",
-			   true);
-		setenv("TERM", "xterm-256color", true);
+		char_p_arguments.push_back(nullptr);
+		set_environment();
 		execvp(tool.path.toStdString().c_str(), char_p_arguments.data());
-		perror("failed to execute command");
-		exit(0);
+		QString args_string{'"'};
+		for (const auto &arg : char_p_arguments) {
+			args_string += arg;
+			args_string += R"(", ")";
+		}
+		args_string.chop(3);
+		perror(QObject::tr("failed to execute command %1 %2, error %3").arg(tool.path, tool.arguments, QString::number(errno)).toStdString().c_str());
+		exit(-1);
 	}
 
 	//in parent

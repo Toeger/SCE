@@ -32,6 +32,7 @@ SOURCES += \
     main.cpp \
     tests/test.cpp \
     tests/test_mainwindow.cpp \
+    tests/test_process_reader.cpp \
     tests/test_settings.cpp \
     tests/test_tool.cpp \
     tests/test_tool_editor_widget.cpp \
@@ -47,6 +48,7 @@ HEADERS += \
     logic/tool_actions.h \
     tests/test.h \
     tests/test_mainwindow.h \
+    tests/test_process_reader.h \
     tests/test_settings.h \
     tests/test_tool.h \
     tests/test_tool_editor_widget.h \
