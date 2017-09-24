@@ -8,6 +8,7 @@
 #include <initializer_list>
 
 #ifdef __linux
+#include "utility/unique_handle.hpp"
 #include <pty.h>
 #include <unistd.h>
 #endif
@@ -52,40 +53,50 @@ QStringList detail::create_arguments_list(const QString &args_string) {
 	return arguments;
 }
 
-struct Pipe {
-	Pipe() {
-		if (pipe(file_descriptors) != 0) {
-			throw std::runtime_error("Failed creating pipe");
+struct File_descriptor_policy {
+	using Handle_type = int;
+
+	constexpr static auto invalid_file_descriptor = -1;
+
+	constexpr static Handle_type get_null() {
+		return invalid_file_descriptor;
+	}
+
+	constexpr static bool is_null(int file_descriptor) {
+		return file_descriptor == invalid_file_descriptor;
+	}
+
+	static void close(int file_descriptor) {
+		if (::close(file_descriptor) != 0) {
+			throw std::runtime_error("Failed to close file descriptor");
 		}
 	}
-	Pipe(Pipe &&other)
-		: file_descriptors{invalid_file_descriptor, invalid_file_descriptor} {
-		std::swap(file_descriptors, other.file_descriptors);
+};
+
+struct Pipe {
+	Pipe() {
+		std::array<int, 2> file_descriptors;
+		if (pipe(file_descriptors.data()) != 0) {
+			throw std::runtime_error("Failed creating pipe");
+		}
+		read_channel = file_descriptors[0];
+		write_channel = file_descriptors[1];
 	}
-	Pipe(const Pipe &other) = delete;
-	~Pipe() {
-		close_read_channel();
-		close_write_channel();
-	}
-	Pipe &operator=(Pipe &&other) {
-		std::swap(file_descriptors, other.file_descriptors);
-		return *this;
-	}
-	Pipe &operator=(const Pipe &other) = delete;
 
 	void close_read_channel() {
-		close(read_channel());
+		read_channel.reset();
 	}
+
 	void close_write_channel() {
-		close(write_channel());
+		write_channel.reset();
 	}
 	bool is_open() const {
-		return read_channel() != invalid_file_descriptor || write_channel() != invalid_file_descriptor;
+		return read_channel || write_channel;
 	}
 
 	void write(std::string_view &s) {
-		assert(write_channel() != invalid_file_descriptor);
-		const auto written = ::write(write_channel(), s.data(), s.size());
+		assert(write_channel);
+		const auto written = ::write(write_channel.get(), s.data(), s.size());
 		if (written == -1) {
 			close_write_channel();
 			return;
@@ -94,7 +105,7 @@ struct Pipe {
 	}
 	std::string read() {
 		char buffer[chunk_size];
-		const auto bytes_read = ::read(read_channel(), buffer, chunk_size);
+		const auto bytes_read = ::read(read_channel.get(), buffer, chunk_size);
 		if (bytes_read <= 0) {
 			close_read_channel();
 		}
@@ -102,47 +113,33 @@ struct Pipe {
 	}
 
 	void set_standard_input() {
-		if (dup2(read_channel(), STDIN_FILENO) != STDIN_FILENO) {
+		if (dup2(read_channel.get(), STDIN_FILENO) != STDIN_FILENO) {
 			throw std::runtime_error("Failed setting standard input");
 		}
 	}
 	void set_standard_output() {
-		if (dup2(write_channel(), STDOUT_FILENO) != STDOUT_FILENO) {
+		if (dup2(write_channel.get(), STDOUT_FILENO) != STDOUT_FILENO) {
 			throw std::runtime_error("Failed setting standard output");
 		}
 	}
 	void set_standard_error() {
-		if (dup2(write_channel(), STDERR_FILENO) != STDERR_FILENO) {
+		if (dup2(write_channel.get(), STDERR_FILENO) != STDERR_FILENO) {
 			throw std::runtime_error("Failed setting standard error");
 		}
 	}
 
-	int &read_channel() {
-		return file_descriptors[0];
+	int get_read_channel() {
+		return read_channel.get();
 	}
-	int &write_channel() {
-		return file_descriptors[1];
-	}
-	int read_channel() const {
-		return file_descriptors[0];
-	}
-	int write_channel() const {
-		return file_descriptors[1];
+	int get_write_channel() {
+		return write_channel.get();
 	}
 
 	private:
 	constexpr static auto chunk_size = 1024;
-	constexpr static auto invalid_file_descriptor = -1;
-	void close(int &file_descriptor) {
-		if (file_descriptor != invalid_file_descriptor) {
-			if (::close(file_descriptor) != 0) {
-				throw std::runtime_error("Failed to close file descriptor");
-			}
-			file_descriptor = invalid_file_descriptor;
-		}
-	}
 
-	int file_descriptors[2];
+	Utility::Unique_handle<File_descriptor_policy> read_channel;
+	Utility::Unique_handle<File_descriptor_policy> write_channel;
 };
 
 static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pipes, std::vector<std::pair<Pipe *, std::string *>> &read_pipes,
@@ -152,8 +149,8 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 	int max_file_descriptor = 0;
 	for (auto it = std::begin(write_pipes); it != std::end(write_pipes);) {
 		if (it->first->is_open()) {
-			FD_SET(it->first->write_channel(), &write_file_descriptors);
-			max_file_descriptor = std::max(max_file_descriptor, it->first->write_channel());
+			FD_SET(it->first->get_write_channel(), &write_file_descriptors);
+			max_file_descriptor = std::max(max_file_descriptor, it->first->get_write_channel());
 			++it;
 		} else {
 			it = write_pipes.erase(it);
@@ -161,8 +158,8 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 	}
 	for (auto it = std::begin(read_pipes); it != std::end(read_pipes);) {
 		if (it->first->is_open()) {
-			FD_SET(it->first->read_channel(), &read_file_descriptors);
-			max_file_descriptor = std::max(max_file_descriptor, it->first->read_channel());
+			FD_SET(it->first->get_read_channel(), &read_file_descriptors);
+			max_file_descriptor = std::max(max_file_descriptor, it->first->get_read_channel());
 			++it;
 		} else {
 			it = read_pipes.erase(it);
@@ -172,12 +169,12 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 
 	if (selected > 0) {
 		for (auto &read_pipe : read_pipes) {
-			if (FD_ISSET(read_pipe.first->read_channel(), &read_file_descriptors)) {
+			if (FD_ISSET(read_pipe.first->get_read_channel(), &read_file_descriptors)) {
 				*read_pipe.second += read_pipe.first->read();
 			}
 		}
 		for (auto &write_pipe : write_pipes) {
-			if (FD_ISSET(write_pipe.first->write_channel(), &write_file_descriptors)) {
+			if (FD_ISSET(write_pipe.first->get_write_channel(), &write_file_descriptors)) {
 				write_pipe.first->write(*write_pipe.second);
 			}
 		}
