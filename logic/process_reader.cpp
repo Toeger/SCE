@@ -9,7 +9,10 @@
 
 #ifdef __linux
 #include "utility/unique_handle.hpp"
+#include <QMessageBox>
+#include <fcntl.h>
 #include <pty.h>
+#include <signal.h>
 #include <unistd.h>
 #endif
 
@@ -94,15 +97,26 @@ struct Pipe {
 		return read_channel || write_channel;
 	}
 
-	void write(std::string_view &s) {
+	void write(std::string_view s) {
 		assert(write_channel);
-		const auto written = ::write(write_channel.get(), s.data(), s.size());
-		if (written == -1) {
-			close_write_channel();
-			return;
+		while (s.size()) {
+			const auto written = ::write(write_channel.get(), s.data(), s.size());
+			if (written == -1) {
+				close_write_channel();
+				return;
+			}
+			s.remove_prefix(written);
 		}
-		s.remove_prefix(written);
 	}
+
+	void set_close_on_exec() {
+		for (auto &channel : {&read_channel, &write_channel}) {
+			if (*channel) {
+				fcntl(channel->get(), F_SETFD, FD_CLOEXEC);
+			}
+		}
+	}
+
 	std::string read() {
 		char buffer[chunk_size];
 		const auto bytes_read = ::read(read_channel.get(), buffer, chunk_size);
@@ -240,19 +254,28 @@ static void set_environment() {
 	setenv("COLORTERM", "truecolor", true);
 }
 
+#ifdef __linux
+static void broken_pipe_signal_handler(int) {
+	//don't do anything in the handler, it just exists so the program doesn't get killed when reading or writing a pipe fails and instead receives an error code
+}
+#endif
+
 Process_reader::Process_reader(const Tool &tool) {
 #ifdef __linux
+	signal(SIGPIPE, &broken_pipe_signal_handler);
 	termios terminal_settings = get_termios_settings();
 	winsize size{.ws_row = 160, .ws_col = 80, .ws_xpixel = 160 * 8, .ws_ypixel = 80 * 10};
 
 	Pipe standard_input;
 	Pipe standard_output;
 	Pipe standard_error;
+	Pipe exec_fail;
 
 	int master;
 	int child = forkpty(&master, nullptr, &terminal_settings, &size);
 	if (child == -1) {
 		error = QObject::tr("Executing program %1 failed with error code %2.").arg(tool.path, QString::number(errno)).toStdString();
+		return;
 	}
 	if (child == 0) { //in child
 		standard_input.close_write_channel();
@@ -261,6 +284,8 @@ Process_reader::Process_reader(const Tool &tool) {
 		standard_input.set_standard_input();
 		standard_output.set_standard_output();
 		standard_error.set_standard_error();
+		exec_fail.close_read_channel();
+		exec_fail.set_close_on_exec();
 
 		chdir(tool.working_directory.toStdString().c_str());
 		auto qlist_arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
@@ -282,7 +307,7 @@ Process_reader::Process_reader(const Tool &tool) {
 			args_string += R"(", ")";
 		}
 		args_string.chop(3);
-		perror(QObject::tr("failed to execute command %1 %2, error %3").arg(tool.path, tool.arguments, QString::number(errno)).toStdString().c_str());
+		exec_fail.write(QObject::tr("failed to execute command %1 %2, error %3").arg(tool.path, tool.arguments, QString::number(errno)).toStdString());
 		exit(-1);
 	}
 
@@ -290,12 +315,25 @@ Process_reader::Process_reader(const Tool &tool) {
 	standard_input.close_read_channel();
 	standard_output.close_write_channel();
 	standard_error.close_write_channel();
+	exec_fail.close_write_channel();
 
 	std::string write_data = resolve_placeholders(tool.input).toStdString();
 	std::string_view write_data_view = write_data;
 
 	timeval timeout{};
 	timeout.tv_sec = 3; //TODO: use timeout from Tool
+
+	{
+		std::string exec_fail_string;
+		while (exec_fail.is_open()) {
+			exec_fail_string += exec_fail.read();
+		}
+		if (exec_fail_string.empty() == false) {
+			QMessageBox::critical(MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
+								  QString::fromStdString(exec_fail_string));
+			return;
+		}
+	}
 
 	std::vector<std::pair<Pipe *, std::string_view *>> write_pipes = {{&standard_input, &write_data_view}};
 	std::vector<std::pair<Pipe *, std::string *>> read_pipes = {{&standard_output, &output}, {&standard_error, &error}};
