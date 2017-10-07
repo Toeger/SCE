@@ -31,12 +31,26 @@ Edit_window *MainWindow::get_current_edit_window() {
 }
 
 QString MainWindow::get_current_path() {
+	if (main_window == nullptr) {
+		return {};
+	}
 	const auto tab_bar = main_window->ui->file_tabs->tabBar();
 	return tab_bar->tabText(tab_bar->currentIndex());
 }
 
 MainWindow *MainWindow::get_main_window() {
 	return main_window;
+}
+
+QString MainWindow::get_current_selection() {
+	if (main_window == nullptr) {
+		return {};
+	}
+	auto edit_window = dynamic_cast<Edit_window *>(main_window->ui->file_tabs->currentWidget());
+	if (edit_window == nullptr) {
+		return {};
+	}
+	return edit_window->textCursor().selectedText().replace("\u2029", "\n");
 }
 
 void MainWindow::on_actionOpen_File_triggered() {

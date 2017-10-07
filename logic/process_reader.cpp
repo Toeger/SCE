@@ -17,16 +17,12 @@
 #endif
 
 static QString resolve_placeholders(QString string) {
-	const auto edit_window = MainWindow::get_current_edit_window();
-	if (edit_window == nullptr) {
-		return string;
-	}
 	struct Placeholder_value {
 		QString placeholder;
 		QString value;
 	} const placeholder_values[] = {
-		{"$FilePath", MainWindow::get_current_path()},                                    //
-		{"$Selection", edit_window->textCursor().selectedText().replace("\u2029", "\n")}, //
+		{"$FilePath", MainWindow::get_current_path()},       //
+		{"$Selection", MainWindow::get_current_selection()}, //
 	};
 	for (const auto &placeholder_value : placeholder_values) {
 		string.replace(placeholder_value.placeholder, placeholder_value.value);

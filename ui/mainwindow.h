@@ -22,6 +22,7 @@ class MainWindow : public QMainWindow {
 	static Edit_window *get_current_edit_window();
 	static QString get_current_path();
 	static MainWindow *get_main_window();
+	static QString get_current_selection();
 
 	protected slots:
 	void on_actionOpen_File_triggered();

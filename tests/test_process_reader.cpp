@@ -30,14 +30,36 @@ void test_args_construction() {
 }
 
 void test_process_reading() {
-	Settings::Keeper keeper;
-	MainWindow mw; //required because tools can read their input from the current content
 	struct Test_cases {
 		Tool tool;
 		std::string_view code;
 		std::string_view expected_output;
 		std::string_view expected_error;
-	} test_cases[] = {{.tool = {}, .code = R"(int main(){})"}};
+	} test_cases[] = {
+		{.tool = {}, .code = R"(int main(){})"},                                                                                                        //
+		{.tool = {}, .code = R"(#include <iostream>
+							 int main(){
+								std::cout << "test";
+							 })", .expected_output = "test"},                                                                        //
+		{.tool = {}, .code = R"(#include <iostream>
+							 int main(){
+								std::cerr << "test";
+							 })", .expected_output = "", .expected_error = "test"},                                                  //
+		{.tool = {}, .code = R"(#include <iostream>
+							 int main(){
+								 std::cout << "multi\nline\ntest\noutput\n";
+								 std::cerr << "multi\nline\ntest\nerror\n";
+							 })", .expected_output = "multi\nline\ntest\noutput\n", .expected_error = "multi\nline\ntest\nerror\n"}, //
+		{.tool = {}, .code = R"(#include <iostream>
+							 #include <thread>
+							 #include <chrono>
+
+							 int main(){
+								 std::cout << "Hello" << std::flush;
+								 std::this_thread::sleep_for(std::chrono::milliseconds{500});
+								 std::cout << "World";
+							 })", .expected_output = "HelloWorld"},                                                                  //
+	};
 
 	for (auto &test_case : test_cases) {
 		const auto cpp_file = "/tmp/SCE_test_process_code.cpp";
