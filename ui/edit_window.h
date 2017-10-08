@@ -17,7 +17,7 @@ class Edit_window : public QPlainTextEdit {
 	Edit_window();
 	~Edit_window();
 
-	protected:
+	private:
 	void wheelEvent(QWheelEvent *we) override;
 	void show_output(const QString &output, Tool_output_target::Type output_target, const QString &title, bool is_error);
 

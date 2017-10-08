@@ -27,7 +27,7 @@ class Tool_editor_widget : public QWidget {
 	void update_current_tool();
 	void update_current_tool_name();
 
-	protected:
+	private:
 	void load_tools_from_settings();
 	void save_tools_to_settings() const;
 	bool need_to_save();
@@ -35,7 +35,7 @@ class Tool_editor_widget : public QWidget {
 	std::vector<Tool> tools;
 	std::unique_ptr<Ui::Tool_editor_widget> ui;
 
-	protected slots:
+	private slots:
 	void on_add_pushButton_clicked();
 	void on_tools_listWidget_currentRowChanged(int currentRow);
 	void on_remove_pushButton_clicked();
@@ -47,6 +47,8 @@ class Tool_editor_widget : public QWidget {
 	void fill_output_list(QComboBox *combobox);
 
 	Ui::Tool_editor_widget *_; //Qt Designer only works correctly if it finds this string
+
+	friend struct Tool_editor_widget_tester;
 };
 
 #endif // TOOL_EDITOR_WIDGET_H

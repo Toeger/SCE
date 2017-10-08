@@ -7,7 +7,7 @@
 #include <QPlainTextEdit>
 #include <QTemporaryFile>
 
-struct MainWindowTester : MainWindow {
+struct MainWindow_tester : MainWindow {
 	void test() {
 		test_add_file_tab();
 	}
@@ -48,5 +48,5 @@ int main(){
 
 void test_mainwindow() {
 	Settings::Keeper keeper;
-	MainWindowTester{}.test();
+	MainWindow_tester{}.test();
 }

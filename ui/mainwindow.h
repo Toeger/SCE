@@ -12,7 +12,6 @@ namespace Ui {
 class Edit_window;
 class Tool_editor_widget;
 
-//Main window that ties all functionality together. Using protected instead of private in order to be able to test.
 class MainWindow : public QMainWindow {
 	Q_OBJECT
 
@@ -24,14 +23,14 @@ class MainWindow : public QMainWindow {
 	static MainWindow *get_main_window();
 	static QString get_current_selection();
 
-	protected slots:
+	private slots:
 	void on_actionOpen_File_triggered();
 	void on_action_Font_triggered();
 	void on_file_tabs_tabCloseRequested(int index);
 	void on_action_Edit_triggered();
 	void closeEvent(QCloseEvent *event) override;
 
-	protected:
+	private:
 	void load_last_files();
 	void save_last_files();
 	void add_file_tab(const QString &filename);
@@ -42,6 +41,8 @@ class MainWindow : public QMainWindow {
 
 	private:
 	Ui::MainWindow *_; //Qt Designer only works correctly if it finds this string
+
+	friend struct MainWindow_tester;
 };
 
 #endif // MAINWINDOW_H
