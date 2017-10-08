@@ -18,8 +18,7 @@ TEMPLATE = app
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
 QMAKE_CXXFLAGS += -Wno-missing-braces
-QMAKE_CXXFLAGS_RELEASE += -DNDEBUG -flto
-QMAKE_LFLAGS_RELEASE += -flto
+QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
 QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 unix: LIBS += -lutil
