@@ -36,6 +36,7 @@ static void assert_executed_correctly(std::string_view code, std::string_view ex
 	assert_equal(QProcess::execute("g++", {"-std=c++17", cpp_file, "-o", exe_file}), 0);
 	Tool tool;
 	tool.path = exe_file;
+	tool.working_directory = "/tmp";
 	Process_reader p{tool};
 	assert_equal(p.get_output(), expected_output);
 	assert_equal(p.get_error(), expected_error);

@@ -283,7 +283,11 @@ Process_reader::Process_reader(const Tool &tool) {
 		exec_fail.close_read_channel();
 		exec_fail.set_close_on_exec();
 
-		chdir(tool.working_directory.toStdString().c_str());
+		if (chdir(tool.working_directory.toStdString().c_str()) != 0) {
+			exec_fail.write(QObject::tr("failed to set working directory to %1: %2").arg(tool.working_directory, QString{strerror(errno)}).toStdString());
+			exec_fail.close_write_channel();
+			exit(-1);
+		}
 		auto qlist_arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
 		qlist_arguments.push_front(tool.path);
 		std::vector<std::string> string_arguments;

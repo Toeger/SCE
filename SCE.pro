@@ -19,7 +19,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = SCE
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-braces -Wno-c99-extensions
+QMAKE_CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-braces
 QMAKE_CXXFLAGS += -Wno-missing-braces
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
