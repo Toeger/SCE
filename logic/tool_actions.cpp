@@ -61,7 +61,9 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 		case Tool_output_target::replace_document:
 			Process_reader::set_text(MainWindow::get_current_edit_window(), output);
 			break;
-			//TODO: handle other cases
+		case Tool_output_target::console:
+			//TODO: add a console and put text in there
+			break;
 	}
 }
 

@@ -91,6 +91,8 @@ void Tool_editor_widget::closeEvent(QCloseEvent *event) {
 			case QMessageBox::Cancel:
 				event->ignore();
 				return;
+			default:
+				return;
 		}
 	}
 }

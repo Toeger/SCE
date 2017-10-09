@@ -6,17 +6,20 @@
 
 QT += core gui
 
-CONFIG += warn_off
 CONFIG += c++1z
 CONFIG += strict_c++
 CONFIG += debug_and_release
+
+#These flags are inserted after our flags and essentially disable warnings customization
+QMAKE_CFLAGS_WARN_ON -= -Wall -W
+QMAKE_CXXFLAGS_WARN_ON -= -Wall -W
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = SCE
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
+QMAKE_CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-braces -Wno-c99-extensions
 QMAKE_CXXFLAGS += -Wno-missing-braces
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
