@@ -31,34 +31,39 @@ void test_args_construction() {
 
 void test_process_reading() {
 	struct Test_cases {
-		Tool tool;
 		std::string_view code;
 		std::string_view expected_output;
 		std::string_view expected_error;
 	} test_cases[] = {
-		{.tool = {}, .code = R"(int main(){})"},                                                                                                        //
-		{.tool = {}, .code = R"(#include <iostream>
-							 int main(){
-								std::cout << "test";
-							 })", .expected_output = "test"},                                                                        //
-		{.tool = {}, .code = R"(#include <iostream>
-							 int main(){
-								std::cerr << "test";
-							 })", .expected_output = "", .expected_error = "test"},                                                  //
-		{.tool = {}, .code = R"(#include <iostream>
-							 int main(){
-								 std::cout << "multi\nline\ntest\noutput\n";
-								 std::cerr << "multi\nline\ntest\nerror\n";
-							 })", .expected_output = "multi\nline\ntest\noutput\n", .expected_error = "multi\nline\ntest\nerror\n"}, //
-		{.tool = {}, .code = R"(#include <iostream>
-							 #include <thread>
-							 #include <chrono>
+		{.code = R"(int main(){})"},
+		{.code = R"(#include <iostream>
+				 int main(){
+					std::cout << "test";
+				 })",
+		 .expected_output = "test"},
+		{.code = R"(#include <iostream>
+				 int main(){
+					std::cerr << "test";
+				 })",
+		 .expected_output = "",
+		 .expected_error = "test"},
+		{.code = R"(#include <iostream>
+				 int main(){
+					 std::cout << "multi\nline\ntest\noutput\n";
+					 std::cerr << "multi\nline\ntest\nerror\n";
+				 })",
+		 .expected_output = "multi\nline\ntest\noutput\n",
+		 .expected_error = "multi\nline\ntest\nerror\n"},
+		{.code = R"(#include <iostream>
+				 #include <thread>
+				 #include <chrono>
 
-							 int main(){
-								 std::cout << "Hello" << std::flush;
-								 std::this_thread::sleep_for(std::chrono::milliseconds{500});
-								 std::cout << "World";
-							 })", .expected_output = "HelloWorld"},                                                                  //
+				 int main(){
+					 std::cout << "Hello" << std::flush;
+					 std::this_thread::sleep_for(std::chrono::milliseconds{500});
+					 std::cout << "World";
+				 })",
+		 .expected_output = "HelloWorld"},
 	};
 
 	for (auto &test_case : test_cases) {
@@ -66,8 +71,9 @@ void test_process_reading() {
 		const auto exe_file = "/tmp/SCE_test_process_exe";
 		assert_true(std::ofstream{cpp_file} << test_case.code);
 		assert_equal(QProcess::execute("g++", {"-std=c++17", cpp_file, "-o", exe_file}), 0);
-		test_case.tool.path = exe_file;
-		Process_reader p{test_case.tool};
+		Tool tool;
+		tool.path = exe_file;
+		Process_reader p{tool};
 		assert_equal(p.get_output(), test_case.expected_output);
 		assert_equal(p.get_error(), test_case.expected_error);
 	}
