@@ -8,6 +8,7 @@ addons:
             - ubuntu-toolchain-r-test
         packages:
             - g++-7
+            - binutils-2.26
 
 before_install:
     # Qt 5.9
@@ -28,6 +29,8 @@ before_script:
     - export QT_FATAL_WARNINGS=1
     # gcc 7
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    # ld
+    - sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld-2.26 90
     # ignore Qt's memory leaks
     - export LSAN_OPTIONS=suppressions=lsan.supp
     # print versions
