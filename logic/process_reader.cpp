@@ -81,6 +81,14 @@ struct Pipe {
 		read_channel = file_descriptors[0];
 		write_channel = file_descriptors[1];
 	}
+	Pipe(const termios &terminal_settings, const winsize &window_size) {
+		std::array<int, 2> file_descriptors;
+		if (openpty(&file_descriptors[0], &file_descriptors[1], nullptr, &terminal_settings, &window_size) != 0){
+			throw std::runtime_error(strerror(errno));
+		}
+		read_channel = file_descriptors[0];
+		write_channel = file_descriptors[1];
+	}
 
 	void close_read_channel() {
 		read_channel.reset();
@@ -118,6 +126,7 @@ struct Pipe {
 		const auto bytes_read = ::read(read_channel.get(), buffer, chunk_size);
 		if (bytes_read <= 0) {
 			close_read_channel();
+			return {};
 		}
 		return {buffer, buffer + bytes_read};
 	}
@@ -263,8 +272,8 @@ Process_reader::Process_reader(const Tool &tool) {
 	winsize size{.ws_row = 160, .ws_col = 80, .ws_xpixel = 160 * 8, .ws_ypixel = 80 * 10};
 
 	Pipe standard_input;
-	Pipe standard_output;
-	Pipe standard_error;
+	Pipe standard_output{terminal_settings, size};
+	Pipe standard_error{terminal_settings, size};
 	Pipe exec_fail;
 
 	int master;

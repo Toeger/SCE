@@ -68,8 +68,8 @@ static void test_process_reading() {
 					 std::cout << "multi\nline\ntest\noutput\n";
 					 std::cerr << "multi\nline\ntest\nerror\n";
 				 })",
-		 .expected_output = "multi\nline\ntest\noutput\n",
-		 .expected_error = "multi\nline\ntest\nerror\n"},
+		 .expected_output = "multi\r\nline\r\ntest\r\noutput\r\n",
+		 .expected_error = "multi\r\nline\r\ntest\r\nerror\r\n"},
 		{.code = R"(#include <iostream>
 				 #include <thread>
 				 #include <chrono>
@@ -88,7 +88,32 @@ static void test_process_reading() {
 	}
 }
 
+static void test_is_tty() { //we need to pretend to be a tty to receive color information
+	const auto code = R"(#include <iostream>
+	#include <unistd.h>
+	int main(){
+		std::cout << isatty(STDOUT_FILENO) << isatty(STDERR_FILENO) << '\n';
+	})";
+	const auto expected_output = "11\r\n";
+	assert_executed_correctly(code, expected_output);
+}
+
+static void test_is_character_device() {
+	const auto code = R"(#include <iostream>
+	#include <sys/stat.h>
+	#include <unistd.h>
+	int main(){
+		struct stat stdout_status {};
+		fstat(STDOUT_FILENO, &stdout_status);
+		std::cout << S_ISCHR(stdout_status.st_mode) << '\n';
+	})";
+	const auto expected_output = "1\r\n";
+	assert_executed_correctly(code, expected_output);
+}
+
 void test_process_reader() {
 	test_args_construction();
 	test_process_reading();
+	test_is_tty();
+	test_is_character_device();
 }
