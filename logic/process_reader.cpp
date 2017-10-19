@@ -83,7 +83,7 @@ struct Pipe {
 	}
 	Pipe(const termios &terminal_settings, const winsize &window_size) {
 		std::array<int, 2> file_descriptors;
-		if (openpty(&file_descriptors[0], &file_descriptors[1], nullptr, &terminal_settings, &window_size) != 0){
+		if (openpty(&file_descriptors[0], &file_descriptors[1], nullptr, &terminal_settings, &window_size) != 0) {
 			throw std::runtime_error(strerror(errno));
 		}
 		read_channel = file_descriptors[0];
@@ -279,7 +279,7 @@ Process_reader::Process_reader(const Tool &tool) {
 	int master;
 	int child = forkpty(&master, nullptr, &terminal_settings, &size);
 	if (child == -1) {
-		error = QObject::tr("Executing program %1 failed with error code %2.").arg(tool.path, QString::number(errno)).toStdString();
+		error = QObject::tr("Failed forking for program %1. Error: %2.").arg(tool.path, QString{strerror(errno)}).toStdString();
 		return;
 	}
 	if (child == 0) { //in child
@@ -292,8 +292,10 @@ Process_reader::Process_reader(const Tool &tool) {
 		exec_fail.close_read_channel();
 		exec_fail.set_close_on_exec();
 
-		if (chdir(tool.working_directory.toStdString().c_str()) != 0) {
-			exec_fail.write(QObject::tr("failed to set working directory to %1: %2").arg(tool.working_directory, QString{strerror(errno)}).toStdString());
+		const auto working_directory = tool.working_directory.isEmpty() ? "." : tool.working_directory.toStdString();
+		if (chdir(working_directory.c_str()) != 0) {
+			exec_fail.write(
+				QObject::tr("Failed to set working directory to %1. Error: %2.").arg(tool.working_directory, QString{strerror(errno)}).toStdString());
 			exec_fail.close_write_channel();
 			exit(-1);
 		}
@@ -316,7 +318,8 @@ Process_reader::Process_reader(const Tool &tool) {
 			args_string += R"(", ")";
 		}
 		args_string.chop(3);
-		exec_fail.write(QObject::tr("failed to execute command %1 %2, error %3").arg(tool.path, tool.arguments, QString::number(errno)).toStdString());
+		exec_fail.write(QObject::tr("Failed to execute command %1 %2. Error: %3.").arg(tool.path, tool.arguments, QString{strerror(errno)}).toStdString());
+		exec_fail.close_write_channel();
 		exit(-1);
 	}
 
