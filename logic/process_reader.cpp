@@ -276,13 +276,12 @@ Process_reader::Process_reader(const Tool &tool) {
 	Pipe standard_error{terminal_settings, size};
 	Pipe exec_fail;
 
-	int master;
-	int child = forkpty(&master, nullptr, &terminal_settings, &size);
-	if (child == -1) {
+	const int child_pid = fork();
+	if (child_pid == -1) {
 		error = QObject::tr("Failed forking for program %1. Error: %2.").arg(tool.path, QString{strerror(errno)}).toStdString();
 		return;
 	}
-	if (child == 0) { //in child
+	if (child_pid == 0) { //in child
 		standard_input.close_write_channel();
 		standard_output.close_read_channel();
 		standard_error.close_read_channel();
