@@ -11,8 +11,10 @@
 #include "utility/unique_handle.hpp"
 #include <QMessageBox>
 #include <fcntl.h>
+#include <iostream>
 #include <pty.h>
 #include <signal.h>
+#include <sstream>
 #include <unistd.h>
 #endif
 
@@ -243,20 +245,28 @@ static termios get_termios_settings() {
 }
 
 static void set_environment() {
-	setenv("LS_COLORS",
-		   "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st="
-		   "37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.la=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:"
-		   "*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;"
-		   "31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*"
-		   ".alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*"
-		   ".bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*."
-		   "mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*."
-		   "vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl="
-		   "01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;"
-		   "36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:",
-		   true);
-	setenv("TERM", "xterm-256color", true);
-	setenv("COLORTERM", "truecolor", true);
+	struct Environment_variable {
+		const char *name;
+		const char *value;
+	} environment_variables[] = {
+		{"LS_COLORS",
+		 "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st="
+		 "37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.la=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:"
+		 "*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;"
+		 "31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*"
+		 ".alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*"
+		 ".bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*."
+		 "mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*."
+		 "vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl="
+		 "01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;"
+		 "36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:"},
+		{"TERM", "xterm-256color"},
+		{"COLORTERM", "truecolor"},
+		{"COLORFGBG", "0;15"},
+	};
+	for (const auto &environment_variable : environment_variables) {
+		setenv(environment_variable.name, environment_variable.value, true);
+	}
 }
 
 #ifdef __linux
@@ -421,24 +431,23 @@ static void process_control_sequence_text(std::string_view text, Control_sequenc
 	}
 }
 
-static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
-	if (ansi_code.empty()) {
-		return;
-	}
+static void set_SGR(QTextCharFormat &format, int code) {
+	//SGR = Select Graphic Rendition
+	//source: https://en.wikipedia.org/wiki/ANSI_escape_code SGR (Select Graphic Rendition) parameters
+	//see also https://unix.stackexchange.com/a/5802
+	//specifically: http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 	const auto default_foreground_color = Qt::black;
 	const auto default_background_color = Qt::white;
-	//source: https://en.wikipedia.org/wiki/ANSI_escape_code SGR (Select Graphic Rendition) parameters
-	switch (ansi_code.front()) {
+	switch (code) {
 		case 0: //reset to normal
 			format.setFontItalic(false);
 			format.setFontOverline(false);
 			format.setFontStrikeOut(false);
-			format.setFontUnderline(false);
+			format.setUnderlineStyle(QTextCharFormat::UnderlineStyle::NoUnderline);
 			format.setFontWeight(QFont::Medium);
 			format.setUnderlineColor(default_foreground_color);
 			format.setBackground(default_background_color);
 			format.setForeground(default_foreground_color);
-			format.setUnderlineStyle(QTextCharFormat::UnderlineStyle::SingleUnderline);
 			break;
 		case 1: //bold
 			format.setFontWeight(QFont::Bold);
@@ -509,7 +518,7 @@ static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
 			//do we just pick whichever? Since double underline is not supported I guess we just remove bold.
 			format.setFontWeight(QFont::Weight::Normal);
 			break;
-		case 22: //Normal color or intensity
+		case 22: //Normal color or intensity (neither bold nor feint)
 			format.setForeground(default_foreground_color);
 			format.setBackground(default_background_color);
 			break;
@@ -592,54 +601,6 @@ static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
 		case 47: //Set text color (background) White
 			format.setForeground(Qt::white);
 			break;
-		case 48: //Reserved for extended set background color
-			/*
-			 * I can't find documentation for this. If there is an undefined color used try something like printf '\033[\060\061;\063\071mTest' in the
-			 * shell to figure out what color it is
-			 */
-			if (ansi_code.size() == 1) { //clear color
-				format.setForeground(default_foreground_color);
-				format.setBackground(default_background_color);
-			} else {                                         //set color
-				if (ansi_code.substr(1, 3) == "\061;\063") { //I don't know what that sequence means, but it makes colors in zsh
-					switch (ansi_code[4]) {
-						case 48: //gray
-							format.setForeground(Qt::gray);
-							break;
-						case 49: //red
-							format.setForeground(Qt::red);
-							break;
-						case 50: //green
-							format.setForeground(Qt::green);
-							break;
-						case 51: //yellow
-							format.setForeground(Qt::yellow);
-							break;
-						case 52: //blue
-							format.setForeground(Qt::blue);
-							break;
-						case 53: //magenta
-							format.setForeground(Qt::magenta);
-							break;
-						case 54: //cyan
-							format.setForeground(Qt::cyan);
-							break;
-						case 55: //white
-							format.setForeground(Qt::white);
-							break;
-						case 56: //black
-							format.setForeground(Qt::black);
-							break;
-						default:
-							//something else
-							assert(!"unsupported color");
-							break;
-					}
-				} else {
-					assert(!"unsupported color code");
-				}
-			}
-			break;
 		case 49: //Default background color
 			format.setBackground(default_background_color);
 			break;
@@ -691,14 +652,28 @@ static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
 	}
 }
 
+static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
+	//std::cout << "Got sequence CSI " << ansi_code << " m\n" << std::flush;
+
+	std::istringstream ss{std::string{ansi_code}};
+	int code{};
+	while (ss >> code) {
+		set_SGR(format, code);
+		if (ss.get() != ';') {
+			ss.setstate(std::ios_base::failbit);
+		}
+	}
+}
+
 void Process_reader::set_text(QPlainTextEdit *text_edit, std::string_view text) {
 	process_control_sequence_text(text,
 								  [text_edit](std::string_view escape_sequence) {
-									  QTextCharFormat format;
-									  set_format(format, escape_sequence);
 									  auto cursor = text_edit->textCursor();
+									  QTextCharFormat format = cursor.charFormat();
+									  set_format(format, escape_sequence);
 									  cursor.setCharFormat(format);
 									  text_edit->setTextCursor(cursor);
+									  //text_edit->textCursor().insertText(">>> " + QString::fromUtf8(escape_sequence.data(), escape_sequence.size()) + " <<<");
 								  },
 								  [text_edit](auto plaintext) { text_edit->textCursor().insertText(QString::fromUtf8(plaintext.data(), plaintext.size())); });
 }
