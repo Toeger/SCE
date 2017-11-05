@@ -65,7 +65,6 @@ FORMS += \
     ui/tool_editor_widget.ui
 
 OTHER_FILES += \
-    .travis.yml
-
-DISTFILES += \
+    .travis.yml \
+    feature_plans.md \
     lsan.supp
