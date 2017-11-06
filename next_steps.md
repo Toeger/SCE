@@ -1,5 +1,3 @@
-# Next steps
-
 - [ ] Run tools asynchronously
 - [ ] Interactive tools
 - [ ] Add editor capabilities
