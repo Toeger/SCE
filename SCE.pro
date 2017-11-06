@@ -67,4 +67,5 @@ FORMS += \
 OTHER_FILES += \
     .travis.yml \
     feature_plans.md \
-    lsan.supp
+    lsan.supp \
+    next_steps.md
