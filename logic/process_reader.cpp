@@ -1,11 +1,14 @@
 #include "process_reader.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
+#include "utility/thread_call.h"
 
+#include <QApplication>
 #include <QPlainTextEdit>
 #include <QProcess>
 #include <cassert>
 #include <initializer_list>
+#include <sstream>
 
 #ifdef __linux
 #include "utility/unique_handle.hpp"
@@ -16,43 +19,6 @@
 #include <signal.h>
 #include <sstream>
 #include <unistd.h>
-#endif
-
-static QString resolve_placeholders(QString string) {
-	struct Placeholder_value {
-		QString placeholder;
-		QString value;
-	} const placeholder_values[] = {
-		{"$FilePath", MainWindow::get_current_path()},       //
-		{"$Selection", MainWindow::get_current_selection()}, //
-	};
-	for (const auto &placeholder_value : placeholder_values) {
-		string.replace(placeholder_value.placeholder, placeholder_value.value);
-	}
-	return string;
-}
-
-QStringList detail::create_arguments_list(const QString &args_string) {
-	//TODO: Warn about unbalanced quotation marks
-	QStringList arguments{""};
-	for (auto &args : args_string.split(' ')) {
-		if (args.isEmpty()) {
-			continue;
-		}
-		if (arguments.last().startsWith('"')) {
-			arguments.last().push_back(' ');
-			arguments.last() += args;
-		} else {
-			arguments << args;
-		}
-		if (arguments.last().endsWith('"')) {
-			arguments.last().chop(1);
-			arguments.last().remove(0, 1);
-		}
-	}
-	arguments.pop_front();
-	return arguments;
-}
 
 struct File_descriptor_policy {
 	using Handle_type = int;
@@ -163,8 +129,8 @@ struct Pipe {
 	Utility::Unique_handle<File_descriptor_policy> write_channel;
 };
 
-static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pipes, std::vector<std::pair<Pipe *, std::string *>> &read_pipes,
-				   timeval timeout) {
+static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pipes,
+				   std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> &read_pipes, timeval timeout) {
 	fd_set read_file_descriptors{};
 	fd_set write_file_descriptors{};
 	int max_file_descriptor = 0;
@@ -191,7 +157,7 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 	if (selected > 0) {
 		for (auto &read_pipe : read_pipes) {
 			if (FD_ISSET(read_pipe.first->get_read_channel(), &read_file_descriptors)) {
-				*read_pipe.second += read_pipe.first->read();
+				(*read_pipe.second)(read_pipe.first->read());
 			}
 		}
 		for (auto &write_pipe : write_pipes) {
@@ -269,13 +235,68 @@ static void set_environment() {
 	}
 }
 
-#ifdef __linux
 static void broken_pipe_signal_handler(int) {
 	//don't do anything in the handler, it just exists so the program doesn't get killed when reading or writing a pipe fails and instead receives an error code
 }
+
 #endif
 
-Process_reader::Process_reader(const Tool &tool) {
+static QString resolve_placeholders(QString string) {
+	struct Placeholder_value {
+		QString placeholder;
+		QString value;
+	} const placeholder_values[] = {
+		{"$FilePath", MainWindow::get_current_path()},       //
+		{"$Selection", MainWindow::get_current_selection()}, //
+	};
+	for (const auto &placeholder_value : placeholder_values) {
+		string.replace(placeholder_value.placeholder, placeholder_value.value);
+	}
+	return string;
+}
+
+QStringList detail::create_arguments_list(const QString &args_string) {
+	//TODO: Warn about unbalanced quotation marks
+	QStringList arguments{""};
+	for (auto &args : args_string.split(' ')) {
+		if (args.isEmpty()) {
+			continue;
+		}
+		if (arguments.last().startsWith('"')) {
+			arguments.last().push_back(' ');
+			arguments.last() += args;
+		} else {
+			arguments << args;
+		}
+		if (arguments.last().endsWith('"')) {
+			arguments.last().chop(1);
+			arguments.last().remove(0, 1);
+		}
+	}
+	arguments.pop_front();
+	return arguments;
+}
+
+Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
+							   std::function<void(State)> completion_callback)
+	: output_callback{std::move(output_callback)}
+	, error_callback{std::move(error_callback)}
+	, completion_callback{std::move(completion_callback)}
+	, process_handler{&Process_reader::run_process, this, std::move(tool)} {}
+
+void Process_reader::join() {
+	//TODO: check if we can join the thread. If not process events and check again.
+	//Right now we could be joining while the thread waits for us to process events, which would get us stuck.
+	QApplication::processEvents();
+	process_handler.join();
+	QApplication::processEvents();
+}
+
+void Process_reader::run_process(Tool tool) {
+//this function is run in a different thread, so we cannot use any GUI functions or access any non-local memory without synchronization
+//for example writing `this->state = State::running;`, `completion_callback();` or `new QPushButton("Click Me");` would be incorrect
+//instead we have to make the GUI thread do those things for us via Utility::gui_call
+
 #ifdef __linux
 	signal(SIGPIPE, &broken_pipe_signal_handler);
 	termios terminal_settings = get_termios_settings();
@@ -288,7 +309,8 @@ Process_reader::Process_reader(const Tool &tool) {
 
 	const int child_pid = fork();
 	if (child_pid == -1) {
-		error = QObject::tr("Failed forking for program %1. Error: %2.").arg(tool.path, QString{strerror(errno)}).toStdString();
+		state = State::error;
+		error_callback(QObject::tr("Failed forking for program %1. Error: %2.").arg(tool.path, QString{strerror(errno)}).toStdString());
 		return;
 	}
 	if (child_pid == 0) { //in child
@@ -357,7 +379,8 @@ Process_reader::Process_reader(const Tool &tool) {
 	}
 
 	std::vector<std::pair<Pipe *, std::string_view *>> write_pipes = {{&standard_input, &write_data_view}};
-	std::vector<std::pair<Pipe *, std::string *>> read_pipes = {{&standard_output, &output}, {&standard_error, &error}};
+	std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> read_pipes = {{&standard_output, &output_callback},
+																						  {&standard_error, &error_callback}};
 
 	while (standard_input.is_open() || standard_output.is_open() || standard_error.is_open()) {
 		if (write_data_view.empty()) {
@@ -366,27 +389,30 @@ Process_reader::Process_reader(const Tool &tool) {
 		select(write_pipes, read_pipes, timeout);
 	}
 #else
+	QProcess process;
 	process.setWorkingDirectory(tool.working_directory);
-	process.start(tool.path, create_arguments_list(resolve_placeholders(tool.arguments)));
+	process.start(tool.path, detail::create_arguments_list(resolve_placeholders(tool.arguments)));
 	const auto selection = resolve_placeholders(tool.input).toUtf8();
 	const auto bytes_written = process.write(selection);
-	assert(selection.size() == bytes_written);
+	assert(selection.size() == bytes_written); //TODO: handle partial writes
 	process.closeWriteChannel();
-	if (process.waitForFinished(3000)) { //TODO: Make this timeout a tools' argument.
-		output = process.readAllStandardOutput();
-		error = process.readAllStandardError();
+	if (process.waitForFinished()) {
+		const auto output = process.readAllStandardOutput();
+		if (output.isEmpty() == false) {
+			Utility::gui_call([ s = output.toStdString(), this ] { output_callback(s); });
+		}
+		const auto error = process.readAllStandardError();
+		if (error.isEmpty() == false) {
+			Utility::gui_call([ s = error.toStdString(), this ] { error_callback(s); });
+		}
 	} else {
 		assert(false); //TODO: handle timeouts
 	}
 #endif
-}
-
-const std::string &Process_reader::get_output() const {
-	return output;
-}
-
-const std::string &Process_reader::get_error() const {
-	return error;
+	Utility::gui_call([ callback = std::move(completion_callback), this ] {
+		state = State::finished;
+		callback(Process_reader::State::finished);
+	});
 }
 
 template <class Control_sequence_callback, class Plaintext_callback>
@@ -665,7 +691,7 @@ static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
 	}
 }
 
-void Process_reader::set_text(QPlainTextEdit *text_edit, std::string_view text) {
+void Ansi_code_handling::set_text(QPlainTextEdit *text_edit, std::string_view text) {
 	process_control_sequence_text(text,
 								  [text_edit](std::string_view escape_sequence) {
 									  auto cursor = text_edit->textCursor();
@@ -678,7 +704,7 @@ void Process_reader::set_text(QPlainTextEdit *text_edit, std::string_view text) 
 								  [text_edit](auto plaintext) { text_edit->textCursor().insertText(QString::fromUtf8(plaintext.data(), plaintext.size())); });
 }
 
-QString Process_reader::strip_control_sequences_text(std::string_view text) {
+QString Ansi_code_handling::strip_control_sequences_text(std::string_view text) {
 	std::string retval;
 	process_control_sequence_text(text, [](auto escape_sequence) { (void)escape_sequence; }, [&retval](auto plaintext) { retval += plaintext; });
 	return QString::fromUtf8(retval.data(), retval.size());

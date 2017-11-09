@@ -41,7 +41,10 @@ SOURCES += \
     tests/test_tool_editor_widget.cpp \
     ui/edit_window.cpp \
     ui/mainwindow.cpp \
-    ui/tool_editor_widget.cpp
+    ui/tool_editor_widget.cpp \
+    utility/thread_call.cpp \
+    utility/unique_handle.cpp
+
 
 HEADERS += \
     logic/process_reader.h \
@@ -58,7 +61,9 @@ HEADERS += \
     ui/edit_window.h \
     ui/mainwindow.h \
     ui/tool_editor_widget.h \
-    utility/unique_handle.hpp
+    utility/thread_call.h \
+    utility/unique_handle.h
+
 
 FORMS += \
     ui/mainwindow.ui \

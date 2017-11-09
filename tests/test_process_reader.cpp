@@ -29,6 +29,13 @@ static void test_args_construction() {
 	}
 }
 
+static std::string strip_carriage_return(std::string_view sv) {
+	std::string retval;
+	retval.reserve(sv.size());
+	std::copy_if(std::begin(sv), std::end(sv), std::back_inserter(retval), [](char c) { return c != '\r'; });
+	return retval;
+}
+
 static void assert_executed_correctly(std::string_view code, std::string_view expected_output, std::string_view expected_error = {}) {
 	const auto cpp_file = "/tmp/SCE_test_process_code.cpp";
 	const auto exe_file = "/tmp/SCE_test_process_exe";
@@ -37,9 +44,12 @@ static void assert_executed_correctly(std::string_view code, std::string_view ex
 	Tool tool;
 	tool.path = exe_file;
 	tool.working_directory = "/tmp";
-	Process_reader p{tool};
-	assert_equal(p.get_output(), expected_output);
-	assert_equal(p.get_error(), expected_error);
+	std::string output;
+	std::string error;
+	Process_reader p{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }};
+	p.join();
+	assert_equal(strip_carriage_return(output), expected_output);
+	assert_equal(strip_carriage_return(error), expected_error);
 }
 
 static void test_process_reading() {
@@ -68,8 +78,8 @@ static void test_process_reading() {
 					 std::cout << "multi\nline\ntest\noutput\n";
 					 std::cerr << "multi\nline\ntest\nerror\n";
 				 })",
-		 .expected_output = "multi\r\nline\r\ntest\r\noutput\r\n",
-		 .expected_error = "multi\r\nline\r\ntest\r\nerror\r\n"},
+		 .expected_output = "multi\nline\ntest\noutput\n",
+		 .expected_error = "multi\nline\ntest\nerror\n"},
 		{.code = R"(#include <iostream>
 				 #include <thread>
 				 #include <chrono>
@@ -94,7 +104,7 @@ static void test_is_tty() { //we need to pretend to be a tty to receive color in
 	int main(){
 		std::cout << isatty(STDOUT_FILENO) << isatty(STDERR_FILENO) << '\n';
 	})";
-	const auto expected_output = "11\r\n";
+	const auto expected_output = "11\n";
 	assert_executed_correctly(code, expected_output);
 }
 
@@ -107,13 +117,23 @@ static void test_is_character_device() {
 		fstat(STDOUT_FILENO, &stdout_status);
 		std::cout << S_ISCHR(stdout_status.st_mode) << '\n';
 	})";
-	const auto expected_output = "1\r\n";
+	const auto expected_output = "1\n";
 	assert_executed_correctly(code, expected_output);
 }
 
+#if __linux
+constexpr bool linux = true;
+#else
+constexpr bool linux = false;
+#endif
+
 void test_process_reader() {
+	MainWindow mw; //required for MainWindow::get_main_window which is required for Utility::gui_call
 	test_args_construction();
 	test_process_reading();
-	test_is_tty();
-	test_is_character_device();
+	if (linux) {
+		//only have a character device on linux for now
+		test_is_tty();
+		test_is_character_device();
+	}
 }

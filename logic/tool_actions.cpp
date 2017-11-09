@@ -47,7 +47,7 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 			edit->setReadOnly(true);
 			edit->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);
 			edit->setFont(Settings::get<Settings::Key::font>("console"));
-			Process_reader::set_text(edit, output);
+			Ansi_code_handling::set_text(edit, output);
 			auto cursor = edit->textCursor();
 			cursor.movePosition(QTextCursor::Start);
 			edit->setTextCursor(cursor);
@@ -56,10 +56,10 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 			break;
 		} break;
 		case Tool_output_target::paste:
-			MainWindow::get_current_edit_window()->insertPlainText(Process_reader::strip_control_sequences_text(output));
+			MainWindow::get_current_edit_window()->insertPlainText(Ansi_code_handling::strip_control_sequences_text(output));
 			break;
 		case Tool_output_target::replace_document:
-			Process_reader::set_text(MainWindow::get_current_edit_window(), output);
+			Ansi_code_handling::set_text(MainWindow::get_current_edit_window(), output);
 			break;
 		case Tool_output_target::console:
 			//TODO: add a console and put text in there
@@ -68,9 +68,12 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 }
 
 static void run_action(const Tool &tool) {
-	Process_reader p{tool};
-	show_output(p.get_output(), tool.output, tool.get_name(), false);
-	show_output(p.get_error(), tool.error, tool.get_name(), true);
+	std::string output;
+	std::string error;
+	Process_reader p{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }};
+	p.join();
+	show_output(output, tool.output, tool.get_name(), false);
+	show_output(error, tool.error, tool.get_name(), true);
 }
 
 void Tool_actions::set_actions(const std::vector<Tool> &tools) {
