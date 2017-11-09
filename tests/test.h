@@ -61,7 +61,7 @@ namespace detail {
 		out << "u: \"" << us << "\"\n";
 		const auto mismatch_it = std::mismatch(std::begin(ts), std::end(ts), std::begin(us), std::end(us));
 		const auto mismatch_pos = mismatch_it.first != std::end(ts) ? mismatch_it.first - std::begin(ts) :
-																	  mismatch_it.second != std::end(ts) ? mismatch_it.second - std::begin(ts) : -1;
+																	  mismatch_it.second != std::end(us) ? mismatch_it.second - std::begin(us) : -1;
 		if (mismatch_pos != -1) {
 			out << std::string(mismatch_pos + 4, ' ') << "^\n";
 		}
