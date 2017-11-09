@@ -11,7 +11,7 @@
 #include <sstream>
 
 #ifdef __linux
-#include "utility/unique_handle.hpp"
+#include "utility/unique_handle.h"
 #include <QMessageBox>
 #include <fcntl.h>
 #include <iostream>
