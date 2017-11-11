@@ -8,8 +8,10 @@
 #include <QMessageBox>
 #include <memory>
 
-Edit_window::Edit_window()
-	: syntax_highlighter{std::make_unique<Syntax_highligher>(document())} {
+Edit_window::Edit_window() {
+	auto highlighter = std::make_unique<Syntax_highligher>(document());
+	highlighter->load_rules("testdata/c++-syntax.json");
+	syntax_highlighter = std::move(highlighter);
 	Tool_actions::add_widget(this);
 }
 

@@ -3,4 +3,5 @@
 - [ ] Add editor capabilities
   - [ ] Squigglies, hovertext and various other markers
   - [ ] Toolbar
+  - [ ] Syntax highlighting
 - [ ] Make up editor API that allows tools to access editor and content functionality
