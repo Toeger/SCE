@@ -99,41 +99,51 @@ static void test_process_reading() {
 }
 
 static void test_is_tty() { //we need to pretend to be a tty to receive color information
-	const auto code = R"(#include <iostream>
-	#include <unistd.h>
-	int main(){
-		std::cout << isatty(STDOUT_FILENO) << isatty(STDERR_FILENO) << '\n';
-	})";
-	const auto expected_output = "11\n";
+	const auto code = R"(
+#include <iostream>
+
+#if __linux
+#include <unistd.h>
+int main() {
+	std::cout << isatty(STDOUT_FILENO) << isatty(STDERR_FILENO) << '\n';
+}
+#else
+int main() {
+	std::cout << "00\n";
+}
+#endif
+)";
+	const auto expected_output = using_tty ? "11\n" : "00\n";
 	assert_executed_correctly(code, expected_output);
 }
 
 static void test_is_character_device() {
-	const auto code = R"(#include <iostream>
-	#include <sys/stat.h>
-	#include <unistd.h>
-	int main(){
-		struct stat stdout_status {};
-		fstat(STDOUT_FILENO, &stdout_status);
-		std::cout << S_ISCHR(stdout_status.st_mode) << '\n';
-	})";
-	const auto expected_output = "1\n";
-	assert_executed_correctly(code, expected_output);
-}
+	const auto code = R"(
+#include <iostream>
 
 #if __linux
-constexpr bool linux = true;
+#include <sys/stat.h>
+#include <unistd.h>
+int main() {
+	struct stat stdout_status {};
+	fstat(STDOUT_FILENO, &stdout_status);
+	std::cout << S_ISCHR(stdout_status.st_mode) << '\n';
+}
 #else
-constexpr bool linux = false;
+int main() {
+	std::cout << "0\n";
+}
 #endif
+)";
+	const auto expected_output = using_tty ? "1\n" : "0\n";
+	assert_executed_correctly(code, expected_output);
+}
 
 void test_process_reader() {
 	MainWindow mw; //required for MainWindow::get_main_window which is required for Utility::gui_call
 	test_args_construction();
 	test_process_reading();
-	if (linux) {
-		//only have a character device on linux for now
-		test_is_tty();
-		test_is_character_device();
-	}
+	test_is_tty();
+	test_is_character_device();
+	std::cout << "Using tty: " << (using_tty ? "true" : "false") << '\n';
 }

@@ -10,7 +10,7 @@
 #include <initializer_list>
 #include <sstream>
 
-#ifdef __linux
+#if USING_TTY
 #include "utility/unique_handle.h"
 #include <QMessageBox>
 #include <fcntl.h>
@@ -297,7 +297,7 @@ void Process_reader::run_process(Tool tool) {
 //for example writing `this->state = State::running;`, `completion_callback();` or `new QPushButton("Click Me");` would be incorrect
 //instead we have to make the GUI thread do those things for us via Utility::gui_call
 
-#ifdef __linux
+#if USING_TTY
 	signal(SIGPIPE, &broken_pipe_signal_handler);
 	termios terminal_settings = get_termios_settings();
 	winsize size{.ws_row = 160, .ws_col = 80, .ws_xpixel = 160 * 8, .ws_ypixel = 80 * 10};
@@ -372,8 +372,10 @@ void Process_reader::run_process(Tool tool) {
 			exec_fail_string += exec_fail.read();
 		}
 		if (exec_fail_string.empty() == false) {
-			QMessageBox::critical(MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
-								  QString::fromStdString(exec_fail_string));
+			Utility::gui_call([ exec_fail_string = std::move(exec_fail_string), tool = std::move(tool) ] {
+				QMessageBox::critical(MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
+									  QString::fromStdString(exec_fail_string));
+			});
 			return;
 		}
 	}
@@ -388,7 +390,7 @@ void Process_reader::run_process(Tool tool) {
 		}
 		select(write_pipes, read_pipes, timeout);
 	}
-#else
+#else //not using tty
 	QProcess process;
 	process.setWorkingDirectory(tool.working_directory);
 	process.start(tool.path, detail::create_arguments_list(resolve_placeholders(tool.arguments)));

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui
+QT += core gui widgets
 
 CONFIG += c++1z
 CONFIG += strict_c++
@@ -13,8 +13,6 @@ CONFIG += debug_and_release
 #These flags are inserted after our flags and essentially disable warnings customization
 QMAKE_CFLAGS_WARN_ON -= -Wall -W
 QMAKE_CXXFLAGS_WARN_ON -= -Wall -W
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = SCE
 TEMPLATE = app
@@ -25,6 +23,7 @@ QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
 QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 unix: LIBS += -lutil
+DEFINES += $$(ENVIRONMENT_DEFINES)
 
 SOURCES += \
     logic/process_reader.cpp \
@@ -45,7 +44,6 @@ SOURCES += \
     utility/thread_call.cpp \
     utility/unique_handle.cpp
 
-
 HEADERS += \
     logic/process_reader.h \
     logic/settings.h \
@@ -63,7 +61,6 @@ HEADERS += \
     ui/tool_editor_widget.h \
     utility/thread_call.h \
     utility/unique_handle.h
-
 
 FORMS += \
     ui/mainwindow.ui \

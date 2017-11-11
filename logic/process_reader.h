@@ -19,7 +19,14 @@ namespace Ansi_code_handling {
 	QString strip_control_sequences_text(std::string_view text);
 } // namespace Ansi_code_handling
 
-//#undef __linux
+#if __linux
+#ifndef USING_TTY
+#define USING_TTY true
+#else
+#define USING_TTY false
+#endif
+#endif
+constexpr bool using_tty = USING_TTY;
 
 class Process_reader {
 	public:
