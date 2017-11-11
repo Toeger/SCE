@@ -45,5 +45,6 @@ script:
     - ./SCE test
     - make clean
     - export ENVIRONMENT_DEFINES=USING_TTY=false
+    - qmake -nocache
     - make -j debug
     - ./SCE test
