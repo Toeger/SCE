@@ -130,7 +130,7 @@ struct Pipe {
 };
 
 static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pipes,
-				   std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> &read_pipes, timeval timeout) {
+				   std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> &read_pipes, timeval *timeout) {
 	fd_set read_file_descriptors{};
 	fd_set write_file_descriptors{};
 	int max_file_descriptor = 0;
@@ -152,7 +152,7 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 			it = read_pipes.erase(it);
 		}
 	}
-	const auto selected = ::select(max_file_descriptor + 1, &read_file_descriptors, &write_file_descriptors, nullptr, &timeout);
+	const auto selected = ::select(max_file_descriptor + 1, &read_file_descriptors, &write_file_descriptors, nullptr, timeout);
 
 	if (selected > 0) {
 		for (auto &read_pipe : read_pipes) {
@@ -363,9 +363,6 @@ void Process_reader::run_process(Tool tool) {
 	std::string write_data = resolve_placeholders(tool.input).toStdString();
 	std::string_view write_data_view = write_data;
 
-	timeval timeout{};
-	timeout.tv_sec = 3; //TODO: use timeout from Tool
-
 	{
 		std::string exec_fail_string;
 		while (exec_fail.is_open()) {
@@ -383,12 +380,31 @@ void Process_reader::run_process(Tool tool) {
 	std::vector<std::pair<Pipe *, std::string_view *>> write_pipes = {{&standard_input, &write_data_view}};
 	std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> read_pipes = {{&standard_output, &output_callback},
 																						  {&standard_error, &error_callback}};
+	timeval timeout{};
+	timeval *timeout_pointer = tool.timeout.count() == 0 ? nullptr : &timeout;
 
-	while (standard_input.is_open() || standard_output.is_open() || standard_error.is_open()) {
+	auto update_timeout = [ &timeout, &tool, start = std::chrono::steady_clock::now() ]() {
+		//returns true while we should keep running
+		if (tool.timeout.count() == 0) {
+			return true;
+		}
+		const auto now = std::chrono::steady_clock::now();
+		if (start + tool.timeout < now) {
+			//timeout
+			//kill(); //TODO: ask user instead of just killing?
+			return false;
+		}
+		const auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(now - start - tool.timeout);
+		timeout.tv_sec = time_left.count() / 1000;
+		timeout.tv_usec = time_left.count() % 1000 * 1000;
+		return true;
+	};
+
+	while ((standard_input.is_open() || standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
 		if (write_data_view.empty()) {
 			standard_input.close_write_channel();
 		}
-		select(write_pipes, read_pipes, timeout);
+		select(write_pipes, read_pipes, timeout_pointer);
 	}
 #else //not using tty
 	QProcess process;
