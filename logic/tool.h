@@ -3,6 +3,7 @@
 
 #include <QKeySequence>
 #include <QString>
+#include <chrono>
 #include <tuple>
 
 class QJsonObject;
@@ -22,37 +23,16 @@ class Tool {
 	QString working_directory{};
 	Tool_output_target::Type output{};
 	Tool_output_target::Type error{};
-	Activation activation{}; //todo: add context menu and menu entry
-
-	static constexpr auto get_persistent_members() { //this may some day be replacable with reflection
-		return std::make_tuple(&Tool::path, &Tool::arguments, &Tool::input, &Tool::working_directory, &Tool::output, &Tool::error, &Tool::activation);
-	}
+	Activation activation{}; //TODO: add context menu and menu entry
+	std::chrono::milliseconds timeout;
 
 	QString to_string() const;
 	static Tool from_string(const QString &data);
 	QString get_name() const;
-
-	private:
-	void write(const QString &data, const QString &name, QJsonObject &json) const;
-	void write(const Tool_output_target::Type &data, const QString &name, QJsonObject &json) const;
-	void write(const Activation &data, const QString &name, QJsonObject &json) const;
-	static void read(QString &data, const QString &name, QJsonObject &json);
-	static void read(Tool_output_target::Type &data, const QString &name, QJsonObject &json);
-	static void read(Activation &data, const QString &name, QJsonObject &json);
 };
 
-template <class Comparator, std::size_t... indexes>
-bool compare(const Tool &lhs, const Tool &rhs, std::index_sequence<indexes...>) {
-	constexpr auto members = Tool::get_persistent_members();
-	return Comparator{}(std::tie(lhs.*std::get<indexes>(members)...), std::tie(rhs.*std::get<indexes>(members)...));
-}
+bool operator==(const Tool &lhs, const Tool &rhs);
 
-inline bool operator==(const Tool &lhs, const Tool &rhs) {
-	return compare<std::equal_to<>>(lhs, rhs, std::make_index_sequence<std::tuple_size_v<decltype(Tool::get_persistent_members())>>());
-}
-
-inline bool operator<(const Tool &lhs, const Tool &rhs) {
-	return compare<std::less<>>(lhs, rhs, std::make_index_sequence<std::tuple_size_v<decltype(Tool::get_persistent_members())>>());
-}
+bool operator<(const Tool &lhs, const Tool &rhs);
 
 #endif // TOOL_H

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>486</width>
-    <height>379</height>
+    <width>453</width>
+    <height>415</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -176,7 +176,7 @@
          <item row="6" column="1">
           <widget class="QKeySequenceEdit" name="activation_keySequenceEdit"/>
          </item>
-         <item row="7" column="0" colspan="2">
+         <item row="8" column="0" colspan="2">
           <widget class="QLabel" name="variables_label">
            <property name="text">
             <string>Variables</string>
@@ -186,7 +186,7 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
+         <item row="9" column="0">
           <widget class="QLabel" name="current_file_path_placeholder_label">
            <property name="text">
             <string>$FilePath</string>
@@ -196,14 +196,14 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
+         <item row="9" column="1">
           <widget class="QLabel" name="current_file_path_explanation_label">
            <property name="text">
             <string>Full path to current file</string>
            </property>
           </widget>
          </item>
-         <item row="9" column="0">
+         <item row="10" column="0">
           <widget class="QLabel" name="current_file_path_placeholder_label_2">
            <property name="text">
             <string>$Selection</string>
@@ -213,10 +213,30 @@
            </property>
           </widget>
          </item>
-         <item row="9" column="1">
+         <item row="10" column="1">
           <widget class="QLabel" name="current_file_path_explanation_label_2">
            <property name="text">
             <string>Currently selected text</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="timeout_label">
+           <property name="text">
+            <string>Timeout</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QDoubleSpinBox" name="timeout_doubleSpinBox">
+           <property name="suffix">
+            <string>s</string>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>86400.000000000000000</double>
            </property>
           </widget>
          </item>

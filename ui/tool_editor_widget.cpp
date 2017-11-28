@@ -5,6 +5,7 @@
 #include "ui_tool_editor_widget.h"
 
 #include <QCloseEvent>
+#include <QDoubleSpinBox>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStringList>
@@ -12,14 +13,14 @@
 
 //this lists the association between ui elements and Tool members
 static auto get_ui_inputs_tool_attributes(Ui::Tool_editor_widget *ui) {
-	return std::make_tuple(ui->path_lineEdit, &Tool::path,                    //
-						   ui->arguments_lineEdit, &Tool::arguments,          //
-						   ui->input_lineEdit, &Tool::input,                  //
-						   ui->output_comboBox, &Tool::output,                //
-						   ui->errors_comboBox, &Tool::error,                 //
-						   ui->activation_keySequenceEdit, &Tool::activation, //
-						   ui->working_dir_lineEdit, &Tool::working_directory //
-	);
+	return std::make_tuple(ui->path_lineEdit, &Tool::path,                     //
+						   ui->arguments_lineEdit, &Tool::arguments,           //
+						   ui->input_lineEdit, &Tool::input,                   //
+						   ui->output_comboBox, &Tool::output,                 //
+						   ui->errors_comboBox, &Tool::error,                  //
+						   ui->activation_keySequenceEdit, &Tool::activation,  //
+						   ui->working_dir_lineEdit, &Tool::working_directory, //
+						   ui->timeout_doubleSpinBox, &Tool::timeout);
 }
 //set ui elements based on a Tool member
 static void tool_to_ui(QLineEdit *line_edit, QString Tool::*member, const Tool &tool) {
@@ -30,6 +31,9 @@ static void tool_to_ui(QComboBox *combo_box, Tool_output_target::Type Tool::*mem
 }
 static void tool_to_ui(QKeySequenceEdit *key_edit, QKeySequence Tool::*member, const Tool &tool) {
 	key_edit->setKeySequence(tool.*member);
+}
+static void tool_to_ui(QDoubleSpinBox *spinbox, std::chrono::milliseconds Tool::*member, const Tool &tool) {
+	spinbox->setValue((tool.*member).count() / 1000.);
 }
 
 //set all ui elements to the value of a Tool
@@ -51,6 +55,9 @@ static void ui_to_tool(QComboBox *combo_box, Tool_output_target::Type Tool::*mem
 }
 static void ui_to_tool(QKeySequenceEdit *key_edit, QKeySequence Tool::*member, Tool &tool) {
 	tool.*member = key_edit->keySequence();
+}
+static void ui_to_tool(QDoubleSpinBox *spinbox, std::chrono::milliseconds Tool::*member, Tool &tool) {
+	tool.*member = std::chrono::milliseconds{static_cast<long long int>(spinbox->value() * 1000)};
 }
 
 template <class Tuple, std::size_t... indexes>
