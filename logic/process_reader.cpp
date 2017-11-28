@@ -71,15 +71,22 @@ struct Pipe {
 		return read_channel || write_channel;
 	}
 
-	void write(std::string_view s) {
+	void write(std::string_view &s) {
 		assert(write_channel);
+		const auto written = ::write(write_channel.get(), s.data(), s.size());
+		if (written == -1) {
+			close_write_channel();
+			return;
+		}
+		s.remove_prefix(written);
+	}
+
+	void write_all(std::string_view s) {
 		while (s.size()) {
-			const auto written = ::write(write_channel.get(), s.data(), s.size());
-			if (written == -1) {
-				close_write_channel();
-				return;
+			if (is_open() == false) {
+				throw std::runtime_error("Failed writing to pipe");
 			}
-			s.remove_prefix(written);
+			write(s);
 		}
 	}
 
@@ -327,7 +334,7 @@ void Process_reader::run_process(Tool tool) {
 
 		const auto working_directory = tool.working_directory.isEmpty() ? "." : tool.working_directory.toStdString();
 		if (chdir(working_directory.c_str()) != 0) {
-			exec_fail.write(
+			exec_fail.write_all(
 				QObject::tr("Failed to set working directory to %1. Error: %2.").arg(tool.working_directory, QString{strerror(errno)}).toStdString());
 			exec_fail.close_write_channel();
 			exit(-1);
@@ -351,7 +358,7 @@ void Process_reader::run_process(Tool tool) {
 			args_string += R"(", ")";
 		}
 		args_string.chop(3);
-		exec_fail.write(QObject::tr("Failed to execute command %1 %2. Error: %3.").arg(tool.path, tool.arguments, QString{strerror(errno)}).toStdString());
+		exec_fail.write_all(QObject::tr("Failed to execute command %1 %2. Error: %3.").arg(tool.path, tool.arguments, QString{strerror(errno)}).toStdString());
 		exec_fail.close_write_channel();
 		exit(-1);
 	}
