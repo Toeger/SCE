@@ -1,6 +1,7 @@
 #include "tool_editor_widget.h"
 #include "logic/settings.h"
 #include "logic/tool_actions.h"
+#include "mainwindow.h"
 #include "tests/test.h"
 #include "ui_tool_editor_widget.h"
 
@@ -77,6 +78,8 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	fill_output_list(ui->output_comboBox);
 	fill_output_list(ui->errors_comboBox);
 	update_tools_list();
+	ui->current_file_path_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_path()));
+	ui->selection_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_selection()));
 }
 
 Tool_editor_widget::~Tool_editor_widget() {}

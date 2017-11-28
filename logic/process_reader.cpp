@@ -10,6 +10,8 @@
 #include <initializer_list>
 #include <sstream>
 
+using namespace std::string_literals;
+
 #if USING_TTY
 #include "utility/unique_handle.h"
 #include <QMessageBox>
@@ -175,7 +177,7 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 		}
 		return;
 	} else { //error occured
-		throw std::runtime_error("Select failed");
+		throw std::runtime_error("Select failed: "s + strerror(errno));
 		return;
 	}
 }
@@ -383,7 +385,7 @@ void Process_reader::run_process(Tool tool) {
 	timeval timeout{};
 	timeval *timeout_pointer = tool.timeout.count() == 0 ? nullptr : &timeout;
 
-	auto update_timeout = [ &timeout, &tool, start = std::chrono::steady_clock::now() ]() {
+	auto update_timeout = [&timeout, &tool, start = std::chrono::steady_clock::now() ]() {
 		//returns true while we should keep running
 		if (tool.timeout.count() == 0) {
 			return true;
