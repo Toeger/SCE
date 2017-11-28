@@ -41,7 +41,7 @@ static void assert_executed_correctly(std::string_view code, std::string_view ex
 	const auto exe_file = "/tmp/SCE_test_process_exe";
 	assert_true(std::ofstream{cpp_file} << code);
 	assert_equal(QProcess::execute("g++", {"-std=c++17", cpp_file, "-o", exe_file}), 0);
-	Tool tool;
+	Tool tool{};
 	tool.path = exe_file;
 	tool.working_directory = "/tmp";
 	std::string output;
