@@ -96,14 +96,6 @@ void Syntax_highligher::load_rules(QString filename) {
 }
 
 void Syntax_highligher::highlightBlock(const QString &qtext) {
-	QTextCharFormat format;
-	format.setForeground(Qt::blue);
-	std::smatch matches;
-	const auto &text = qtext.toStdString();
-	for (const auto &token_color : token_colors) {
-		for (std::sregex_token_iterator it{std::begin(text), std::end(text), token_color.regex}; it != std::sregex_token_iterator{}; ++it) {
-			format.setForeground(token_color.color);
-			setFormat(it->first - std::begin(text), it->length(), format);
-		}
-	}
+	(void)qtext;
+	return;
 }
