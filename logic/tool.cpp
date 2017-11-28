@@ -63,19 +63,15 @@ QString Tool::get_name() const {
 	return path.split('/').last();
 }
 
-//takes an `std::tuple` and returns an `std::tuple` without the last element
-template <class Tuple, std::size_t... indexes>
-static constexpr auto remove_last_tuple_element(Tuple tuple, std::index_sequence<indexes...>) {
-	return std::make_tuple(std::move(std::get<indexes>(tuple))...);
-}
-template <class Tuple>
-static constexpr auto remove_last_tuple_element(Tuple &&tuple) {
-	return remove_last_tuple_element(std::forward<Tuple>(tuple), std::make_index_sequence<std::tuple_size_v<Tuple> - 1>());
+//creates an std::tuple but ignores the first argument
+template <class Ignored, class... Args>
+static constexpr auto make_skip_tuple(Ignored, Args &&... args) {
+	return std::make_tuple(std::forward<Args>(args)...);
 }
 
 static constexpr auto get_members() { //this may some day be replacable with reflection
-#define X(Y) &Tool::Y,
-	return remove_last_tuple_element(std::make_tuple(TOOL_MEMBERS 0));
+#define X(Y) , &Tool::Y
+	return make_skip_tuple("ignored" TOOL_MEMBERS);
 #undef X
 }
 
