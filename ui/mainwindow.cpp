@@ -97,7 +97,8 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
-	ui->file_tabs->addTab(file_edit.release(), filename);
+	auto index = ui->file_tabs->addTab(file_edit.release(), filename);
+	ui->file_tabs->setTabToolTip(index, filename);
 }
 
 void MainWindow::apply_to_all_edit_windows(const std::function<void(Edit_window *)> &function) {
