@@ -80,6 +80,9 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	update_tools_list();
 	ui->current_file_path_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_path()));
 	ui->selection_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_selection()));
+	ui->working_dir_label->setToolTip(
+		tr("Current working directory of the executable. If you set this to $FilePath you can use just the file name in arguments. Default when left empty: %1")
+			.arg(QDir::currentPath()));
 }
 
 Tool_editor_widget::~Tool_editor_widget() {}

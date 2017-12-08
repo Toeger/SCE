@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>453</width>
-    <height>415</height>
+    <height>442</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -110,9 +110,6 @@
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="working_dir_label">
-           <property name="toolTip">
-            <string>Current working directory of the executable. If you set this to $FilePath you can use just the file name in arguments.</string>
-           </property>
            <property name="text">
             <string>Working Dir</string>
            </property>
