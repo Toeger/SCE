@@ -72,13 +72,13 @@ QString Tool::get_name() const {
 
 //creates an std::tuple but ignores the first argument
 template <class Ignored, class... Args>
-static constexpr auto make_skip_tuple(Ignored, Args &&... args) {
+static constexpr auto first_skipped_make_tuple(Ignored, Args &&... args) {
 	return std::make_tuple(std::forward<Args>(args)...);
 }
 
 static constexpr auto get_members() { //this may some day be replacable with reflection
 #define X(Y) , &Tool::Y
-	return make_skip_tuple("ignored" TOOL_MEMBERS);
+	return first_skipped_make_tuple("ignored" TOOL_MEMBERS);
 #undef X
 }
 

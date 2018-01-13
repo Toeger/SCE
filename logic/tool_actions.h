@@ -3,7 +3,7 @@
 
 #include <vector>
 
-class Tool;
+struct Tool;
 class QWidget;
 
 namespace Tool_actions {
