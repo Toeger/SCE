@@ -42,10 +42,9 @@ class Tool_editor_widget : public QWidget {
 	void on_path_browse_pushButton_clicked();
 	void on_buttonBox_accepted();
 	void on_buttonBox_rejected();
+	void on_activation_comboBox_activated(int index);
 
 	private:
-	void fill_output_list(QComboBox *combobox);
-
 	Ui::Tool_editor_widget *_; //Qt Designer only works correctly if it finds this string
 
 	friend struct Tool_editor_widget_tester;

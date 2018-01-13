@@ -12,6 +12,7 @@
 	X(output)                                                                                                                                                  \
 	X(error)                                                                                                                                                   \
 	X(activation)                                                                                                                                              \
+	X(activation_keyboard_shortcut)                                                                                                                            \
 	X(working_directory)                                                                                                                                       \
 	X(timeout)
 
@@ -21,7 +22,10 @@ static void write(const QString &data, const QString &name, QJsonObject &json) {
 static void write(const Tool_output_target::Type &data, const QString &name, QJsonObject &json) {
 	json[name] = data;
 }
-static void write(const Tool::Activation &data, const QString &name, QJsonObject &json) {
+static void write(const Tool_activation::Type &data, const QString &name, QJsonObject &json) {
+	json[name] = data;
+}
+static void write(const QKeySequence &data, const QString &name, QJsonObject &json) {
 	json[name] = data.toString();
 }
 static void write(const std::chrono::milliseconds &data, const QString &name, QJsonObject &json) {
@@ -34,7 +38,10 @@ static void read(QString &data, const QString &name, QJsonObject &json) {
 static void read(Tool_output_target::Type &data, const QString &name, QJsonObject &json) {
 	data = static_cast<Tool_output_target::Type>(json[name].toInt());
 }
-static void read(Tool::Activation &data, const QString &name, QJsonObject &json) {
+static void read(Tool_activation::Type &data, const QString &name, QJsonObject &json) {
+	data = static_cast<Tool_activation::Type>(json[name].toInt());
+}
+static void read(QKeySequence &data, const QString &name, QJsonObject &json) {
 	data = json[name].toString();
 }
 static void read(std::chrono::milliseconds &data, const QString &name, QJsonObject &json) {

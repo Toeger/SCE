@@ -14,13 +14,14 @@
 
 //this lists the association between ui elements and Tool members
 static auto get_ui_inputs_tool_attributes(Ui::Tool_editor_widget *ui) {
-	return std::make_tuple(ui->path_lineEdit, &Tool::path,                     //
-						   ui->arguments_lineEdit, &Tool::arguments,           //
-						   ui->input_lineEdit, &Tool::input,                   //
-						   ui->output_comboBox, &Tool::output,                 //
-						   ui->errors_comboBox, &Tool::error,                  //
-						   ui->activation_keySequenceEdit, &Tool::activation,  //
-						   ui->working_dir_lineEdit, &Tool::working_directory, //
+	return std::make_tuple(ui->path_lineEdit, &Tool::path,                                      //
+						   ui->arguments_lineEdit, &Tool::arguments,                            //
+						   ui->input_lineEdit, &Tool::input,                                    //
+						   ui->output_comboBox, &Tool::output,                                  //
+						   ui->errors_comboBox, &Tool::error,                                   //
+						   ui->working_dir_lineEdit, &Tool::working_directory,                  //
+						   ui->activation_comboBox, &Tool::activation,                          //
+						   ui->activation_keySequenceEdit, &Tool::activation_keyboard_shortcut, //
 						   ui->timeout_doubleSpinBox, &Tool::timeout);
 }
 //set ui elements based on a Tool member
@@ -28,6 +29,9 @@ static void tool_to_ui(QLineEdit *line_edit, QString Tool::*member, const Tool &
 	line_edit->setText(tool.*member);
 }
 static void tool_to_ui(QComboBox *combo_box, Tool_output_target::Type Tool::*member, const Tool &tool) {
+	combo_box->setCurrentIndex(tool.*member);
+}
+static void tool_to_ui(QComboBox *combo_box, Tool_activation::Type Tool::*member, const Tool &tool) {
 	combo_box->setCurrentIndex(tool.*member);
 }
 static void tool_to_ui(QKeySequenceEdit *key_edit, QKeySequence Tool::*member, const Tool &tool) {
@@ -54,6 +58,9 @@ static void ui_to_tool(QLineEdit *line_edit, QString Tool::*member, Tool &tool) 
 static void ui_to_tool(QComboBox *combo_box, Tool_output_target::Type Tool::*member, Tool &tool) {
 	tool.*member = static_cast<Tool_output_target::Type>(combo_box->currentIndex());
 }
+static void ui_to_tool(QComboBox *combo_box, Tool_activation::Type Tool::*member, Tool &tool) {
+	tool.*member = static_cast<Tool_activation::Type>(combo_box->currentIndex());
+}
 static void ui_to_tool(QKeySequenceEdit *key_edit, QKeySequence Tool::*member, Tool &tool) {
 	tool.*member = key_edit->keySequence();
 }
@@ -70,14 +77,23 @@ static void ui_to_tool(Ui::Tool_editor_widget *ui, Tool &tool) {
 	ui_to_tool(std::move(ui_tuple), std::make_index_sequence<std::tuple_size<decltype(ui_tuple)>() / 2>(), tool);
 }
 
+template <auto function>
+void fill_combobox(QComboBox *combobox) {
+	for (const auto &entry : function()) {
+		combobox->insertItem(std::numeric_limits<int>::max(), entry);
+	}
+}
+
 Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	: QWidget(parent)
 	, ui(new Ui::Tool_editor_widget) {
 	ui->setupUi(this);
 	load_tools_from_settings();
-	fill_output_list(ui->output_comboBox);
-	fill_output_list(ui->errors_comboBox);
+	fill_combobox<Tool_output_target::get_texts>(ui->output_comboBox);
+	fill_combobox<Tool_output_target::get_texts>(ui->errors_comboBox);
+	fill_combobox<Tool_activation::get_texts>(ui->activation_comboBox);
 	update_tools_list();
+	ui->splitter->setSizes({1, 1});
 	ui->current_file_path_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_path()));
 	ui->selection_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_selection()));
 	ui->working_dir_label->setToolTip(
@@ -160,23 +176,6 @@ void Tool_editor_widget::on_add_pushButton_clicked() {
 	update_tools_list();
 }
 
-void Tool_editor_widget::fill_output_list(QComboBox *combobox) {
-	struct Tool_output_dropdown_data {
-		Tool_output_target::Type target;
-		const QString &text;
-	} const dropdown_entries[] = {
-		{Tool_output_target::ignore, tr("Ignored")},
-		{Tool_output_target::paste, tr("Paste into editor")},
-		{Tool_output_target::console, tr("Display in console")},
-		{Tool_output_target::popup, tr("Display in popup window")},
-		{Tool_output_target::replace_document, tr("Replace document")},
-	};
-	for (const auto &dropdown_entry : dropdown_entries) {
-		assert_equal(dropdown_entry.target, &dropdown_entry - dropdown_entries);
-		combobox->insertItem(dropdown_entry.target, dropdown_entry.text);
-	}
-}
-
 void Tool_editor_widget::on_tools_listWidget_currentRowChanged(int currentRow) {
 	if (currentRow == -1 || tools.empty()) {
 		return;
@@ -217,4 +216,8 @@ void Tool_editor_widget::on_buttonBox_accepted() {
 
 void Tool_editor_widget::on_buttonBox_rejected() {
 	close();
+}
+
+void Tool_editor_widget::on_activation_comboBox_activated(int index) {
+	ui->activation_keySequenceEdit->setVisible(index == Tool_activation::Type::keyboard_shortcut);
 }
