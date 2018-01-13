@@ -84,6 +84,12 @@ void MainWindow::save_last_files() {
 }
 
 void MainWindow::add_file_tab(const QString &filename) {
+	for (int i = 0; i < ui->file_tabs->tabBar()->count(); i++) {
+		if (ui->file_tabs->tabText(i) == filename) {
+			ui->file_tabs->setCurrentIndex(i);
+			return;
+		}
+	}
 	auto file_edit = std::make_unique<Edit_window>();
 	QFile file{filename};
 	file.open(QFile::ReadOnly);
