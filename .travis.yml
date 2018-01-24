@@ -9,7 +9,6 @@ addons:
         packages:
             - g++-7
             - binutils-2.26
-            - protobuf-compiler
             - libprotobuf-dev
 
 before_install:
@@ -20,6 +19,12 @@ before_install:
 install:
     # Qt 5.9
     - sudo apt-get install qt59base
+    # Protobuf
+    - wget https://github.com/google/protobuf/releases/download/v3.5.0/protoc-3.5.0-linux-x86_64.zip -O /tmp/protoc-3.5.0-linux-x86_64.zip
+    - sudo unzip -o -d /usr/local /tmp/protoc-3.5.0-linux-x86_64.zip
+    - sudo chmod +x /usr/local/bin/protoc
+    - sudo chmod og+rx /usr/local/include/google /usr/local/include/google/protobuf /usr/local/include/google/protobuf/compiler
+    - sudo chmod -R og+r /usr/local/include/google/protobuf/
 
 before_script:
     # Display
@@ -38,6 +43,7 @@ before_script:
     # print versions
     - qmake --version
     - g++ --version
+    - protoc --version
 
 script:
     - qmake -nocache
