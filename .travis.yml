@@ -9,6 +9,8 @@ addons:
         packages:
             - g++-7
             - binutils-2.26
+            - protobuf-compiler
+            - libprotobuf-dev
 
 before_install:
     # Qt 5.9

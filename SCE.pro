@@ -17,15 +17,31 @@ QMAKE_CXXFLAGS_WARN_ON -= -Wall -W
 TARGET = SCE
 TEMPLATE = app
 
+proto.target = $$_PRO_FILE_PWD_/interop/sce.pb.cc
+proto.depends = $$_PRO_FILE_PWD_/interop/sce.proto
+proto.commands = protoc --proto_path=$$_PRO_FILE_PWD_/interop --cpp_out=$$_PRO_FILE_PWD_/interop $$_PRO_FILE_PWD_/interop/sce.proto
+PRE_TARGETDEPS += $$_PRO_FILE_PWD_/interop/sce.pb.cc
+QMAKE_EXTRA_TARGETS += proto
+
+generated_sources.name = generated_sources
+generated_sources.input = $$_PRO_FILE_PWD_/interop/sce.pb.cc
+generated_sources.dependency_type = TYPE_C
+generated_sources.variable_out = OBJECTS
+generated_sources.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
+generated_sources.commands = $${QMAKE_CXX} $(CXXFLAGS) -w $(INCPATH) -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
+QMAKE_EXTRA_COMPILERS += generated_sources
+
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-braces
 QMAKE_CXXFLAGS += -Wno-missing-braces
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 QMAKE_CXXFLAGS_DEBUG += -fsanitize=undefined,address
 QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 unix: LIBS += -lutil
+LIBS += -lprotobuf
 DEFINES += $$(ENVIRONMENT_DEFINES)
 
 SOURCES += \
+    interop/plugin.cpp \
     logic/process_reader.cpp \
     logic/settings.cpp \
     logic/syntax_highligher.cpp \
@@ -34,6 +50,7 @@ SOURCES += \
     main.cpp \
     tests/test.cpp \
     tests/test_mainwindow.cpp \
+    tests/test_plugin.cpp \
     tests/test_process_reader.cpp \
     tests/test_settings.cpp \
     tests/test_tool.cpp \
@@ -45,6 +62,7 @@ SOURCES += \
     utility/unique_handle.cpp
 
 HEADERS += \
+    interop/plugin.h \
     logic/process_reader.h \
     logic/settings.h \
     logic/syntax_highligher.h \
@@ -52,6 +70,7 @@ HEADERS += \
     logic/tool_actions.h \
     tests/test.h \
     tests/test_mainwindow.h \
+    tests/test_plugin.h \
     tests/test_process_reader.h \
     tests/test_settings.h \
     tests/test_tool.h \
@@ -70,4 +89,8 @@ OTHER_FILES += \
     .travis.yml \
     feature_plans.md \
     lsan.supp \
-    next_steps.md
+    next_steps.md \
+    interop/sce.pb.h
+
+DISTFILES += \
+    interop/sce.proto

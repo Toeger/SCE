@@ -218,6 +218,6 @@ void Tool_editor_widget::on_buttonBox_rejected() {
 	close();
 }
 
-void Tool_editor_widget::on_activation_comboBox_activated(int index) {
+void Tool_editor_widget::on_activation_comboBox_currentIndexChanged(int index) {
 	ui->activation_keySequenceEdit->setVisible(index == Tool_activation::Type::keyboard_shortcut);
 }
