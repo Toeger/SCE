@@ -10,7 +10,7 @@
 
 Edit_window::Edit_window() {
 	auto highlighter = std::make_unique<Syntax_highligher>(document());
-	highlighter->load_rules("testdata/c++-syntax.json");
+	highlighter->load_rules(TEST_DATA_PATH "c++-syntax.json");
 	syntax_highlighter = std::move(highlighter);
 	Tool_actions::add_widget(this);
 }

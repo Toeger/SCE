@@ -39,6 +39,7 @@ QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 unix: LIBS += -lutil
 LIBS += -lprotobuf
 DEFINES += $$(ENVIRONMENT_DEFINES)
+DEFINES += TEST_DATA_PATH=\\\"$$_PRO_FILE_PWD_/testdata/\\\"
 
 SOURCES += \
     interop/plugin.cpp \
