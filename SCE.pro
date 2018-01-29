@@ -34,7 +34,7 @@ INCLUDEPATH += $${BUILD_DIR}
 #Add custom target to compile protobuffer code with warnings disabled
 compiled_proto.target = $${BUILD_DIR}/$${BUILD}/sce.pb.o
 compiled_proto.depends = $${BUILD_DIR}/sce.pb.cc
-compiled_proto.commands = $${QMAKE_CXX} $${CXXFLAGS} -w $${INCPATH} -c $${compiled_proto.depends} -o $${compiled_proto.target}
+compiled_proto.commands = $${QMAKE_CXX} $(CXXFLAGS) -w $(INCPATH) -c $${compiled_proto.depends} -o $${compiled_proto.target}
 QMAKE_EXTRA_TARGETS += compiled_proto
 OBJECTS += $${compiled_proto.target}
 
