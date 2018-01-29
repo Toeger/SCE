@@ -10,26 +10,36 @@ CONFIG += c++1z
 CONFIG += strict_c++
 CONFIG += debug_and_release
 
-#These flags are inserted after our flags and essentially disable warnings customization
+#Prevent these flags from being inserted after our flags and essentially disabling warnings customization
 QMAKE_CFLAGS_WARN_ON -= -Wall -W
 QMAKE_CXXFLAGS_WARN_ON -= -Wall -W
 
 TARGET = SCE
 TEMPLATE = app
 
-proto.target = $$_PRO_FILE_PWD_/interop/sce.pb.cc
-proto.depends = $$_PRO_FILE_PWD_/interop/sce.proto
-proto.commands = protoc --proto_path=$$_PRO_FILE_PWD_/interop --cpp_out=$$_PRO_FILE_PWD_/interop $$_PRO_FILE_PWD_/interop/sce.proto
-PRE_TARGETDEPS += $$_PRO_FILE_PWD_/interop/sce.pb.cc
-QMAKE_EXTRA_TARGETS += proto
+#Create variable BUILD for the configuration, should be either "debug" or "release", possibly "profile". It should already exist, but I can't find it.
+CONFIG(debug, debug|release) BUILD = debug
+CONFIG(release, debug|release) BUILD = release
 
-generated_sources.name = generated_sources
-generated_sources.input = $$_PRO_FILE_PWD_/interop/sce.pb.cc
-generated_sources.dependency_type = TYPE_C
-generated_sources.variable_out = OBJECTS
-generated_sources.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
-generated_sources.commands = $${QMAKE_CXX} $(CXXFLAGS) -w $(INCPATH) -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
-QMAKE_EXTRA_COMPILERS += generated_sources
+#Can't find the build directory variable. Should be $${buildDir} but isn't. Here we are using the output dir instead which is wrong.
+BUILD_DIR = $${OUT_PWD}
+
+#Add custom target to create protobuffer code
+proto.target = $${BUILD_DIR}/sce.pb.cc
+proto.depends = $${_PRO_FILE_PWD_}/interop/sce.proto
+proto.commands = protoc --proto_path=$${_PRO_FILE_PWD_}/interop --cpp_out=$${BUILD_DIR} $${_PRO_FILE_PWD_}/interop/sce.proto
+QMAKE_EXTRA_TARGETS += proto
+INCLUDEPATH += $${BUILD_DIR}
+
+#Add custom target to compile protobuffer code with warnings disabled
+compiled_proto.target = $${BUILD_DIR}/$${BUILD}/sce.pb.o
+compiled_proto.depends = $${BUILD_DIR}/sce.pb.cc
+compiled_proto.commands = $${QMAKE_CXX} $${CXXFLAGS} -w $${INCPATH} -c $${compiled_proto.depends} -o $${compiled_proto.target}
+QMAKE_EXTRA_TARGETS += compiled_proto
+OBJECTS += $${compiled_proto.target}
+
+#Add compiled protobuf as dependency. No clue how to express that, so we just set it as a pre-build depenency.
+PRE_TARGETDEPS += $${compiled_proto.target}
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-braces
 QMAKE_CXXFLAGS += -Wno-missing-braces
@@ -39,7 +49,7 @@ QMAKE_LFLAGS_DEBUG += -fsanitize=undefined,address
 unix: LIBS += -lutil
 LIBS += -lprotobuf
 DEFINES += $$(ENVIRONMENT_DEFINES)
-DEFINES += TEST_DATA_PATH=\\\"$$_PRO_FILE_PWD_/testdata/\\\"
+DEFINES += TEST_DATA_PATH=\\\"$${_PRO_FILE_PWD_}/testdata/\\\"
 
 SOURCES += \
     interop/plugin.cpp \
