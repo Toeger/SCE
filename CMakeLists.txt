@@ -17,6 +17,14 @@ find_package(Protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
 
+# Warnings
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    #general warnings
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+    #disable warning for generated protobuf file
+    set_source_files_properties(sce.pb.cc PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
+endif()
+
 add_definitions(-DTEST_DATA_PATH=\"${CMAKE_SOURCE_DIR}/testdata/\")
 
 # Source files
@@ -51,7 +59,7 @@ qt5_wrap_ui(SCE_SRC
 )
 
 # Tell CMake to create the executable
-add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS}) # don't know if ${PROTO_HDRS} belongs here
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util)
