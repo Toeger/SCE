@@ -39,18 +39,10 @@ before_script:
     # ignore Qt's memory leaks
     - export LSAN_OPTIONS=suppressions=lsan.supp
     # print versions
-    - qmake --version
     - g++ --version
     - protoc --version
 
 script:
-    - qmake -nocache
-    - make -j release
-    - make clean
-    - make -j debug
-    - ./SCE test
-    - make clean
-    - export ENVIRONMENT_DEFINES=USING_TTY=false
-    - qmake -nocache
-    - make -j debug
+    - cmake .
+    - make -j
     - ./SCE test

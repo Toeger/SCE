@@ -4,6 +4,9 @@ interop/sce.pb.cc
 
 # Local Project files
 *.pro.user
+*.kdev4
+.anjuta
+.kdev4
 
 # Prerequisites
 *.d
