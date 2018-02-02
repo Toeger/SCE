@@ -25,21 +25,19 @@ CONFIG(release, debug|release) BUILD = release
 BUILD_DIR = $${OUT_PWD}
 
 #Add custom target to create protobuffer code
-proto.target = $${BUILD_DIR}/sce.pb.cc
+proto.target = sce.pb.h #sce.pb.cc  #To make a correct makefile the target would be need to be "sce.pb.h sce.pb.cc" but qmake doesn't support that,
+                                     #so we just have to live with spuriously broken builds
 proto.depends = $${_PRO_FILE_PWD_}/interop/sce.proto
 proto.commands = protoc --proto_path=$${_PRO_FILE_PWD_}/interop --cpp_out=$${BUILD_DIR} $${_PRO_FILE_PWD_}/interop/sce.proto
 QMAKE_EXTRA_TARGETS += proto
 INCLUDEPATH += $${BUILD_DIR}
 
 #Add custom target to compile protobuffer code with warnings disabled
-compiled_proto.target = $${BUILD_DIR}/$${BUILD}/sce.pb.o
-compiled_proto.depends = $${BUILD_DIR}/sce.pb.cc
-compiled_proto.commands = $${QMAKE_CXX} $(CXXFLAGS) -w $(INCPATH) -c $${compiled_proto.depends} -o $${compiled_proto.target}
+compiled_proto.target = sce.pb.o
+compiled_proto.depends = sce.pb.h
+compiled_proto.commands = $${QMAKE_CXX} $(CXXFLAGS) -w $(INCPATH) -c sce.pb.cc -o $${compiled_proto.target}
 QMAKE_EXTRA_TARGETS += compiled_proto
 OBJECTS += $${compiled_proto.target}
-
-#Add compiled protobuf as dependency. No clue how to express that, so we just set it as a pre-build depenency.
-PRE_TARGETDEPS += $${compiled_proto.target}
 
 QMAKE_CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-braces
 QMAKE_CXXFLAGS += -Wno-missing-braces
