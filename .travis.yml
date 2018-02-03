@@ -1,14 +1,18 @@
 language: cpp
 dist: trusty
 
-# C++17
 addons:
     apt:
         sources:
+            # Ubuntu testing
             - ubuntu-toolchain-r-test
         packages:
+            # C++17
             - g++-7
+            # ld
             - binutils-2.26
+            # ninja
+            - ninja-build
 
 before_install:
     # Qt 5.9
@@ -28,7 +32,7 @@ before_script:
     # Display
     - export DISPLAY=:99.0
     - sh -e /etc/init.d/xvfb start
-    - sleep 3 # wait for xvfb to start
+    #- sleep 3 # wait for xvfb to start #waiting should not be necessary, compiling C++ will take care of that
     # Qt 5.9
     - source /opt/qt59/bin/qt59-env.sh
     - export QT_FATAL_WARNINGS=1
@@ -41,8 +45,18 @@ before_script:
     # print versions
     - g++ --version
     - protoc --version
+    - cmake --version
+    - ninja --version
+    # set up build directories
+    - mkdir debug_build
+    - mkdir release_build
+    - cd debug_build
 
 script:
-    - cmake .
-    - make -j
+    - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
+    - ninja
+    - ./SCE test
+    - cd ../release_build
+    - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
+    - ninja
     - ./SCE test
