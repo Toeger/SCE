@@ -53,10 +53,10 @@ before_script:
     - cd debug_build
 
 script:
-    - cmake -DCMAKE_BUILD_TYPE=DEBUG ..
-    - make -j
+    - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
+    - ninja
     - ./SCE test
     - cd ../release_build
-    - cmake -DCMAKE_BUILD_TYPE=RELEASE ..
-    - make -j
+    - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
+    - ninja
     - ./SCE test
