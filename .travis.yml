@@ -41,7 +41,7 @@ before_script:
     # ld
     - sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld-2.26 90
     # ignore Qt's memory leaks
-    - export LSAN_OPTIONS=suppressions=lsan.supp
+    - export LSAN_OPTIONS=suppressions=../lsan.supp
     # print versions
     - g++ --version
     - protoc --version
