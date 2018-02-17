@@ -16,13 +16,27 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
+PROTOBUF_GENERATE_PYTHON(PROTO_PY_SRCS interop/sce.proto)
+#PROTOBUF_GENERATE_RPC_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
+#unfortunately the above command does not exist so we lose platform independence here
+if (UNIX)
+	set(GRPC_PATH "/usr/bin/grpc_cpp_plugin")
+else()
+	message(FATAL_ERROR "Figure out where the grpc_cpp_plugin is located on your system and add it in the CMakeLists.txt")
+endif()
+
+add_custom_command(
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PATH}" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
+	DEPENDS interop/sce.proto
+	OUTPUT sce.grpc.pb.cc  sce.grpc.pb.h
+	COMMENT "Generating RPC code for sce.proto.")
 
 # Warnings
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     #general warnings
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
     #disable warning for generated protobuf file
-    set_source_files_properties(sce.pb.cc PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
+    set_source_files_properties(sce.pb.cc sce.grpc.pb.cc PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
 endif()
 
 # Sanitizers
@@ -58,6 +72,7 @@ set(SCE_SRC
 
 # Create code from a list of Qt designer ui files.
 #set(CMAKE_AUTOUIC ON) # use this if you have CMake 3.x instead of the following
+#auto-uic fails for test_mainwindow because that includes ui_mainwindow.h without having a ui file.
 # UI files
 qt5_wrap_ui(SCE_SRC
     ui/mainwindow.ui
@@ -65,10 +80,10 @@ qt5_wrap_ui(SCE_SRC
 )
 
 # Tell CMake to create the executable
-add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS}) # don't know if ${PROTO_HDRS} belongs here
+add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h) # don't know if ${PROTO_HDRS} belongs here
 
 # Use the Widgets module from Qt 5.
-target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util)
+target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++)
 
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)

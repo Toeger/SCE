@@ -1,7 +1,7 @@
 #include "test_mainwindow.h"
-#include "ui/mainwindow.h"
 #include "logic/settings.h"
 #include "test.h"
+#include "ui/mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include <QPlainTextEdit>
@@ -13,7 +13,7 @@ struct MainWindow_tester : MainWindow {
 	}
 	void test_add_file_tab() {
 		ui->file_tabs->clear();
-		{ //check behavior when loading a file that we cannot access
+		{ // check behavior when loading a file that we cannot access
 			assert_equal(ui->file_tabs->count(), 0);
 			const constexpr auto non_existing_filename = "not-existing-file";
 			add_file_tab(non_existing_filename);
@@ -23,11 +23,11 @@ struct MainWindow_tester : MainWindow {
 			assert_equal(edit->toPlainText(), "");
 			assert_equal(edit->placeholderText(), tr("Failed reading file %1").arg(non_existing_filename));
 		}
-		{ //check closing tab
+		{ // check closing tab
 			on_file_tabs_tabCloseRequested(0);
 			assert_equal(ui->file_tabs->count(), 0);
 		}
-		{ //check loading existing file
+		{ // check loading existing file
 			QTemporaryFile tempfile{};
 			tempfile.open();
 			const constexpr auto tempfile_contents = R"(#include <iostream>
