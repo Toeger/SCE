@@ -34,7 +34,7 @@ install:
     # protobuf
     - cd protobuf
     - ./autogen.sh
-    - ./configure
+    - ./configure --prefix=/usr
     - make
     - sudo make install
     - sudo ldconfig # refresh shared library cache.
