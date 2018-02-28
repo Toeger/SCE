@@ -13,32 +13,21 @@ addons:
             - binutils-2.26
             # ninja
             - ninja-build
-            # protobuf compilation tools
-            - autoconf
-            - automake
-            - libtool
-            - curl
-            - unzip
 
 before_install:
     # Qt 5.9
     - sudo add-apt-repository -y ppa:beineri/opt-qt591-trusty
+    # protobuf
+    - sudo add-apt-repository -y ppa:maarten-fonville/protobuf
+    - sudo add-apt-repository -y ppa:bclee/grpc
     # Update sources
     - sudo apt-get update
-    # protobuf
-    - git clone -b 3.5.1.1 --single-branch https://github.com/google/protobuf
 
 install:
     # Qt 5.9
     - sudo apt-get install qt59base
     # protobuf
-    - cd protobuf
-    - ./autogen.sh
-    - ./configure --prefix=/usr
-    - make
-    - sudo make install
-    - sudo ldconfig # refresh shared library cache.
-    - cd ..
+    - sudo apt-get install protobuf-compiler libprotobuf-dev protobuf-compiler-grpc libgrpc++-dev
 
 before_script:
     # Display
