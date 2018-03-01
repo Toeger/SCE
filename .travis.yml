@@ -32,6 +32,8 @@ install:
     - cmake -DINSTALL_BIN_DIR=/usr/bin .. -G Ninja
     - sudo ninja install -j4
     - sudo cp grpc_cpp_plugin /usr/bin
+    - sudo cp *.a /usr/lib
+    - sudo cp *.so /usr/lib
     - cd ../..
 
 before_script:
