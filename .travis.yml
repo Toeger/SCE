@@ -30,7 +30,7 @@ install:
     - mkdir build
     - cd build
     - cmake -DINSTALL_BIN_DIR=/usr/bin .. -G Ninja
-    - ninja install
+    - sudo ninja install
     - cd ../..
 
 before_script:
