@@ -18,8 +18,7 @@ before_install:
     # Qt 5.9
     - sudo add-apt-repository -y ppa:beineri/opt-qt591-trusty
     # protobuf
-    - sudo add-apt-repository -y ppa:maarten-fonville/protobuf
-    - sudo add-apt-repository -y ppa:bclee/grpc
+    - git clone -b v1.10.x --single-branch --recursive https://github.com/grpc/grpc
     # Update sources
     - sudo apt-get update
 
@@ -27,7 +26,11 @@ install:
     # Qt 5.9
     - sudo apt-get install qt59base
     # protobuf
-    - sudo apt-get install protobuf-compiler libprotobuf-dev protobuf-compiler-grpc libgrpc++-dev
+    - cd grpc
+    - mkdir build
+    - cmake -DINSTALL_BIN_DIR=/usr/bin .. -G Ninja
+    - ninja install
+    - cd ..
 
 before_script:
     # Display
