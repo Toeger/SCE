@@ -24,63 +24,59 @@ if (UNIX)
 else()
 	message(FATAL_ERROR "Figure out where the grpc_cpp_plugin is located on your system and add it in the CMakeLists.txt")
 endif()
-
 add_custom_command(
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PATH}" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	DEPENDS interop/sce.proto
 	OUTPUT sce.grpc.pb.cc  sce.grpc.pb.h
 	COMMENT "Generating RPC code for sce.proto.")
 
-# Warnings
+#extra flags
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    #general warnings
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
-    #disable warning for generated protobuf file
-    set_source_files_properties(sce.pb.cc sce.grpc.pb.cc PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
+	#general warnings
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+	#disable warning for generated protobuf file
+	set_source_files_properties(sce.pb.cc sce.grpc.pb.cc PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
+	#sanitizers
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address")
+	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=undefined,address")
+	#disable annoying warnings
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-parameter")
+	message("Debug build")
 endif()
 
-# Sanitizers
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=undefined,address")
-endif()
-
+#defines
 add_definitions(-DTEST_DATA_PATH=\"${CMAKE_SOURCE_DIR}/testdata/\")
 
 # Source files
 set(SCE_SRC
-  interop/plugin.cpp
-  logic/process_reader.cpp
-  logic/settings.cpp
-  logic/syntax_highligher.cpp
-  logic/tool.cpp
-  logic/tool_actions.cpp
-  main.cpp
-  tests/test.cpp
-  tests/test_mainwindow.cpp
-  tests/test_plugin.cpp
-  tests/test_process_reader.cpp
-  tests/test_settings.cpp
-  tests/test_tool.cpp
-  tests/test_tool_editor_widget.cpp
-  ui/edit_window.cpp
-  ui/mainwindow.cpp
-  ui/tool_editor_widget.cpp
-  utility/thread_call.cpp
-  utility/unique_handle.cpp
+	interop/plugin.cpp
+	logic/process_reader.cpp
+	logic/settings.cpp
+	logic/syntax_highligher.cpp
+	logic/tool.cpp
+	logic/tool_actions.cpp
+	main.cpp
+	tests/test.cpp
+	tests/test_mainwindow.cpp
+	tests/test_plugin.cpp
+	tests/test_process_reader.cpp
+	tests/test_settings.cpp
+	tests/test_tool.cpp
+	tests/test_tool_editor_widget.cpp
+	ui/edit_window.cpp
+	ui/mainwindow.cpp
+	ui/tool_editor_widget.cpp
+	utility/thread_call.cpp
+	utility/unique_handle.cpp
 )
 
 # Create code from a list of Qt designer ui files.
-#set(CMAKE_AUTOUIC ON) # use this if you have CMake 3.x instead of the following
-#auto-uic fails for test_mainwindow because that includes ui_mainwindow.h without having a ui file.
-# UI files
-qt5_wrap_ui(SCE_SRC
-    ui/mainwindow.ui
-    ui/tool_editor_widget.ui
-)
+set(CMAKE_AUTOUIC ON)
+#disable autouic for every .cpp file that includes a ui_ file but doesn't have a .ui file of the same name
+set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
 
-# Tell CMake to create the executable
-add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h) # don't know if ${PROTO_HDRS} belongs here
+#create the executable
+add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h)
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++)
