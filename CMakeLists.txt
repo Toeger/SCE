@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+cmake_policy(SET CMP0071 NEW)
 project(SCE)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -35,7 +36,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 	#general warnings
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 	#disable warning for generated protobuf file
-	set_source_files_properties(sce.pb.cc sce.grpc.pb.cc PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
+	set_source_files_properties(sce.pb.cc sce.grpc.pb.cc PROPERTIES COMPILE_FLAGS -w)
 	#sanitizers
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address")
 	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=undefined,address")
