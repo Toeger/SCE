@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
-cmake_policy(SET CMP0071 NEW)
 project(SCE)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
