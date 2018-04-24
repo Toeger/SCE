@@ -34,7 +34,7 @@ install:
     - mkdir build
     - cd build
     - cmake .. -G Ninja
-    - sudo ninja install -v -j4
+    - sudo ninja install -j4
     - sudo cp grpc_cpp_plugin /usr/bin
     - sudo cp *.a /usr/lib
     - sudo cp *.so /usr/lib
@@ -62,7 +62,7 @@ before_script:
 
 script:
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
-    - ninja -j4
+    - ninja -v -j4
     - ./SCE test
     - cd ../release_build
     - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
