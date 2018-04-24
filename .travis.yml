@@ -15,6 +15,10 @@ addons:
             - ninja-build
 
 before_install:
+    # gcc 7
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    # ld
+    - sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld-2.26 90
     # Qt 5.9
     - sudo add-apt-repository -y ppa:beineri/opt-qt591-trusty
     # protobuf
@@ -44,13 +48,6 @@ before_script:
     # Qt 5.9
     - source /opt/qt59/bin/qt59-env.sh
     - export QT_FATAL_WARNINGS=1
-    # gcc 7
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
-    # ld
-    - sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld-2.26 90
-    - file /usr/bin/x86_64-linux-gnu-ld
-    - /usr/bin/x86_64-linux-gnu-ld --version
-    - false
     # ignore Qt's memory leaks
     - export LSAN_OPTIONS=suppressions=../lsan.supp
     # print versions
