@@ -13,7 +13,8 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets CONFIG REQUIRED)
 
 # Set up protobuffer
-find_package(Protobuf CONFIG REQUIRED)
+set(CMAKE_MODULE_PATH "/usr/local/lib/grpc/cmake/;/usr/local/lib/protobuf/cmake/;${CMAKE_MODULE_PATH}")
+find_package(Protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
 PROTOBUF_GENERATE_PYTHON(PROTO_PY_SRCS interop/sce.proto)
@@ -80,6 +81,6 @@ add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.gr
 # Use the Widgets module from Qt 5.
 target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++)
 message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
-
+	
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)
