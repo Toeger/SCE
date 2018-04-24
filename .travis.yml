@@ -19,9 +19,6 @@ before_install:
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # ld
     - sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld-2.26 90
-    - file /usr/bin/x86_64-linux-gnu-ld
-    - /usr/bin/x86_64-linux-gnu-ld --version
-    - false
     # Qt 5.9
     - sudo add-apt-repository -y ppa:beineri/opt-qt591-trusty
     # protobuf
@@ -37,7 +34,7 @@ install:
     - mkdir build
     - cd build
     - cmake .. -G Ninja
-    - sudo ninja install -j4
+    - sudo ninja install -v -j4
     - sudo cp grpc_cpp_plugin /usr/bin
     - sudo cp *.a /usr/lib
     - sudo cp *.so /usr/lib
