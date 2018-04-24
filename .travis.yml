@@ -48,6 +48,9 @@ before_script:
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # ld
     - sudo update-alternatives --install /usr/bin/ld ld /usr/bin/ld-2.26 90
+    - file /usr/bin/x86_64-linux-gnu-ld
+    - /usr/bin/x86_64-linux-gnu-ld --version
+    - false
     # ignore Qt's memory leaks
     - export LSAN_OPTIONS=suppressions=../lsan.supp
     # print versions
