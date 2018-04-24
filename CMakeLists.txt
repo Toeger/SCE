@@ -13,7 +13,7 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets CONFIG REQUIRED)
 
 # Set up protobuffer
-find_package(Protobuf REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
 PROTOBUF_GENERATE_PYTHON(PROTO_PY_SRCS interop/sce.proto)
@@ -41,7 +41,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=undefined,address")
 	#disable annoying warnings
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-parameter")
-	message("Debug build")
 endif()
 
 #defines
@@ -80,6 +79,7 @@ add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.gr
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++)
+message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
 
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)

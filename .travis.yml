@@ -29,7 +29,7 @@ install:
     - cd grpc
     - mkdir build
     - cd build
-    - cmake -DINSTALL_BIN_DIR=/usr/bin .. -G Ninja
+    - cmake .. -G Ninja
     - sudo ninja install -j4
     - sudo cp grpc_cpp_plugin /usr/bin
     - sudo cp *.a /usr/lib
