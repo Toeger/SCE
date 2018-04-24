@@ -11,7 +11,8 @@ static void test_rpc_call() {
     //class that implements the RPC functions
     constexpr auto test_response = "testresponse";
     class Rpc_server : public sce::proto::Query::Service {
-        grpc::Status GetCurrentFile(grpc::ServerContext *context, const sce::proto::GetCurrentFileParams *request, sce::proto::String *response) override {
+        grpc::Status GetCurrentFile([[maybe_unused]] grpc::ServerContext *context, [[maybe_unused]] const sce::proto::GetCurrentFileParams *request,
+                                    sce::proto::String *response) override {
             response->set_text(test_response);
             return grpc::Status::OK;
         }
@@ -39,8 +40,8 @@ static void test_rpc_call() {
 
 void test_plugin() {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
-	
+
     test_rpc_call();
-	
+
     google::protobuf::ShutdownProtobufLibrary();
 }
