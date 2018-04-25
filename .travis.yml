@@ -44,7 +44,6 @@ before_script:
     # Display
     - export DISPLAY=:99.0
     - sh -e /etc/init.d/xvfb start
-    #- sleep 3 # wait for xvfb to start #waiting should not be necessary, compiling C++ will take care of that
     # Qt 5.9
     - source /opt/qt59/bin/qt59-env.sh
     - export QT_FATAL_WARNINGS=1
@@ -56,6 +55,7 @@ before_script:
     - cmake --version
     - ninja --version
     - ld --version
+    - /usr/bin/x86_64-linux-gnu-ld --version
     # set up build directories
     - mkdir debug_build
     - mkdir release_build
