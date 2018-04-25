@@ -62,9 +62,9 @@ before_script:
 
 script:
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
-    - ninja -v -j4
-    - ./SCE test
-    - cd ../release_build
-    - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
-    - ninja -j4
-    - ./SCE test
+    - ninja -v
+    #- ./SCE test
+    #- cd ../release_build
+    #- cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
+    #- ninja -j4
+    #- ./SCE test
