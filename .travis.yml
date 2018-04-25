@@ -55,12 +55,13 @@ before_script:
     - protoc --version
     - cmake --version
     - ninja --version
+    - ld --version
     # set up build directories
     - mkdir debug_build
     - mkdir release_build
-    - cd debug_build
 
 script:
+    - cd debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -v
     #- ./SCE test
