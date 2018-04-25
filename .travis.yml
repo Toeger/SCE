@@ -8,15 +8,15 @@ addons:
             - ubuntu-toolchain-r-test
         packages:
             # C++17
-            - g++-7
+            #- g++-7
             # ninja
             - ninja-build
 
 before_install:
     # gcc 7
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # ld
-    - sudo add-apt-repository -y ppa:jonathonf/binutils
+    - sudo add-apt-repository -y ppa:jonathonf/gcc
     # Qt 5.9
     - sudo add-apt-repository -y ppa:beineri/opt-qt591-trusty
     # protobuf
@@ -27,6 +27,9 @@ before_install:
 install:
     # ld
     - sudo apt-get install binutils
+    # gcc
+    - sudo apt-get install gcc-8
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
     # Qt 5.9
     - sudo apt-get install qt59base
     # protobuf
