@@ -35,6 +35,9 @@ install:
     - cd build
     - cmake .. -G Ninja
     - sudo ninja install -j4
+    - sudo cp grpc_cpp_plugin /usr/local/bin
+    - sudo cp *.a /usr/local/lib
+    - sudo cp *.so /usr/local/lib
     - cd ../..
 
 before_script:
