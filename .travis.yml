@@ -39,6 +39,8 @@ install:
     - sudo cp *.a /usr/local/lib
     - sudo cp *.so /usr/local/lib
     - cd ../..
+    - file /usr/lib/libgrpc++.a
+    - file /usr/local/lib/libgrpc++.a
 
 before_script:
     # Display
@@ -61,11 +63,19 @@ before_script:
     - mkdir release_build
 
 script:
-    - cd debug_build
-    - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
-    - ninja -j4
-    - ./SCE test
-    - cd ../release_build
-    - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
-    - ninja -j4
-    - ./SCE test
+    - git clone https://github.com/Toeger/LibFinder
+    - cd LibFinder
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+    - ./libfinder -u
+    - ./libfinder -s grpc_insecure_channel_create
+    #- cd debug_build
+    #- cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
+    #- ninja -j4
+    #- ./SCE test
+    #- cd ../release_build
+    #- cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
+    #- ninja -j4
+    #- ./SCE test
