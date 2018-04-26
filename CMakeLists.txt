@@ -13,22 +13,24 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets CONFIG REQUIRED)
 
 # Set up protobuffer
-set(CMAKE_MODULE_PATH "/usr/local/lib/grpc/cmake/;/usr/local/lib/protobuf/cmake/;${CMAKE_MODULE_PATH}")
+if (NOT DEFINED ENV{TRAVIS})
+	set(USR_PATH "/usr")
+else()
+	set(USR_PATH "/usr/local")
+endif()
+
+set(CMAKE_MODULE_PATH "${USR_PATH}/lib/grpc/cmake/;${USR_PATH}/lib/protobuf/cmake/;${CMAKE_MODULE_PATH}")
 find_package(Protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
 PROTOBUF_GENERATE_PYTHON(PROTO_PY_SRCS interop/sce.proto)
 if (UNIX)
-	if (NOT DEFINED ENV{TRAVIS})
-		set(GRPC_PATH "/usr/bin/grpc_cpp_plugin")
-	else()
-		set(GRPC_PATH "/usr/local/bin/grpc_cpp_plugin")
-	endif()
+	set(GRPC_PLUGIN "${USR_PATH}/bin/grpc_cpp_plugin")
 else()
 	message(FATAL_ERROR "Figure out where the grpc_cpp_plugin is located on your system and add it in the CMakeLists.txt")
 endif()
 add_custom_command(
-	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PATH}" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PLUGIN}" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	DEPENDS interop/sce.proto
 	OUTPUT sce.grpc.pb.cc  sce.grpc.pb.h
 	COMMENT "Generating RPC code for sce.proto.")
