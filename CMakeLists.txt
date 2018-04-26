@@ -86,7 +86,7 @@ set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
 add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h)
 
 # Use the Widgets module from Qt 5.
-target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc grpc++ gpr grpc_cronet grpc_unsecure z grpc++_cronet grpc++_unsecure grpc++_error_details)
+target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ grpc++_cronet grpc++_unsecure grpc++_error_details grpc grpc_cronet grpc_unsecure gpr z)
 message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
 	
 # Install the executable
