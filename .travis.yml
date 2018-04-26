@@ -39,8 +39,6 @@ install:
     - sudo cp *.a /usr/local/lib
     - sudo cp *.so /usr/local/lib
     - cd ../..
-    - file /usr/lib/libgrpc++.a
-    - file /usr/local/lib/libgrpc++.a
 
 before_script:
     # Display
