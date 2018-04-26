@@ -11,6 +11,8 @@ addons:
             - g++-7
             # ninja
             - ninja-build
+            # ssl
+            - libssl-dev
             # boost
             - libboost-all-dev
 
