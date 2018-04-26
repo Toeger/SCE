@@ -63,6 +63,8 @@ before_script:
     - mkdir release_build
 
 script:
+    - sudo apt-get install locate
+    - sudo updatedb
     - git clone https://github.com/Toeger/LibFinder
     - cd LibFinder
     - mkdir build
