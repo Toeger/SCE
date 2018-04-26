@@ -85,8 +85,10 @@ set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
 #create the executable
 add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h)
 
-# Use the Widgets module from Qt 5.
-target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ grpc++_cronet grpc++_unsecure grpc++_error_details grpc grpc_cronet grpc_unsecure gpr z ssl)
+# Link executable
+# Debian is fine with "util grpc++", but Ubuntu wants all the libraries spelled out.
+set(SYSTEM_LIBS "util grpc++ grpc++_cronet grpc++_unsecure grpc++_error_details grpc grpc_cronet grpc_unsecure gpr z ssl")
+target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} ${SYSTEM_LIBS} ${SYSTEM_LIBS})
 message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
 	
 # Install the executable
