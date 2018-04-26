@@ -6,11 +6,15 @@ addons:
         sources:
             # Ubuntu testing
             - ubuntu-toolchain-r-test
+            # boost just for a quick test
+            - boost-latest
         packages:
             # C++17
             - g++-7
             # ninja
             - ninja-build
+            # boost
+            - libboost1.55-all-dev
 
 before_install:
     # gcc 7
@@ -69,6 +73,7 @@ script:
     - make
     - ./libfinder -u
     - ./libfinder -s grpc_insecure_channel_create
+    - false #just so this test doesn't count as a successful build
     #- cd debug_build
     #- cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     #- ninja -j4
