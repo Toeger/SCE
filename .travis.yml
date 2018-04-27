@@ -65,21 +65,24 @@ before_script:
     - mkdir release_build
 
 script:
-    #- sudo apt-get install locate
-    #- sudo updatedb
-    #- git clone https://github.com/Toeger/LibFinder
-    #- cd LibFinder
-    #- mkdir build
-    #- cd build
-    #- cmake ..
-    #- make
-    #- ./libfinder -u
-    #- ./libfinder -s grpc_insecure_channel_create
-    #- false #just so this test doesn't count as a successful build
     - cd debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
     - ./SCE test
+    # using libfinder to find some missing symbols
+    - sudo apt-get install locate
+    - sudo updatedb
+    - git clone https://github.com/Toeger/LibFinder
+    - cd LibFinder
+    - mkdir build
+    - cd build
+    - cmake -G Ninja ..
+    - ninja -j4
+    - ./libfinder -u
+    - ./libfinder -s ares_inet_ntop
+    - ./libfinder -s init_openssl
+    - ./libfinder -s BIO_pending
+    #- false #just so this test doesn't count as a successful build
     #- cd ../release_build
     #- cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
     #- ninja -j4
