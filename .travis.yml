@@ -13,6 +13,8 @@ addons:
             - ninja-build
             # boost
             - libboost-all-dev
+            # realpath
+            - coreutils
 
 before_install:
     # gcc 7
