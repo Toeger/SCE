@@ -86,9 +86,9 @@ set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
 add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h)
 
 # Link executable
-# Debian is fine with "util grpc++", but Ubuntu wants all the libraries spelled out.
-set(GRPC_LIBS ENV{GRPC_LIBS})
-target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ ${GRPC_LIBS})
+# Debian is fine with "util grpc++", but apparently Ubuntu wants all the libraries spelled out.
+set(PROTOBUF_LIBRARIES "${PROTOBUF_LIBRARIES};ENV{GRPC_LIBS}")
+target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++)
 message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
 	
 # Install the executable
