@@ -38,7 +38,7 @@ install:
     - sudo ninja install -j4
     - find -name \*.a | grep /lib.\*\\.a$
     - sudo cp grpc_cpp_plugin /usr/local/bin
-    #- sudo cp *.a /usr/local/lib
+    - sudo cp *.a /usr/local/lib
     #- sudo cp third_party/boringssl/crypto/libcrypto.a /usr/local/lib
     #- sudo cp third_party/boringssl/ssl/libssl.a /usr/local/lib
     #- sudo cp third_party/zlib/libz.a /usr/local/lib
