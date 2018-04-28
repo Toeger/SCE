@@ -11,6 +11,8 @@ addons:
             - g++-7
             # ninja
             - ninja-build
+            # boost
+            - libboost-all-dev
 
 before_install:
     # gcc 7
@@ -67,24 +69,25 @@ before_script:
     - mkdir release_build
 
 script:
+    # using libfinder to find some missing symbols
+    - sudo apt-get install locate
+    - sudo updatedb
+    - git clone https://github.com/Toeger/LibFinder
+    - cd LibFinder && mkdir build && cd build
+    - cmake -G Ninja ..
+    - ninja -j4
+    - ./libfinder -u 2>/dev/null
+    - ./libfinder -s ares_inet_ntop
+    - ./libfinder -s OPENSSL_free
+    - ./libfinder -s BIO_pending
+    - cd ../..
+    - false #just so this test doesn't count as a successful build
+    # debug build
     - cd debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
     - ./SCE test
-    # using libfinder to find some missing symbols
-    #- sudo apt-get install locate
-    #- sudo updatedb
-    #- git clone https://github.com/Toeger/LibFinder
-    #- cd LibFinder
-    #- mkdir build
-    #- cd build
-    #- cmake -G Ninja ..
-    #- ninja -j4
-    #- ./libfinder -u
-    #- ./libfinder -s ares_inet_ntop
-    #- ./libfinder -s init_openssl
-    #- ./libfinder -s BIO_pending
-    #- false #just so this test doesn't count as a successful build
+    # release build
     #- cd ../release_build
     #- cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
     #- ninja -j4
