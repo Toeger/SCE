@@ -11,10 +11,6 @@ addons:
             - g++-7
             # ninja
             - ninja-build
-            # ssl
-            - libssl-dev
-            # boost
-            - libboost-all-dev
 
 before_install:
     # gcc 7
@@ -34,15 +30,20 @@ install:
     # Qt 5.9
     - sudo apt-get install qt59base
     # protobuf
-    - cd grpc
-    - mkdir build
-    - cd build
+    - cd grpc && mkdir build && cd build
     - cmake .. -G Ninja
     - sudo ninja install -j4
     - sudo cp grpc_cpp_plugin /usr/local/bin
     - sudo cp *.a /usr/local/lib
-    - sudo cp *.so /usr/local/lib
-    - cd ../..
+    - cd ..
+    - sudo cp third_party/boringssl/crypto/libcrypto.a /usr/local/lib
+    - sudo cp third_party/boringssl/ssl/libssl.a /usr/local/lib
+    - sudo cp third_party/zlib/libz.a /usr/local/lib
+    - sudo cp third_party/zlib/libz.so /usr/local/lib
+    - sudo cp third_party/protobuf/libprotobuf.a /usr/local/lib
+    - sudo cp third_party/protobuf/*.a /usr/local/lib
+    - sudo cp third_party/cares/cares/lib/libcares.a /usr/local/lib
+    - cd ..
 
 before_script:
     # Display
@@ -70,18 +71,18 @@ script:
     - ninja -j4
     - ./SCE test
     # using libfinder to find some missing symbols
-    - sudo apt-get install locate
-    - sudo updatedb
-    - git clone https://github.com/Toeger/LibFinder
-    - cd LibFinder
-    - mkdir build
-    - cd build
-    - cmake -G Ninja ..
-    - ninja -j4
-    - ./libfinder -u
-    - ./libfinder -s ares_inet_ntop
-    - ./libfinder -s init_openssl
-    - ./libfinder -s BIO_pending
+    #- sudo apt-get install locate
+    #- sudo updatedb
+    #- git clone https://github.com/Toeger/LibFinder
+    #- cd LibFinder
+    #- mkdir build
+    #- cd build
+    #- cmake -G Ninja ..
+    #- ninja -j4
+    #- ./libfinder -u
+    #- ./libfinder -s ares_inet_ntop
+    #- ./libfinder -s init_openssl
+    #- ./libfinder -s BIO_pending
     #- false #just so this test doesn't count as a successful build
     #- cd ../release_build
     #- cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
