@@ -32,12 +32,9 @@ install:
     - cat envtest.sh
     - touch lib1
     - touch lib2
-    - echo $PRETEST
-    - echo $TEST
-    - find . -name "lib*"
     - source envtest.sh
     - echo $PRETEST
-    - echo $TEST
+    - echo LIB_LIST
     - false
     # ld
     - sudo apt-get install binutils
