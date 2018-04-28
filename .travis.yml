@@ -5,7 +5,7 @@ addons:
     apt:
         sources:
             # Ubuntu testing
-            #- ubuntu-toolchain-r-test
+            - ubuntu-toolchain-r-test
         packages:
             # C++17
             #- g++-7
@@ -14,7 +14,7 @@ addons:
             # boost
             #- libboost-all-dev
             # realpath
-            #- realpath
+            - realpath
 
 before_install:
     # gcc 7
@@ -30,10 +30,14 @@ before_install:
 
 install:
     - cat envtest.sh
+    - touch lib1
+    - touch lib2
+    - echo $PRETEST
+    - echo $TEST
+    - find . -name "lib*"
     - source envtest.sh
-    - echo $ENVTEST
-    - . ./envtest.sh
-    - echo $ENVTEST
+    - echo $PRETEST
+    - echo $TEST
     - false
     # ld
     - sudo apt-get install binutils
