@@ -20,7 +20,6 @@ else()
 endif()
 
 set(CMAKE_MODULE_PATH "${USR_PATH}/lib/grpc/cmake/;${USR_PATH}/lib/protobuf/cmake/;${CMAKE_MODULE_PATH}")
-link_directories("${USR_PATH}/lib")
 find_package(Protobuf REQUIRED)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
@@ -88,7 +87,7 @@ add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.gr
 
 # Link executable
 # Debian is fine with "util grpc++", but Ubuntu wants all the libraries spelled out.
-target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ grpc protobuf gpr ssl crypto z)
+target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ ENV{GRPC_LIBS})
 message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
 	
 # Install the executable
