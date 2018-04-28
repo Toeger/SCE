@@ -38,7 +38,7 @@ install:
     - cmake .. -G Ninja
     - ninja -j4
     - sudo ninja install -j4
-    - find -name \*.a | grep /lib.\*\\.a$
+    - find . -name "lib*.a"
     - sudo cp grpc_cpp_plugin /usr/local/bin
     - sudo cp *.a /usr/local/lib
     #- sudo cp third_party/boringssl/crypto/libcrypto.a /usr/local/lib
@@ -49,7 +49,9 @@ install:
     #- sudo cp third_party/protobuf/*.a /usr/local/lib
     #- sudo cp third_party/cares/cares/lib/libcares.a /usr/local/lib
     - cd ../..
-    - . ./generate_grpc_libs.sh
+    - source generate_grpc_libs.sh
+    - echo $GRPC_LIBS
+    - sh generate_grpc_libs.sh
     - echo $GRPC_LIBS
 
 before_script:
