@@ -49,10 +49,11 @@ install:
     #- sudo cp third_party/protobuf/*.a /usr/local/lib
     #- sudo cp third_party/cares/cares/lib/libcares.a /usr/local/lib
     - cd ../..
-    - source generate_grpc_libs.sh
+    - source ./generate_grpc_libs.sh
     - echo $GRPC_LIBS
-    - sh generate_grpc_libs.sh
+    - . ./generate_grpc_libs.sh
     - echo $GRPC_LIBS
+    - false #early exit, just to check if setting environment variables works
 
 before_script:
     # Display
