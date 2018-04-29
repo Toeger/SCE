@@ -29,12 +29,6 @@ before_install:
     #- sudo apt-get update
 
 install:
-    - cat envtest.sh
-    - touch lib1
-    - touch lib2
-    - export GRPC_LIBS=$(sh envtest.sh)
-    - echo $GRPC_LIBS
-    - false
     # ld
     - sudo apt-get install binutils
     # Qt 5.9
@@ -44,22 +38,11 @@ install:
     - cmake .. -G Ninja
     - ninja -j4
     - sudo ninja install -j4
-    - find . -name "lib*.a"
     - sudo cp grpc_cpp_plugin /usr/local/bin
     - sudo cp *.a /usr/local/lib
-    #- sudo cp third_party/boringssl/crypto/libcrypto.a /usr/local/lib
-    #- sudo cp third_party/boringssl/ssl/libssl.a /usr/local/lib
-    #- sudo cp third_party/zlib/libz.a /usr/local/lib
-    #- sudo cp third_party/zlib/libz.so /usr/local/lib
-    #- sudo cp third_party/protobuf/libprotobuf.a /usr/local/lib
-    #- sudo cp third_party/protobuf/*.a /usr/local/lib
-    #- sudo cp third_party/cares/cares/lib/libcares.a /usr/local/lib
+    - export GRPC_LIBS=$(sh print_libs.sh)
+    - echo $GRPC_LIBS
     - cd ../..
-    - source ./generate_grpc_libs.sh
-    - echo $GRPC_LIBS
-    - . ./generate_grpc_libs.sh
-    - echo $GRPC_LIBS
-    - false #early exit, just to check if setting environment variables works
 
 before_script:
     # Display
@@ -83,18 +66,18 @@ before_script:
 
 script:
     # using libfinder to find some missing symbols
-    - sudo apt-get install locate
-    - sudo updatedb
-    - git clone https://github.com/Toeger/LibFinder
-    - cd LibFinder && mkdir build && cd build
-    - cmake -G Ninja ..
-    - ninja -j4
-    - ./libfinder -u 2>/dev/null
-    - ./libfinder -s ares_inet_ntop
-    - ./libfinder -s OPENSSL_free
-    - ./libfinder -s BIO_pending
-    - cd ../..
-    - false #just so this test doesn't count as a successful build
+    #- sudo apt-get install locate
+    #- sudo updatedb
+    #- git clone https://github.com/Toeger/LibFinder
+    #- cd LibFinder && mkdir build && cd build
+    #- cmake -G Ninja ..
+    #- ninja -j4
+    #- ./libfinder -u 2>/dev/null
+    #- ./libfinder -s ares_inet_ntop
+    #- ./libfinder -s OPENSSL_free
+    #- ./libfinder -s BIO_pending
+    #- cd ../..
+    #- false #just so this test doesn't count as a successful build
     # debug build
     - cd debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
