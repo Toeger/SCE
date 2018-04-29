@@ -6,4 +6,4 @@ do
     echo $LIB_LIST
     echo "$LIB_LIST $(realpath $lib)"
 done
-
+export POSTTEST="$POSTTEST posttest"
