@@ -32,11 +32,8 @@ install:
     - cat envtest.sh
     - touch lib1
     - touch lib2
-    - source envtest.sh
-    - echo $PRETEST
-    - echo $LIB_LIST
-    - echo $MIDTEST
-    - echo $POSTTEST
+    - export GRPC_LIBS=$(sh envtest.sh)
+    - echo $GRPC_LIBS
     - false
     # ld
     - sudo apt-get install binutils
