@@ -87,6 +87,7 @@ add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.gr
 
 # Link executable
 # Debian is fine with "util grpc++", but apparently Ubuntu wants all the libraries spelled out.
+message("GRPC libs: " $ENV{GRPC_LIBS})
 target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ $ENV{GRPC_LIBS})
 message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
 	
