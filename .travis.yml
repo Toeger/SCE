@@ -35,6 +35,7 @@ install:
     - source envtest.sh
     - echo $PRETEST
     - echo $LIB_LIST
+    - echo $MIDTEST
     - echo $POSTTEST
     - false
     # ld
