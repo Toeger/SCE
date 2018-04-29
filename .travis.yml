@@ -35,6 +35,7 @@ install:
     - source envtest.sh
     - echo $PRETEST
     - echo $LIB_LIST
+    - echo $POSTTEST
     - false
     # ld
     - sudo apt-get install binutils
