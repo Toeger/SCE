@@ -15,14 +15,14 @@ addons:
             - libboost-all-dev
             # realpath
             - realpath
-            # python
-            - python2.7
 
 before_install:
     # gcc 7
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # ld
     - sudo add-apt-repository -y ppa:jonathonf/binutils
+    # python
+    - sudo add-apt-repository -y ppa:jonathonf/python-2.7
     # Qt 5.9
     - sudo add-apt-repository -y ppa:beineri/opt-qt591-trusty
     # protobuf
@@ -33,6 +33,8 @@ before_install:
 install:
     # ld
     - sudo apt-get install binutils
+    # python
+    - sudo apt-get install python2.7
     # Qt 5.9
     - sudo apt-get install qt59base
     # protobuf
