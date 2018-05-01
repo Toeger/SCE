@@ -26,7 +26,12 @@ struct Test_RPC_server {
 
 	Test_RPC_server()
 		//create RPC server and run it in a thread
-		: server{grpc::ServerBuilder{}.AddListeningPort(rpc_address, grpc::InsecureServerCredentials()).RegisterService(&rpc_server).BuildAndStart()}
+		: server{grpc::ServerBuilder{}
+					 .SetDefaultCompressionLevel(GRPC_COMPRESS_LEVEL_NONE)
+					 .SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE)
+					 .AddListeningPort(rpc_address, grpc::InsecureServerCredentials())
+					 .RegisterService(&rpc_server)
+					 .BuildAndStart()}
 		, server_thread{[this] { server->Wait(); }} {}
 	~Test_RPC_server() {
 		server->Shutdown();

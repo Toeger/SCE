@@ -54,8 +54,9 @@ before_script:
     # Qt 5.9
     - source /opt/qt59/bin/qt59-env.sh
     - export QT_FATAL_WARNINGS=1
-    # ignore Qt's memory leaks
-    - export LSAN_OPTIONS=suppressions=../lsan.supp
+    # Sanitizer settings
+    - export UBSAN_OPTIONS=print_stacktrace=1
+    - export LSAN_OPTIONS=suppressions=../lsan.supp #ignore Qt's memory leaks
     # print versions
     - g++ --version
     - protoc --version
