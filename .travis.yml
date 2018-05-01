@@ -37,7 +37,7 @@ install:
     - cd grpc && mkdir build && cd build
     - cmake .. -G Ninja
     - sudo ninja install -j4
-    - sudo cp grpc_cpp_plugin /usr/local/bin
+    - sudo cp grpc_* /usr/local/bin
     - sudo cp *.a /usr/local/lib
     - cd ../..
     - export GRPC_LIBS=$(sh print_libs.sh)

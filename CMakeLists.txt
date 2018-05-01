@@ -25,14 +25,15 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
 PROTOBUF_GENERATE_PYTHON(PROTO_PY_SRCS interop/sce.proto)
 if (UNIX)
-	set(GRPC_PLUGIN "${USR_PATH}/bin/grpc_cpp_plugin")
+	set(GRPC_PLUGIN_PATH "${USR_PATH}/bin")
 else()
 	message(FATAL_ERROR "Figure out where the grpc_cpp_plugin is located on your system and add it in the CMakeLists.txt")
 endif()
 add_custom_command(
-	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PLUGIN}" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PLUGIN_PATH}/grpc_cpp_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
+	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--grpc_python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--plugin=protoc-gen-grpc_python=${GRPC_PLUGIN_PATH}/grpc_python_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	DEPENDS interop/sce.proto
-	OUTPUT sce.grpc.pb.cc  sce.grpc.pb.h
+	OUTPUT sce.grpc.pb.cc  sce.grpc.pb.h #${CMAKE_CURRENT_SOURCE_DIR}/testdata/sce_pb2_grpc.py  ${CMAKE_CURRENT_SOURCE_DIR}/testdata/sce_pb2.py
 	COMMENT "Generating RPC code for sce.proto.")
 
 #extra flags
@@ -89,9 +90,8 @@ add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.gr
 # Debian is fine with "util grpc++", but apparently Ubuntu wants all the libraries spelled out.
 # On a proper system that packages grpc $ENV{GRPC_LIBS} should be empty.
 # Otherwise compile from source and use `export GRPC_LIBS=$(sh print_libs.sh)` to get a list of the compiled libs.
-message("GRPC libs: " $ENV{GRPC_LIBS})
+#message("GRPC libs: " $ENV{GRPC_LIBS})
 target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ $ENV{GRPC_LIBS} $ENV{GRPC_LIBS})
-message("Protobuf libraries: " ${PROTOBUF_LIBRARIES})
-	
+
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)

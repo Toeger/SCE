@@ -1,12 +1,14 @@
 # Generated Files
-interop/sce.pb.h
-interop/sce.pb.cc
+testdata/interop_scripts/sce_pb2.py
+testdata/interop_scripts/sce_pb2_grpc.py
+testdata/interop_scripts/venv
 
 # Local Project files
 *.pro.user
 *.kdev4
 .anjuta
 .kdev4
+CMakeLists.txt.user
 
 # Prerequisites
 *.d
