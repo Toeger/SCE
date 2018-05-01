@@ -1,6 +1,8 @@
 # Generated Files
 testdata/interop_scripts/sce_pb2.py
+testdata/interop_scripts/sce_pb2.pyc
 testdata/interop_scripts/sce_pb2_grpc.py
+testdata/interop_scripts/sce_pb2_grpc.pyc
 testdata/interop_scripts/venv
 
 # Local Project files
