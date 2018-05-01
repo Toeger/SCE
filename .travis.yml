@@ -15,6 +15,8 @@ addons:
             - libboost-all-dev
             # realpath
             - realpath
+            # python
+            - python2.7
 
 before_install:
     # gcc 7
@@ -58,6 +60,7 @@ before_script:
     - cmake --version
     - ninja --version
     - ld --version
+    - python --version
     - /usr/bin/x86_64-linux-gnu-ld --version
     # set up build directories
     - mkdir debug_build
