@@ -40,18 +40,18 @@ add_custom_command(
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	#general warnings
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+	#disable annoying warnings
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-missing-braces")
 	#disable warning for generated protobuf file
 	set_source_files_properties(sce.pb.cc sce.grpc.pb.cc PROPERTIES COMPILE_FLAGS -w)
 	#sanitizers
-	if (DEFINED ENV{TRAVIS})
-		#it seems like there is a bug in travis' gcc when using sanitizers that causes ld: unrecognized option '--push-state--no-as-needed'
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address")
+	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=undefined,address")
+	#workaround for ubuntu gcc bug: using sanitizers causes ld: unrecognized option '--push-state--no-as-needed'
+	if (DEFINED ENV{TRAVIS} AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fuse-ld=gold")
 		link_directories(${USR_PATH}/lib)
 	endif()
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address")
-	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=undefined,address")
-	#disable annoying warnings
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-parameter -Wno-missing-braces")
 endif()
 
 #defines
