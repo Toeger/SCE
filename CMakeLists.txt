@@ -21,7 +21,6 @@ endif()
 
 set(CMAKE_MODULE_PATH "${USR_PATH}/lib/grpc/cmake/;${USR_PATH}/lib/protobuf/cmake/;${CMAKE_MODULE_PATH}")
 find_package(Protobuf REQUIRED)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
 PROTOBUF_GENERATE_PYTHON(PROTO_PY_SRCS interop/sce.proto)
 if (UNIX)
@@ -86,14 +85,20 @@ set(CMAKE_AUTOUIC ON)
 set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
 
 #create the executable
-add_executable(SCE ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h)
+add_executable(${PROJECT_NAME} ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h)
+
+# Manuall list all .ui files so that Qt Creator lists them in the projects view
+set(UI_FILES
+	ui/mainwindow.ui
+	ui/tool_editor_widget.ui)
+target_sources(${PROJECT_NAME} PUBLIC ${UI_FILES})
 
 # Link executable
 # Debian is fine with "util grpc++", but apparently Ubuntu wants all the libraries spelled out.
 # On a proper system that packages grpc $ENV{GRPC_LIBS} should be empty.
 # Otherwise compile from source and use `export GRPC_LIBS=$(sh print_libs.sh)` to get a list of the compiled libs.
 #message("GRPC libs: " $ENV{GRPC_LIBS})
-target_link_libraries(SCE Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ $ENV{GRPC_LIBS} $ENV{GRPC_LIBS})
+target_link_libraries(${PROJECT_NAME} Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ $ENV{GRPC_LIBS} $ENV{GRPC_LIBS})
 
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)
