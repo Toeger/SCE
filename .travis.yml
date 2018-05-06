@@ -84,6 +84,8 @@ script:
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
     - ./SCE test
+    - cat ../testdata/interop_scripts/setuplog
+    - cat ../testdata/interop_scripts/setuperr
     # gcc release build
     - cd ../gcc_release_build
     - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
@@ -96,6 +98,8 @@ script:
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
     - ./SCE test
+    - cat ../testdata/interop_scripts/setuplog
+    - cat ../testdata/interop_scripts/setuperr
     # clang release build
     - cd ../clang_release_build
     - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..

@@ -1,1 +1,1 @@
-virtualenv venv -p $1 > setuplog && . venv/bin/activate && $1 -m pip install --upgrade pip >> setuplog && $1 -m pip install grpcio >> setuplog && $1 rpc_call.py
+virtualenv venv -p $1 > setuplog 2>setuperr && . venv/bin/activate && $1 -m pip install --upgrade pip >> setuplog 2>>setuperr && $1 -m pip install grpcio >> setuplog 2>>setuperr && $1 rpc_call.py
