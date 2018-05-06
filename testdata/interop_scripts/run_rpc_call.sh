@@ -1,1 +1,1 @@
-virtualenv venv>/dev/null && . venv/bin/activate && python -m pip install --upgrade pip>/dev/null && python -m pip install grpcio>/dev/null && python rpc_call.py
+virtualenv venv -p $1 > setuplog && . venv/bin/activate && $1 -m pip install --upgrade pip >> setuplog && $1 -m pip install grpcio >> setuplog && $1 rpc_call.py

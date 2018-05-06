@@ -60,10 +60,21 @@ static void test_python_rpc_call() {
 
 	Tool python_test_script;
 	python_test_script.path = "sh";
-	python_test_script.arguments = "run_rpc_call.sh";
+	python_test_script.arguments = "run_rpc_call.sh python2";
 	python_test_script.working_directory = TEST_DATA_PATH "/interop_scripts";
 	std::string python_output;
 	std::string python_error;
+
+	//python2
+	Process_reader{python_test_script, [&python_output](std::string_view data) { python_output += data; },
+				   [&python_error](std::string_view data) { python_error += data; }}
+		.join();
+	assert_equal(python_error, "");
+	assert_equal(python_output, "testresponse");
+
+	//python3
+	python_output.clear();
+	python_test_script.arguments.back() = '3';
 	Process_reader{python_test_script, [&python_output](std::string_view data) { python_output += data; },
 				   [&python_error](std::string_view data) { python_error += data; }}
 		.join();
