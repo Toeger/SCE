@@ -35,7 +35,7 @@ install:
     # clang
     - sudo apt-get install clang-5.0
     # ld
-    - sudo apt-get install binutils
+    - sudo apt-get install binutils-2.30
     # python
     - sudo apt-get install python2.7
     - sudo apt-get install python3.6
