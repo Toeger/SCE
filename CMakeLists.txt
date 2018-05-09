@@ -75,6 +75,7 @@ set(SCE_SRC
 	ui/edit_window.cpp
 	ui/mainwindow.cpp
 	ui/tool_editor_widget.cpp
+	utility/raii.cpp
 	utility/thread_call.cpp
 	utility/unique_handle.cpp
 )
@@ -90,7 +91,8 @@ add_executable(${PROJECT_NAME} ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.p
 # Manuall list all .ui files so that Qt Creator lists them in the projects view
 set(UI_FILES
 	ui/mainwindow.ui
-	ui/tool_editor_widget.ui)
+	ui/tool_editor_widget.ui
+)
 target_sources(${PROJECT_NAME} PUBLIC ${UI_FILES})
 
 # Link executable

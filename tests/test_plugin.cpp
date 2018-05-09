@@ -8,6 +8,7 @@
 #include <memory>
 #include <sce.grpc.pb.h>
 #include <sce.pb.h>
+#include <sstream>
 #include <string>
 #include <thread>
 
@@ -20,6 +21,7 @@ struct Test_RPC_server {
 		grpc::Status Test([[maybe_unused]] grpc::ServerContext *context, [[maybe_unused]] const sce::proto::Nothing *request,
 						  sce::proto::String *response) override {
 			response->set_str(test_response);
+			assert(response->IsInitialized());
 			return grpc::Status::OK;
 		}
 	};
@@ -58,35 +60,34 @@ static void test_python_rpc_call() {
 	Test_RPC_server trpcs;
 	MainWindow mw;
 
-	Tool python_test_script;
-	python_test_script.path = "sh";
-	python_test_script.arguments = "run_rpc_call.sh python2";
-	python_test_script.working_directory = TEST_DATA_PATH "/interop_scripts";
-	std::string python_output;
-	std::string python_error;
+	auto run_sh_script = [](QString script, std::ostream &output, std::ostream &error) {
+		Tool sh_script;
+		sh_script.path = "sh";
+		sh_script.arguments = std::move(script);
+		sh_script.working_directory = TEST_DATA_PATH "/interop_scripts";
+		Process_reader{sh_script, [&output](std::string_view data) { output << data; }, [&error](std::string_view data) { error << data; }}.join();
+	};
 
+	auto test_sh_script = [&run_sh_script](QString script, std::string_view expected_output, std::string_view expected_error) {
+		std::ostringstream output, error;
+		run_sh_script(std::move(script), output, error);
+		assert_equal(expected_error, error.str());
+		assert_equal(expected_output, output.str());
+	};
+
+	//set up python2
+	std::cout << "Python2 setup:\n";
+	run_sh_script("setup_python.sh python2", std::cout, std::cerr);
+	//set up python3
+	std::cout << "Python3 setup:\n";
+	run_sh_script("setup_python.sh python3", std::cout, std::cerr);
 	//python2
-	Process_reader{python_test_script, [&python_output](std::string_view data) { python_output += data; },
-				   [&python_error](std::string_view data) { python_error += data; }}
-		.join();
-	assert_equal(python_error, "");
-	assert_equal(python_output, "testresponse");
-
+	test_sh_script(R"(run_python_script.sh "python2 rpc_call.py")", "testresponse", "");
 	//python3
-	python_output.clear();
-	python_test_script.arguments.back() = '3';
-	Process_reader{python_test_script, [&python_output](std::string_view data) { python_output += data; },
-				   [&python_error](std::string_view data) { python_error += data; }}
-		.join();
-	assert_equal(python_error, "");
-	assert_equal(python_output, "testresponse");
+	test_sh_script(R"(run_python_script.sh "python3 rpc_call.py")", "testresponse", "");
 }
 
 void test_plugin() {
-	GOOGLE_PROTOBUF_VERIFY_VERSION;
-
 	test_local_rpc_call();
 	test_python_rpc_call();
-
-	google::protobuf::ShutdownProtobufLibrary();
 }
