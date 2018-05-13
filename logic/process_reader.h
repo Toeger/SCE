@@ -2,6 +2,7 @@
 #define PROCESS_READER_H
 
 #include "tool.h"
+#include "utility/pipe.h"
 
 #include <functional>
 #include <string_view>
@@ -43,6 +44,8 @@ class Process_reader {
 
 	void kill();
 	void join();
+	void send_input(std::string_view input);
+	void close_input();
 
 	private:
 	State state{State::running};
@@ -51,6 +54,7 @@ class Process_reader {
 	std::function<void(std::string_view)> error_callback;
 	std::function<void(State)> completion_callback;
 	std::thread process_handler;
+	Pipe standard_input;
 };
 
 #endif // PROCESS_READER_H

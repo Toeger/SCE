@@ -13,130 +13,15 @@
 using namespace std::string_literals;
 
 #if USING_TTY
+#include "utility/pipe.h"
 #include "utility/unique_handle.h"
+
 #include <QMessageBox>
-#include <fcntl.h>
 #include <iostream>
 #include <pty.h>
 #include <signal.h>
 #include <sstream>
 #include <unistd.h>
-
-struct File_descriptor_policy {
-	using Handle_type = int;
-
-	constexpr static auto invalid_file_descriptor = -1;
-
-	constexpr static Handle_type get_null() {
-		return invalid_file_descriptor;
-	}
-
-	constexpr static bool is_null(int file_descriptor) {
-		return file_descriptor == invalid_file_descriptor;
-	}
-
-	static void close(int file_descriptor) {
-		if (::close(file_descriptor) != 0) {
-			throw std::runtime_error("Failed to close file descriptor");
-		}
-	}
-};
-
-struct Pipe {
-	Pipe() {
-		std::array<int, 2> file_descriptors;
-		if (pipe(file_descriptors.data()) != 0) {
-			throw std::runtime_error("Failed creating pipe");
-		}
-		read_channel = file_descriptors[0];
-		write_channel = file_descriptors[1];
-	}
-	Pipe(const termios &terminal_settings, const winsize &window_size) {
-		std::array<int, 2> file_descriptors;
-		if (openpty(&file_descriptors[0], &file_descriptors[1], nullptr, &terminal_settings, &window_size) != 0) {
-			throw std::runtime_error(strerror(errno));
-		}
-		read_channel = file_descriptors[0];
-		write_channel = file_descriptors[1];
-	}
-
-	void close_read_channel() {
-		read_channel.reset();
-	}
-
-	void close_write_channel() {
-		write_channel.reset();
-	}
-	bool is_open() const {
-		return read_channel || write_channel;
-	}
-
-	void write(std::string_view &s) {
-		assert(write_channel);
-		const auto written = ::write(write_channel.get(), s.data(), s.size());
-		if (written == -1) {
-			close_write_channel();
-			return;
-		}
-		s.remove_prefix(written);
-	}
-
-	void write_all(std::string_view s) {
-		while (s.size()) {
-			if (is_open() == false) {
-				throw std::runtime_error("Failed writing to pipe");
-			}
-			write(s);
-		}
-	}
-
-	void set_close_on_exec() {
-		for (auto &channel : {&read_channel, &write_channel}) {
-			if (*channel) {
-				fcntl(channel->get(), F_SETFD, FD_CLOEXEC);
-			}
-		}
-	}
-
-	std::string read() {
-		char buffer[chunk_size];
-		const auto bytes_read = ::read(read_channel.get(), buffer, chunk_size);
-		if (bytes_read <= 0) {
-			close_read_channel();
-			return {};
-		}
-		return {buffer, buffer + bytes_read};
-	}
-
-	void set_standard_input() {
-		if (dup2(read_channel.get(), STDIN_FILENO) != STDIN_FILENO) {
-			throw std::runtime_error("Failed setting standard input");
-		}
-	}
-	void set_standard_output() {
-		if (dup2(write_channel.get(), STDOUT_FILENO) != STDOUT_FILENO) {
-			throw std::runtime_error("Failed setting standard output");
-		}
-	}
-	void set_standard_error() {
-		if (dup2(write_channel.get(), STDERR_FILENO) != STDERR_FILENO) {
-			throw std::runtime_error("Failed setting standard error");
-		}
-	}
-
-	int get_read_channel() {
-		return read_channel.get();
-	}
-	int get_write_channel() {
-		return write_channel.get();
-	}
-
-	private:
-	constexpr static auto chunk_size = 1024;
-
-	Utility::Unique_handle<File_descriptor_policy> read_channel;
-	Utility::Unique_handle<File_descriptor_policy> write_channel;
-};
 
 static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pipes,
 				   std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> &read_pipes, timeval *timeout) {
@@ -296,9 +181,18 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 void Process_reader::join() {
 	//TODO: check if we can join the thread. If not process events and check again.
 	//Right now we could be joining while the thread waits for us to process events, which would get us stuck.
+	standard_input.close_write_channel();
 	QApplication::processEvents();
 	process_handler.join();
 	QApplication::processEvents();
+}
+
+void Process_reader::send_input(std::string_view input) {
+	standard_input.write_all(input);
+}
+
+void Process_reader::close_input() {
+	standard_input.close_write_channel();
 }
 
 void Process_reader::run_process(Tool tool) {
@@ -311,7 +205,6 @@ void Process_reader::run_process(Tool tool) {
 	termios terminal_settings = get_termios_settings();
 	winsize size{.ws_row = 160, .ws_col = 80, .ws_xpixel = 160 * 8, .ws_ypixel = 80 * 10};
 
-	Pipe standard_input;
 	Pipe standard_output{terminal_settings, size};
 	Pipe standard_error{terminal_settings, size};
 	Pipe exec_fail;

@@ -10,7 +10,7 @@
 #include <fstream>
 
 static void test_args_construction() {
-	struct Test_cases {
+	struct Test_case {
 		QString arg_text;
 		QStringList args;
 	} test_cases[] = {
@@ -36,7 +36,8 @@ static std::string strip_carriage_return(std::string_view sv) {
 	return retval;
 }
 
-static void assert_executed_correctly(std::string_view code, std::string_view expected_output, std::string_view expected_error = {}) {
+static void assert_executed_correctly(std::string_view code, std::string_view expected_output, std::string_view expected_error = {},
+									  std::string_view input = {}) {
 	const auto cpp_file = "/tmp/SCE_test_process_code.cpp";
 	const auto exe_file = "/tmp/SCE_test_process_exe";
 	assert_true(std::ofstream{cpp_file} << code);
@@ -47,13 +48,19 @@ static void assert_executed_correctly(std::string_view code, std::string_view ex
 	std::string output;
 	std::string error;
 	Process_reader p{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }};
+	while (input.size() > 0) {
+		const auto input_size = std::min(std::size_t{10}, input.size());
+		p.send_input({input.begin(), input_size});
+		input.remove_prefix(input_size);
+	}
+	p.close_input();
 	p.join();
 	assert_equal(strip_carriage_return(output), expected_output);
 	assert_equal(strip_carriage_return(error), expected_error);
 }
 
 static void test_process_reading() {
-	struct Test_cases {
+	struct Test_case {
 		std::string_view code;
 		std::string_view expected_output;
 		std::string_view expected_error;
@@ -139,11 +146,32 @@ int main() {
 	assert_executed_correctly(code, expected_output);
 }
 
+static void test_input() {
+	const auto code = R"(
+#include <iostream>
+#include <string>
+
+int main() {
+	std::string s;
+	while (std::getline(std::cin, s)) {
+		std::cout << s << '\n';
+	}
+}
+)";
+	const auto text = R"(This
+					  is
+					  a
+					  test.
+)";
+	assert_executed_correctly(code, text, "", text);
+}
+
 void test_process_reader() {
 	MainWindow mw; //required for MainWindow::get_main_window which is required for Utility::gui_call
 	test_args_construction();
 	test_process_reading();
 	test_is_tty();
 	test_is_character_device();
+	test_input();
 	std::cout << "Using tty: " << (using_tty ? "true" : "false") << '\n';
 }

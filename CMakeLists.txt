@@ -75,6 +75,7 @@ set(SCE_SRC
 	ui/edit_window.cpp
 	ui/mainwindow.cpp
 	ui/tool_editor_widget.cpp
+	utility/pipe.cpp
 	utility/raii.cpp
 	utility/thread_call.cpp
 	utility/unique_handle.cpp
