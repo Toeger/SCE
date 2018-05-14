@@ -61,7 +61,7 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 
 grpc::Status RPC_server::RPC_server_impl::SetBufferUpdateNotifications([[maybe_unused]] grpc::ServerContext *context,
 																	   const sce::proto::SetBufferUpdateNotificationsIn *request,
-																	   const sce::proto::SetBufferUpdateNotificationsOut *response) {
+																	   sce::proto::SetBufferUpdateNotificationsOut *response) {
 	//TODO: make it so that the given plugin gets notifications via standard in
 	return grpc::Status::OK;
 }

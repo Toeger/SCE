@@ -23,7 +23,7 @@ struct RPC_server {
 									  sce::proto::GetCurrentBufferOut *response) override;
 		grpc::Status AddNote(grpc::ServerContext *context, const sce::proto::AddNoteIn *request, sce::proto::AddNoteOut *response) override;
 		grpc::Status SetBufferUpdateNotifications(grpc::ServerContext *context, const sce::proto::SetBufferUpdateNotificationsIn *request,
-												  const sce::proto::SetBufferUpdateNotificationsOut *response) override;
+												  sce::proto::SetBufferUpdateNotificationsOut *response) override;
 	};
 
 	RPC_server_impl rpc_server;
