@@ -18,9 +18,9 @@ struct Test_RPC_server {
 
 	//class that implements some RPC functions
 	class Rpc_server : public sce::proto::Query::Service {
-		grpc::Status Test([[maybe_unused]] grpc::ServerContext *context, [[maybe_unused]] const sce::proto::Nothing *request,
-						  sce::proto::String *response) override {
-			response->set_str(test_response);
+		grpc::Status Test([[maybe_unused]] grpc::ServerContext *context, [[maybe_unused]] const sce::proto::TestIn *request,
+						  sce::proto::TestOut *response) override {
+			response->set_message(test_response);
 			assert(response->IsInitialized());
 			return grpc::Status::OK;
 		}
@@ -48,12 +48,12 @@ struct Test_RPC_server {
 static void test_local_rpc_call() {
 	Test_RPC_server rpc_server;
 	//make an RPC call
-	sce::proto::String reply;
+	sce::proto::TestOut reply;
 	grpc::ClientContext client_context;
 	auto stub = sce::proto::Query::NewStub(grpc::CreateChannel(Test_RPC_server::rpc_address, grpc::InsecureChannelCredentials()));
 	auto status = stub->Test(&client_context, {}, &reply);
 	assert_true(status.ok());
-	assert_equal(reply.str(), Test_RPC_server::test_response);
+	assert_equal(reply.message(), Test_RPC_server::test_response);
 }
 
 static void test_python_rpc_call() {

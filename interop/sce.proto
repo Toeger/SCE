@@ -2,33 +2,23 @@ syntax = "proto3";
 
 package sce.proto;
 
-message Position { //position in a file
+message FilePosition { //position in a file
 	uint32 line = 1;
 	uint32 character = 2;
 }
 
-message Range {
-	Position start = 1;
-	Position end = 2;
+message FileRange {
+	FilePosition start = 1;
+	FilePosition end = 2;
 }
 
-message State { //Represents the current state of the buffer. Used to resolve asynchonous edits.
-	uint32 state = 1;
-	string file = 2;
+message FileState { //Represents the current state of the buffer. Used to resolve asynchonous edits.
+	string file = 1;
+	uint32 state = 2;
 }
 
-message Nothing {}
-
-message String {
-	string str = 1;
-}
-
-message Bool {
-	bool b = 1;
-}
-
-message TextBuffer {
-	State state = 1;
+message FileBuffer {
+	FileState state = 1;
 	string text = 2;
 }
 
@@ -36,10 +26,24 @@ message Color {
 	int32 rgb = 1; //to be interpreted as 0x00RRGGBB
 }
 
-message Note {
-	State state = 1;
-	Range range = 2;
-	String note = 3;
+message PluginID {
+	string pluginid = 1;
+}
+
+message TestIn {}
+message TestOut {
+	string message = 1;
+}
+
+message GetCurrentFileNameIn {}
+message GetCurrentFileNameOut {
+	string filename = 1;
+}
+
+message AddNoteIn {
+	FileState state = 1;
+	FileRange range = 2;
+	string note = 3;
 	Color color = 4;
 	enum Type {
 		NOTE = 0;
@@ -48,12 +52,28 @@ message Note {
 	}
 	Type type = 5;
 }
+message AddNoteOut {
+	bool success = 1;
+}
+
+message SetBufferUpdateNotificationsIn {
+	PluginID pluginid = 1;
+	bool activated = 2;
+}
+message SetBufferUpdateNotificationsOut {}
+
+message GetCurrentBufferIn {}
+message GetCurrentBufferOut {
+	FileState filestate = 1;
+}
 
 service Query {
-	rpc Test(Nothing) returns (String); //returns "testresponse"
-	rpc GetCurrentFileName(Nothing) returns (String);
-	rpc SetSelection(Range) returns (Nothing);
-	rpc GetCurrentBuffer(Nothing) returns (TextBuffer);
-	rpc SetBuffer(TextBuffer) returns (Bool);
-	rpc SetNote(Note) returns (Bool);
+	//Generic functions
+	rpc Test(TestIn) returns (TestOut); //returns "testresponse"
+	rpc GetCurrentFileName(GetCurrentFileNameIn) returns (GetCurrentFileNameOut);
+	rpc GetCurrentBuffer(GetCurrentBufferIn) returns (GetCurrentBufferOut);
+
+	//Analyzer functions
+	rpc AddNote(AddNoteIn) returns (AddNoteOut);
+	rpc SetBufferUpdateNotifications(SetBufferUpdateNotificationsIn) returns (SetBufferUpdateNotificationsOut);
 }
