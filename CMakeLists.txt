@@ -46,6 +46,11 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 	#sanitizers
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined,address")
 	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=undefined,address")
+	#workaround for ubuntu gcc bug: using sanitizers causes ld: unrecognized option '--push-state--no-as-needed'
+	if (DEFINED ENV{TRAVIS} AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fuse-ld=gold")
+		link_directories(${USR_PATH}/lib)
+	endif()
 endif()
 
 #defines
