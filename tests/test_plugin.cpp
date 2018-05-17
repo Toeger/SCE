@@ -1,7 +1,6 @@
 #include "test_plugin.h"
 #include "logic/process_reader.h"
 #include "test.h"
-#include "ui/mainwindow.h"
 
 #include <grpc++/grpc++.h>
 #include <iterator>
@@ -58,7 +57,6 @@ static void test_local_rpc_call() {
 
 static void test_python_rpc_call() {
 	Test_RPC_server trpcs;
-	MainWindow mw;
 
 	auto run_sh_script = [](QString script, std::ostream &output, std::ostream &error) {
 		Tool sh_script;

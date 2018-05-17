@@ -2,7 +2,6 @@
 #include "logic/process_reader.h"
 #include "logic/settings.h"
 #include "test.h"
-#include "ui/mainwindow.h"
 
 #include <QProcess>
 #include <QString>
@@ -167,7 +166,6 @@ int main() {
 }
 
 void test_process_reader() {
-	MainWindow mw; //required for MainWindow::get_main_window which is required for Utility::gui_call
 	test_args_construction();
 	test_process_reading();
 	test_is_tty();
