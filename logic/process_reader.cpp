@@ -171,34 +171,40 @@ QStringList detail::create_arguments_list(const QString &args_string) {
 	return arguments;
 }
 
+Process_reader::State Process_reader::get_state() const {
+	return shared.state;
+}
+
 Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
 							   std::function<void(State)> completion_callback)
-	: output_callback{std::move(output_callback)}
-	, error_callback{std::move(error_callback)}
-	, completion_callback{std::move(completion_callback)}
-	, process_handler{&Process_reader::run_process, this, std::move(tool)} {}
+	: gui_thread_private{
+		  .output_callback = std::move(output_callback),
+		  .error_callback = std::move(error_callback),
+		  .completion_callback = std::move(completion_callback),
+		  .process_handler = std::thread{&Process_reader::run_process, this, std::move(tool)},
+	  } {}
 
 void Process_reader::join() {
-	//TODO: check if we can join the thread. If not process events and check again.
-	//Right now we could be joining while the thread waits for us to process events, which would get us stuck.
-	standard_input.close_write_channel();
-	QApplication::processEvents();
-	process_handler.join();
-	QApplication::processEvents();
+	while (shared.state == State::running) {
+		std::this_thread::sleep_for(std::chrono::milliseconds{100});
+		QApplication::processEvents();
+	}
+	shared.standard_input.lock().get().close_write_channel();
+	gui_thread_private.process_handler.join();
 }
 
 void Process_reader::send_input(std::string_view input) {
-	standard_input.write_all(input);
+	shared.standard_input.lock().get().write_all(input);
 }
 
 void Process_reader::close_input() {
-	standard_input.close_write_channel();
+	shared.standard_input.lock().get().close_write_channel();
 }
 
 void Process_reader::run_process(Tool tool) {
-//this function is run in a different thread, so we cannot use any GUI functions or access any non-local memory without synchronization
-//for example writing `this->state = State::running;`, `completion_callback();` or `new QPushButton("Click Me");` would be incorrect
+//this function is run in a different thread, so we cannot use any GUI functions or access any gui_thread_private data directly.
 //instead we have to make the GUI thread do those things for us via Utility::gui_call
+//Note that Utility::gui_call should not capture this because it may be expired by the time it runs.
 
 #if USING_TTY
 	signal(SIGPIPE, &broken_pipe_signal_handler);
@@ -211,15 +217,18 @@ void Process_reader::run_process(Tool tool) {
 
 	const int child_pid = fork();
 	if (child_pid == -1) {
-		state = State::error;
-		error_callback(QObject::tr("Failed forking for program %1. Error: %2.").arg(tool.path, QString{strerror(errno)}).toStdString());
+		shared.state = State::error;
+		Utility::gui_call([ path = tool.path, error_callback = std::move(gui_thread_private.error_callback) ] {
+			error_callback(QObject::tr("Failed forking for program %1. Error: %2.").arg(path, QString{strerror(errno)}).toStdString());
+		});
 		return;
 	}
+	auto standard_input = shared.standard_input.lock();
 	if (child_pid == 0) { //in child
-		standard_input.close_write_channel();
+		standard_input.get().close_write_channel();
 		standard_output.close_read_channel();
 		standard_error.close_read_channel();
-		standard_input.set_standard_input();
+		standard_input.get().set_standard_input();
 		standard_output.set_standard_output();
 		standard_error.set_standard_error();
 		exec_fail.close_read_channel();
@@ -257,7 +266,7 @@ void Process_reader::run_process(Tool tool) {
 	}
 
 	//in parent
-	standard_input.close_read_channel();
+	standard_input.get().close_read_channel();
 	standard_output.close_write_channel();
 	standard_error.close_write_channel();
 	exec_fail.close_write_channel();
@@ -279,9 +288,9 @@ void Process_reader::run_process(Tool tool) {
 		}
 	}
 
-	std::vector<std::pair<Pipe *, std::string_view *>> write_pipes = {{&standard_input, &write_data_view}};
-	std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> read_pipes = {{&standard_output, &output_callback},
-																						  {&standard_error, &error_callback}};
+	std::vector<std::pair<Pipe *, std::string_view *>> write_pipes = {{&standard_input.get(), &write_data_view}};
+	std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> read_pipes = {{&standard_output, &gui_thread_private.output_callback},
+																						  {&standard_error, &gui_thread_private.error_callback}};
 	timeval timeout{};
 	timeval *timeout_pointer = tool.timeout.count() == 0 ? nullptr : &timeout;
 
@@ -302,9 +311,9 @@ void Process_reader::run_process(Tool tool) {
 		return true;
 	};
 
-	while ((standard_input.is_open() || standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
+	while ((standard_input.get().is_open() || standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
 		if (write_data_view.empty()) {
-			standard_input.close_write_channel();
+			standard_input.get().close_write_channel();
 		}
 		select(write_pipes, read_pipes, timeout_pointer);
 	}
@@ -329,8 +338,8 @@ void Process_reader::run_process(Tool tool) {
 		assert(false); //TODO: handle timeouts
 	}
 #endif
-	Utility::gui_call([ callback = std::move(completion_callback), this ] {
-		state = State::finished;
+	Utility::gui_call([ callback = std::move(gui_thread_private.completion_callback), this ] {
+		shared.state = State::finished;
 		callback(Process_reader::State::finished);
 	});
 }

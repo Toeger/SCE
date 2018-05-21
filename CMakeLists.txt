@@ -79,6 +79,7 @@ set(SCE_SRC
 	utility/raii.cpp
 	utility/thread_call.cpp
 	utility/unique_handle.cpp
+	utility/thread_safe.cpp
 )
 
 # Create code from a list of Qt designer ui files.

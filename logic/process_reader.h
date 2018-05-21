@@ -3,7 +3,9 @@
 
 #include "tool.h"
 #include "utility/pipe.h"
+#include "utility/thread_safe.h"
 
+#include <atomic>
 #include <functional>
 #include <string_view>
 #include <thread>
@@ -32,9 +34,7 @@ constexpr bool using_tty = USING_TTY;
 class Process_reader {
 	public:
 	enum class State { running, error, finished };
-	State get_state() const {
-		return state;
-	}
+	State get_state() const;
 
 	Process_reader(Tool tool, //
 				   std::function<void(std::string_view)> output_callback = [](std::string_view) {},
@@ -48,13 +48,18 @@ class Process_reader {
 	void close_input();
 
 	private:
-	State state{State::running};
 	void run_process(Tool tool);
-	std::function<void(std::string_view)> output_callback;
-	std::function<void(std::string_view)> error_callback;
-	std::function<void(State)> completion_callback;
-	std::thread process_handler;
-	Pipe standard_input;
+
+	struct {
+		std::function<void(std::string_view)> output_callback;
+		std::function<void(std::string_view)> error_callback;
+		std::function<void(State)> completion_callback;
+		std::thread process_handler;
+	} gui_thread_private;
+	struct {
+		std::atomic<State> state{State::running};
+		Thread_safe<Pipe> standard_input;
+	} shared;
 };
 
 #endif // PROCESS_READER_H
