@@ -13,7 +13,7 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5Widgets CONFIG REQUIRED)
 
 # Boost
-find_package(Boost 1.62 COMPONENTS system REQUIRED)
+find_package(Boost 1.54 COMPONENTS system REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 # Set up protobuffer
