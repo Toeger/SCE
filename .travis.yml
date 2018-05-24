@@ -14,9 +14,11 @@ addons:
             # realpath
             - realpath
             # boost
-            - libboost1.62-all-dev
+            #- libboost1.62-all-dev
 
 before_install:
+    - apt-cache search boost
+    - false
     # gcc 7
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # clang 5
