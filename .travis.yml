@@ -18,6 +18,9 @@ addons:
             # boost
             - libboost-all-dev
 
+cache:
+    ccache: true
+
 before_install:
     # gcc 7
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
@@ -45,6 +48,13 @@ install:
     - sudo apt-get install python3.6
     # Qt 5.9
     - sudo apt-get install qt510base
+    # ccache
+    - which clang++
+    - which g++
+    - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
+    - sudo ln -s $(which ccache) /usr/lib/ccache/g++
+    - which clang++
+    - which g++
     # protobuf
     - cd grpc && mkdir build && cd build
     - cmake .. -G Ninja
@@ -88,7 +98,7 @@ script:
     - cd gcc_debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
-    - gdb -q -ex "set confirm off" -ex "set pagination off" -ex "handle all nostop" -ex run -ex bt -ex quit --args SCE test
+    - gdb -q -ex "set confirm off" -ex "set pagination off" -ex "handle SIG40 nostop" -ex run -ex bt -ex quit --args SCE test
     - ./SCE test
     # gcc release build
     - cd ../gcc_release_build
@@ -101,7 +111,7 @@ script:
     - cd ../clang_debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
-    - gdb -q -ex "set confirm off" -ex "set pagination off" -ex "handle all nostop" -ex run -ex bt -ex quit --args SCE test
+    - gdb -q -ex "set confirm off" -ex "set pagination off" -ex "handle SIG40 nostop" -ex run -ex bt -ex quit --args SCE test
     - ./SCE test
     # clang release build
     - cd ../clang_release_build
