@@ -50,8 +50,6 @@ install:
     - sudo apt-get install qt510base
     # ccache
     - which clang++
-    - which g++
-    - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
     - sudo ln -s $(which ccache) /usr/lib/ccache/g++
     - which clang++
     - which g++
