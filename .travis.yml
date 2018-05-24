@@ -53,6 +53,7 @@ install:
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
     - which clang++
     - which g++
+    - export CXXFLAGS="-Qunused-arguments"
     # protobuf
     - cd grpc && mkdir build && cd build
     - cmake .. -G Ninja
