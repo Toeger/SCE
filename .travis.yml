@@ -50,7 +50,7 @@ install:
     - sudo apt-get install qt510base
     # ccache
     - which clang++
-    - sudo ln -s $(which ccache) /usr/lib/ccache/g++
+    - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
     - which clang++
     - which g++
     # protobuf
