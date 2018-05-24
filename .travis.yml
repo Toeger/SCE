@@ -9,6 +9,8 @@ addons:
         packages:
             # C++17
             - g++-7
+            # gdb
+            - gdb
             # ninja
             - ninja-build
             # realpath
@@ -69,10 +71,11 @@ before_script:
     - protoc --version
     - cmake --version
     - ninja --version
-    - ld --version
     - python --version
     - python2 --version
     - python3 --version
+    - gdb --version
+    - ld --version
     - /usr/bin/x86_64-linux-gnu-ld --version
     # set up build directories
     - mkdir gcc_debug_build
@@ -85,6 +88,7 @@ script:
     - cd gcc_debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
+    - gdb -ex "set confirm off" -ex "handle SIG40 nostop" -ex run -ex bt -ex quit --args SCE test
     - ./SCE test
     # gcc release build
     - cd ../gcc_release_build
@@ -97,6 +101,7 @@ script:
     - cd ../clang_debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
+    - gdb -ex "set confirm off" -ex "handle SIG40 nostop" -ex run -ex bt -ex quit --args SCE test
     - ./SCE test
     # clang release build
     - cd ../clang_release_build
