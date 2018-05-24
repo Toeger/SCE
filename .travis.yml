@@ -5,14 +5,14 @@ addons:
     apt:
         sources:
             # Ubuntu testing
-            - ubuntu-toolchain-r-test
+            #- ubuntu-toolchain-r-test
         packages:
             # C++17
-            - g++-7
+            #- g++-7
             # ninja
-            - ninja-build
+            #- ninja-build
             # realpath
-            - realpath
+            #- realpath
             # boost
             #- libboost1.62-all-dev
 
