@@ -5,20 +5,18 @@ addons:
     apt:
         sources:
             # Ubuntu testing
-            #- ubuntu-toolchain-r-test
+            - ubuntu-toolchain-r-test
         packages:
             # C++17
-            #- g++-7
+            - g++-7
             # ninja
-            #- ninja-build
+            - ninja-build
             # realpath
-            #- realpath
+            - realpath
             # boost
-            #- libboost1.62-all-dev
+            - libboost-all-dev
 
 before_install:
-    - apt-cache show libboost-all-dev
-    - false
     # gcc 7
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # clang 5
