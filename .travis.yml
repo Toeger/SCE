@@ -88,7 +88,7 @@ script:
     - cd gcc_debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
-    - gdb -ex "set confirm off" -ex "handle SIG40 nostop" -ex run -ex bt -ex quit --args SCE test
+    - gdb -q -ex "set confirm off" -ex "set pagination off" -ex "handle all nostop" -ex run -ex bt -ex quit --args SCE test
     - ./SCE test
     # gcc release build
     - cd ../gcc_release_build
@@ -101,7 +101,7 @@ script:
     - cd ../clang_debug_build
     - cmake -DCMAKE_BUILD_TYPE=DEBUG -G Ninja ..
     - ninja -j4
-    - gdb -ex "set confirm off" -ex "handle SIG40 nostop" -ex run -ex bt -ex quit --args SCE test
+    - gdb -q -ex "set confirm off" -ex "set pagination off" -ex "handle all nostop" -ex run -ex bt -ex quit --args SCE test
     - ./SCE test
     # clang release build
     - cd ../clang_release_build
