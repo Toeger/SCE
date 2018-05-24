@@ -1,4 +1,4 @@
-#include "test_plugin.h"
+#include "test_rpc_server.h"
 #include "logic/process_reader.h"
 #include "test.h"
 
@@ -85,7 +85,7 @@ static void test_python_rpc_call() {
 	test_sh_script(R"(run_python_script.sh "python3 rpc_call.py")", "testresponse", "");
 }
 
-void test_plugin() {
+void test_rpc_server() {
 	test_local_rpc_call();
 	test_python_rpc_call();
 }

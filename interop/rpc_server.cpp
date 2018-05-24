@@ -1,4 +1,4 @@
-#include "plugin.h"
+#include "rpc_server.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
 
@@ -6,7 +6,7 @@ RPC_server::RPC_server()
 	: server{grpc::ServerBuilder{}
 				 .SetDefaultCompressionLevel(GRPC_COMPRESS_LEVEL_NONE)
 				 .SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE)
-				 .AddListeningPort(rpc_address, grpc::InsecureServerCredentials())
+				 .AddListeningPort(default_rpc_address, grpc::InsecureServerCredentials())
 				 .RegisterService(&rpc_server)
 				 .BuildAndStart()}
 	, server_thread{[this] { server->Wait(); }} {}
@@ -62,6 +62,6 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 grpc::Status RPC_server::RPC_server_impl::SetBufferUpdateNotifications([[maybe_unused]] grpc::ServerContext *context,
 																	   const sce::proto::SetBufferUpdateNotificationsIn *request,
 																	   sce::proto::SetBufferUpdateNotificationsOut *response) {
-	//TODO: make it so that the given plugin gets notifications via standard in
+	//TODO: make it so that the given plugin gets notifications
 	return grpc::Status::OK;
 }

@@ -12,6 +12,10 @@ set(CMAKE_AUTOMOC ON)
 # Find the QtWidgets library
 find_package(Qt5Widgets CONFIG REQUIRED)
 
+# Boost
+find_package(Boost 1.62 COMPONENTS system REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+
 # Set up protobuffer
 if (NOT DEFINED ENV{TRAVIS})
 	set(USR_PATH "/usr")
@@ -58,7 +62,8 @@ add_definitions(-DTEST_DATA_PATH=\"${CMAKE_SOURCE_DIR}/testdata/\")
 
 # Source files
 set(SCE_SRC
-	interop/plugin.cpp
+	interop/notification_server.cpp
+	interop/rpc_server.cpp
 	logic/process_reader.cpp
 	logic/settings.cpp
 	logic/syntax_highligher.cpp
@@ -67,8 +72,9 @@ set(SCE_SRC
 	main.cpp
 	tests/test.cpp
 	tests/test_mainwindow.cpp
-	tests/test_plugin.cpp
+	tests/test_notification_server.cpp
 	tests/test_process_reader.cpp
+	tests/test_rpc_server.cpp
 	tests/test_settings.cpp
 	tests/test_tool.cpp
 	tests/test_tool_editor_widget.cpp
@@ -78,8 +84,8 @@ set(SCE_SRC
 	utility/pipe.cpp
 	utility/raii.cpp
 	utility/thread_call.cpp
-	utility/unique_handle.cpp
 	utility/thread_safe.cpp
+	utility/unique_handle.cpp
 )
 
 # Create code from a list of Qt designer ui files.
@@ -102,7 +108,14 @@ target_sources(${PROJECT_NAME} PUBLIC ${UI_FILES})
 # On a proper system that packages grpc $ENV{GRPC_LIBS} should be empty.
 # Otherwise compile from source and use `export GRPC_LIBS=$(sh print_libs.sh)` to get a list of the compiled libs.
 #message("GRPC libs: " $ENV{GRPC_LIBS})
-target_link_libraries(${PROJECT_NAME} Qt5::Widgets ${PROTOBUF_LIBRARIES} util grpc++ $ENV{GRPC_LIBS} $ENV{GRPC_LIBS})
+target_link_libraries(${PROJECT_NAME}
+	Qt5::Widgets
+	${Boost_LIBRARIES}
+	${PROTOBUF_LIBRARIES}
+	util
+	grpc++
+	$ENV{GRPC_LIBS} $ENV{GRPC_LIBS} #appears twice to avoid library order issues
+)
 
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)
