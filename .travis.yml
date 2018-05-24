@@ -116,3 +116,5 @@ script:
     - cmake -DCMAKE_BUILD_TYPE=RELEASE -G Ninja ..
     - ninja -j4
     - ./SCE test
+    # ccache stats
+    - ccache -s
