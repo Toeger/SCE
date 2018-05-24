@@ -53,7 +53,6 @@ install:
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
     - which clang++
     - which g++
-    - export CXXFLAGS="-Qunused-arguments"
     # protobuf
     - cd grpc && mkdir build && cd build
     - cmake .. -G Ninja
@@ -105,6 +104,7 @@ script:
     - ninja -j4
     - ./SCE test
     # clang debug build
+    - export CXXFLAGS="-Qunused-arguments"
     - export CC=clang
     - export CXX=clang++
     - cd ../clang_debug_build
