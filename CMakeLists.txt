@@ -103,6 +103,22 @@ set(UI_FILES
 )
 target_sources(${PROJECT_NAME} PUBLIC ${UI_FILES})
 
+# Other files one would want to edit that are not directly part of the SCE build
+set(MISC_FILES
+	.clang-format
+	.gitignore
+	.travis.yml
+	CMakeLists.txt
+	README.md
+	docs/description.md
+	docs/next_steps.md
+	feature_plans.md
+	list_libs.sh
+	lsan.supp
+	run_all_test_configurations.sh
+)
+target_sources(${PROJECT_NAME} PUBLIC ${MISC_FILES})
+
 # Link executable
 # Debian is fine with "util grpc++", but apparently Ubuntu wants all the libraries spelled out.
 # On a proper system that packages grpc $ENV{GRPC_LIBS} should be empty.

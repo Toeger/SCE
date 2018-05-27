@@ -46,7 +46,7 @@ install:
     # python
     - sudo apt-get install python2.7
     - sudo apt-get install python3.6
-    # Qt 5.9
+    # Qt
     - sudo apt-get install qt510base
     # ccache
     - which clang++
@@ -60,17 +60,18 @@ install:
     - sudo cp grpc_* /usr/local/bin
     - sudo cp *.a /usr/local/lib
     - cd ../..
-    - export GRPC_LIBS=$(sh print_libs.sh)
+    - export GRPC_LIBS=$(sh -e print_libs.sh)
     - echo $GRPC_LIBS
 
 before_script:
     # Display
     - export DISPLAY=:99.0
     - sh -e /etc/init.d/xvfb start
-    # Qt 5.9
+    # Qt
     - source /opt/qt510/bin/qt510-env.sh
     - export QT_FATAL_WARNINGS=1
     # Sanitizer settings
+    - export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-5.0/bin/llvm-symbolizer
     - export UBSAN_OPTIONS=print_stacktrace=1
     - export LSAN_OPTIONS=suppressions=../lsan.supp #ignore Qt's memory leaks
     # print versions
@@ -85,11 +86,9 @@ before_script:
     - gdb --version
     - ld --version
     - /usr/bin/x86_64-linux-gnu-ld --version
-    # gdb flags
-    - export GDB='gdb -q --return-child-result -ex "set confirm off" -ex "set pagination off" -ex "handle SIG40 nostop" -ex run -ex bt -ex quit --args'
 
 script:
-    - sh -e runner.sh
+    - ./run_all_test_configurations.sh
 
 after_script:
     # ccache stats
