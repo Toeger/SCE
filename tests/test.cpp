@@ -8,6 +8,7 @@
 #include "test_tool_editor_widget.h"
 
 void test() {
+	test_notification_server();
 	test_rpc_server();
 	test_process_reader();
 	test_settings();

@@ -3,8 +3,7 @@
 #include <algorithm>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/write.hpp>
-
-#include <boost/asio.hpp>
+#include <future>
 
 Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp::endpoint> &addresses)
 	: gui_thread_private{.work = static_cast<decltype(gui_thread_private.work)>(shared.io_service), .server = {}} {
@@ -13,7 +12,7 @@ Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp:
 				   [this](boost::asio::ip::tcp::endpoint endpoint) {
 					   return std::make_unique<Notification_thread_private::Listener>(shared.io_service, endpoint, notification_thread_private.sockets);
 				   });
-	gui_thread_private.server = std::thread{[&shared = shared] { shared.io_service.poll(); }};
+	gui_thread_private.server = std::thread{[&shared = shared] { shared.io_service.run(); }};
 }
 
 Notification_server::~Notification_server() {
@@ -34,6 +33,13 @@ void Notification_server::send_notification(std::string data) {
 									 });
 		}
 	});
+}
+
+std::size_t Notification_server::get_number_of_established_connections() {
+	std::promise<std::size_t> sockets_size_promise;
+	auto sockets_size_future = sockets_size_promise.get_future();
+	shared.io_service.dispatch([&sockets = notification_thread_private.sockets, &sockets_size_promise] { sockets_size_promise.set_value(sockets.size()); });
+	return sockets_size_future.get();
 }
 
 Notification_server::Notification_thread_private::Listener::Listener(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint endpoint,

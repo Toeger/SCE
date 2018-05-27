@@ -6,13 +6,12 @@ BUILD_TYPE=DEBUG SANITIZER=-fsanitize=undefined,address
 BUILD_TYPE=DEBUG SANITIZER=-fsanitize=thread
 BUILD_TYPE=RELEASE"
 
-COMPILERCOLOR="\033[0;34m" #blue
-BUILDCOLOR="\033[1;34m" #light blue
+BLUE="\033[0;34m" #blue
 NOCOLOR="\033[0m"
 
 echo "$BUILDS" | while IFS= read -r BUILD; do
 	echo "$COMPILERS" | while IFS= read -r COMPILER; do
-		printf "\n${COMPILERCOLOR}Compiler: $COMPILER\n${BUILDCOLOR}Build: $BUILD${NOCOLOR}\n"
+		printf "\n$BLUE$COMPILER$BUILDCOLOR $BUILD$NOCOLOR\n"
 		export $COMPILER
 		export $BUILD
 		mkdir -p testbuild && cd testbuild

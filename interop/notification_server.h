@@ -15,6 +15,7 @@ struct Notification_server {
 	~Notification_server();
 	Notification_server(const Notification_server &) = delete;
 	void send_notification(std::string data);
+	std::size_t get_number_of_established_connections();
 
 	private:
 	struct {
