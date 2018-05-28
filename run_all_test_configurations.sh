@@ -11,7 +11,7 @@ NOCOLOR="\033[0m"
 
 echo "$BUILDS" | while IFS= read -r BUILD; do
 	echo "$COMPILERS" | while IFS= read -r COMPILER; do
-		printf "\n$BLUE$COMPILER$BUILDCOLOR $BUILD$NOCOLOR\n"
+		printf "\n$BLUE$COMPILER $BUILD$NOCOLOR\n"
 		export $COMPILER
 		export $BUILD
 		mkdir -p testbuild && cd testbuild

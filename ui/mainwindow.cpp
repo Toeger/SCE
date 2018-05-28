@@ -4,12 +4,14 @@
 #include "logic/tool_actions.h"
 #include "tool_editor_widget.h"
 #include "ui_mainwindow.h"
+#include "utility/color.h"
 
 #include <QFile>
 #include <QFileDialog>
 #include <QFont>
 #include <QFontDialog>
 #include <QFontMetrics>
+#include <iostream>
 
 static MainWindow *main_window{};
 
@@ -24,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() { //required for destructors of otherwise incomplete type Ui::MainWindow
 	save_last_files();
+	main_window = nullptr;
 }
 
 Edit_window *MainWindow::get_current_edit_window() {
@@ -51,6 +54,11 @@ QString MainWindow::get_current_selection() {
 		return {};
 	}
 	return edit_window->textCursor().selectedText().replace("\u2029", "\n");
+}
+
+void MainWindow::report_error(std::string_view message, std::string_view error) {
+	//TODO: If we have a GUI show it there too.
+	std::cerr << Color::light_red << message << ' ' << Color::red << error << Color::no_color << '\n';
 }
 
 void MainWindow::on_actionOpen_File_triggered() {
@@ -131,4 +139,13 @@ void MainWindow::on_action_Edit_triggered() {
 		tool_editor_widget = std::make_unique<Tool_editor_widget>();
 		tool_editor_widget->show();
 	}
+}
+
+void MainWindow::on_action_Test_triggered() {
+	auto edit = get_current_edit_window();
+	QTextCursor tc{edit->textCursor()};
+	QTextCharFormat tcf;
+	tcf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::WaveUnderline);
+	tcf.setUnderlineColor(Qt::red);
+	tc.setCharFormat(tcf);
 }

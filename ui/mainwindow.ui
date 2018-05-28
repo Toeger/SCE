@@ -61,6 +61,8 @@
      <string>&amp;Tools</string>
     </property>
     <addaction name="action_Edit"/>
+    <addaction name="separator"/>
+    <addaction name="action_Test"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
@@ -103,6 +105,14 @@
   <action name="action_Edit">
    <property name="text">
     <string>&amp;Edit</string>
+   </property>
+  </action>
+  <action name="action_Test">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Test</string>
    </property>
   </action>
  </widget>

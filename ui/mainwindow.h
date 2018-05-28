@@ -16,18 +16,20 @@ class MainWindow : public QMainWindow {
 	Q_OBJECT
 
 	public:
-	explicit MainWindow(QWidget *parent = 0);
-	~MainWindow();
+	explicit MainWindow(QWidget *parent = nullptr);
+	~MainWindow() override;
 	static Edit_window *get_current_edit_window();
 	static QString get_current_path();
 	static MainWindow *get_main_window();
 	static QString get_current_selection();
+	static void report_error(std::string_view message, std::string_view error);
 
 	private slots:
 	void on_actionOpen_File_triggered();
-	void on_action_Font_triggered();
-	void on_file_tabs_tabCloseRequested(int index);
 	void on_action_Edit_triggered();
+	void on_action_Font_triggered();
+	void on_action_Test_triggered();
+	void on_file_tabs_tabCloseRequested(int index);
 	void closeEvent(QCloseEvent *event) override;
 
 	private:
