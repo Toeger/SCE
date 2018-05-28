@@ -8,14 +8,15 @@
 #include <string_view>
 #include <utility>
 
+#include "utility/color.h"
+
 //run all tests
 void test();
 
 namespace detail {
-	extern std::stringstream ss;
 	inline auto &out = std::cerr;
 	template <class T>
-	constexpr auto is_printable(const T &t) -> decltype((ss << t, std::true_type{}));
+	constexpr auto is_printable(const T &t) -> decltype((out << t, std::true_type{}));
 	constexpr auto is_printable(...) -> std::false_type;
 	template <class T>
 	constexpr bool is_printable_v = decltype(is_printable(std::declval<T>()))::value;
@@ -54,7 +55,7 @@ namespace detail {
 
 	template <class T, class U>
 	void report_assert_failure(std::string_view function, const T &t, const U &u) {
-		out << function << " failed:\n";
+		out << Color::red << function << " failed:\n" << Color::no_color;
 		const auto ts = as_string(t);
 		const auto us = as_string(u);
 		out << "t: \"" << ts << "\"\n";
@@ -63,7 +64,7 @@ namespace detail {
 		const auto mismatch_pos = mismatch_it.first != std::end(ts) ? mismatch_it.first - std::begin(ts) :
 																	  mismatch_it.second != std::end(us) ? mismatch_it.second - std::begin(us) : -1;
 		if (mismatch_pos != -1) {
-			out << std::string(mismatch_pos + 4, ' ') << "^\n";
+			out << std::string(mismatch_pos + 4, ' ') << Color::red << "^\n" << Color::no_color;
 		}
 		out << std::flush;
 		__builtin_trap();
@@ -71,7 +72,7 @@ namespace detail {
 
 	template <class T>
 	void report_assert_failure(std::string_view function, const T &t) {
-		out << function << " failed:\n";
+		out << Color::red << function << " failed:\n" << Color::no_color;
 		out << "t: " << as_printable(t) << '\n' << std::flush;
 		__builtin_trap();
 	}

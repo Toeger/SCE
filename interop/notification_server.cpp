@@ -1,4 +1,5 @@
 #include "notification_server.h"
+#include "utility/color.h"
 
 #include <algorithm>
 #include <boost/asio/buffer.hpp>
@@ -14,7 +15,7 @@ Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp:
 			notification_thread_private.listeners.push_back(
 				std::make_unique<Notification_thread_private::Listener>(shared.io_service, address, notification_thread_private.sockets));
 		} catch (const boost::system::system_error &e) {
-			std::cerr << "\033[0;31mFailed binding to " << address.address() << ':' << address.port() << " " << e.what() << "\033[0m\n";
+			std::cerr << Color::red << "Failed binding to " << address.address() << ':' << address.port() << " " << e.what() << Color::no_color;
 		}
 	}
 	gui_thread_private.server = std::thread{[&shared = shared] { shared.io_service.run(); }};
