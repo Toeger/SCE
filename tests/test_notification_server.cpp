@@ -16,7 +16,6 @@ static void test_single_connection() {
 	boost::asio::ip::tcp::socket socket{io_service};
 	socket.connect({boost::asio::ip::address_v4::loopback(), 53677});
 	constexpr char test_data[] = "Hello world";
-	assert_equal(ns.get_number_of_established_connections(), 1u);
 	ns.send_notification(test_data);
 	std::string buffer(sizeof test_data - 1, '\0');
 	const auto received =
@@ -35,7 +34,6 @@ static void test_multiple_connections() {
 		socket.connect({boost::asio::ip::address_v4::loopback(), 53677});
 	}
 	constexpr char test_data[] = "Hello world";
-	assert_equal(ns.get_number_of_established_connections(), number_of_sockets);
 	ns.send_notification(test_data);
 	for (auto &socket : sockets) {
 		std::string buffer(sizeof test_data - 1, '\0');

@@ -15,7 +15,7 @@ Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp:
 			notification_thread_private.listeners.push_back(
 				std::make_unique<Notification_thread_private::Listener>(shared.io_service, address, notification_thread_private.sockets));
 		} catch (const boost::system::system_error &e) {
-			std::cerr << Color::red << "Failed binding to " << address.address() << ':' << address.port() << " " << e.what() << Color::no_color;
+			std::cerr << Color::red << "Failed binding to " << address.address() << ':' << address.port() << " " << e.what() << Color::no_color << '\n';
 		}
 	}
 	gui_thread_private.server = std::thread{[&shared = shared] { shared.io_service.run(); }};
