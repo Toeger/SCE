@@ -6,6 +6,14 @@
 #include <boost/asio/read.hpp>
 #include <string>
 
+static void wait_for_connections(const std::size_t target_connections, Notification_server &ns) {
+	for (auto connections = ns.get_number_of_established_connections(); connections < target_connections;
+		 connections = ns.get_number_of_established_connections()) {
+		std::clog << "Waiting for connections: " << connections << '/' << target_connections << '\n';
+		std::this_thread::sleep_for(std::chrono::milliseconds{200});
+	}
+}
+
 static void test_simple_create_destroy() {
 	Notification_server ns;
 }
@@ -16,8 +24,7 @@ static void test_single_connection() {
 	boost::asio::ip::tcp::socket socket{io_service};
 	socket.connect({boost::asio::ip::address_v4::loopback(), 53677});
 	constexpr char test_data[] = "Hello world";
-	while (ns.get_number_of_established_connections() < 1)
-		std::this_thread::yield();
+	wait_for_connections(1, ns);
 	ns.send_notification(test_data);
 	std::string buffer(sizeof test_data - 1, '\0');
 	const auto received =
@@ -36,8 +43,7 @@ static void test_multiple_connections() {
 		socket.connect({boost::asio::ip::address_v4::loopback(), 53677});
 	}
 	constexpr char test_data[] = "Hello world";
-	while (ns.get_number_of_established_connections() < number_of_sockets)
-		std::this_thread::yield();
+	wait_for_connections(number_of_sockets, ns);
 	ns.send_notification(test_data);
 	for (auto &socket : sockets) {
 		std::string buffer(sizeof test_data - 1, '\0');
