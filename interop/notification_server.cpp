@@ -4,14 +4,19 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/write.hpp>
 #include <future>
+#include <iostream>
 
 Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp::endpoint> &addresses)
 	: gui_thread_private{.work = static_cast<decltype(gui_thread_private.work)>(shared.io_service), .server = {}} {
 	notification_thread_private.listeners.reserve(addresses.size());
-	std::transform(std::begin(addresses), std::end(addresses), std::back_inserter(notification_thread_private.listeners),
-				   [this](boost::asio::ip::tcp::endpoint endpoint) {
-					   return std::make_unique<Notification_thread_private::Listener>(shared.io_service, endpoint, notification_thread_private.sockets);
-				   });
+	for (const auto &address : addresses) {
+		try {
+			notification_thread_private.listeners.push_back(
+				std::make_unique<Notification_thread_private::Listener>(shared.io_service, address, notification_thread_private.sockets));
+		} catch (const boost::system::system_error &e) {
+			std::cerr << "\033[0;31mFailed binding to " << address.address() << ':' << address.port() << " " << e.what() << "\033[0m\n";
+		}
+	}
 	gui_thread_private.server = std::thread{[&shared = shared] { shared.io_service.run(); }};
 }
 

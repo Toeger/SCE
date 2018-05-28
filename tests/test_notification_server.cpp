@@ -46,8 +46,14 @@ static void test_multiple_connections() {
 	}
 }
 
+static void test_inaccessible_address_skip() {
+	//the first attempt opening port 1 should already fail because we are not root, but just in case we try to open it twice so it definitely fails
+	Notification_server ns{{{boost::asio::ip::address_v4::loopback(), 1}, {boost::asio::ip::address_v4::loopback(), 1}}};
+}
+
 void test_notification_server() {
 	test_simple_create_destroy();
 	test_single_connection();
 	test_multiple_connections();
+	test_inaccessible_address_skip();
 }
