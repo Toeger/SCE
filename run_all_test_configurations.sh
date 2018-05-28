@@ -3,7 +3,6 @@ COMPILERS="CXX=g++
 CXX=clang++"
 BUILDS="BUILD_TYPE=DEBUG SANITIZER=-fsanitize=undefined RUNNER=../gdb.sh
 BUILD_TYPE=DEBUG SANITIZER=-fsanitize=undefined,address
-BUILD_TYPE=DEBUG SANITIZER=-fsanitize=thread
 BUILD_TYPE=RELEASE"
 
 BLUE="\033[0;34m" #blue
@@ -15,7 +14,7 @@ echo "$BUILDS" | while IFS= read -r BUILD; do
 		export $COMPILER
 		export $BUILD
 		mkdir -p testbuild && cd testbuild
-		cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G Ninja ..
+		cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G Ninja .. | grep -v -- "--" || true
 		time ninja
 		time $RUNNER ./SCE test
 		cd .. && rm -R testbuild
