@@ -35,6 +35,7 @@ struct Notification_server {
 			boost::asio::ip::tcp::socket socket;
 			Listener(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint endpoint,
 					 std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> &sockets);
+			Listener(const Listener &) = delete;
 		};
 		std::vector<std::unique_ptr<Listener>> listeners;
 		std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> sockets;

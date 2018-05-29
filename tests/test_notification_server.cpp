@@ -4,13 +4,19 @@
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/read.hpp>
+#include <chrono>
 #include <string>
 
-static void wait_for_connections(const std::size_t target_connections, Notification_server &ns) {
+static void wait_for_connections(const std::size_t target_connections, Notification_server &ns,
+								 std::chrono::milliseconds timeout = std::chrono::milliseconds{3000}) {
+	const auto start_time = std::chrono::high_resolution_clock::now();
 	for (auto connections = ns.get_number_of_established_connections(); connections < target_connections;
 		 connections = ns.get_number_of_established_connections()) {
 		std::clog << "Waiting for connections: " << connections << '/' << target_connections << '\n';
-		std::this_thread::sleep_for(std::chrono::milliseconds{200});
+		std::this_thread::sleep_for(std::chrono::milliseconds{16});
+		if (std::chrono::high_resolution_clock::now() - start_time > timeout) {
+			throw std::runtime_error{"Connection timeout"};
+		}
 	}
 }
 
@@ -19,7 +25,7 @@ static void test_simple_create_destroy() {
 }
 
 static void test_single_connection() {
-	Notification_server ns;
+	Notification_server ns{{{boost::asio::ip::address_v4::loopback(), 53677}}};
 	boost::asio::io_service io_service;
 	boost::asio::ip::tcp::socket socket{io_service};
 	socket.connect({boost::asio::ip::address_v4::loopback(), 53677});

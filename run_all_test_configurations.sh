@@ -3,6 +3,7 @@ COMPILERS="CXX=g++
 CXX=clang++"
 BUILDS="BUILD_TYPE=DEBUG SANITIZER=-fsanitize=undefined RUNNER=../gdb.sh
 BUILD_TYPE=DEBUG SANITIZER=-fsanitize=undefined,address
+BUILD_TYPE=DEBUG SANITIZER=-fsanitize=thread
 BUILD_TYPE=RELEASE"
 
 BLUE="\033[0;34m" #blue

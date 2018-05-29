@@ -21,9 +21,9 @@ Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp:
 			MainWindow::report_error(message.str(), e.what());
 		}
 	}
-	gui_thread_private.server = std::thread{[&shared = shared] {
+	gui_thread_private.server = std::thread{[&io_service = shared.io_service] {
 		try {
-			shared.io_service.run();
+			io_service.run();
 		} catch (const boost::system::system_error &e) {
 			MainWindow::report_error("Failed running notification server", e.what());
 		}
@@ -31,6 +31,13 @@ Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp:
 }
 
 Notification_server::~Notification_server() {
+	shared.io_service.dispatch([&sockets = notification_thread_private.sockets] {
+		for (auto &socket : sockets) {
+			socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+			socket->close();
+		}
+		sockets.clear();
+	});
 	shared.io_service.stop();
 	gui_thread_private.server.join();
 }
@@ -67,19 +74,18 @@ Notification_server::Notification_thread_private::Listener::Listener(boost::asio
 	, io_service{io_service}
 	, acceptor{io_service, endpoint}
 	, socket{io_service} {
-	struct Writer {};
 	struct Acceptor {
 		void operator()(const boost::system::error_code &error) {
 			if (error) {
 				MainWindow::report_error("Failed accepting connection", error.message());
-			} else {
-				listener->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
-				sockets->push_back(std::make_unique<boost::asio::ip::tcp::socket>(std::move(listener->socket)));
+				return;
 			}
+			listener->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
+			sockets->push_back(std::make_unique<boost::asio::ip::tcp::socket>(std::move(listener->socket)));
 			listener->acceptor.async_accept(listener->socket, listener->endpoint, Acceptor{sockets, listener});
 		}
 		std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> *sockets;
 		Listener *listener;
 	};
-	acceptor.async_accept(socket, endpoint, Acceptor{&sockets, this});
+	acceptor.async_accept(socket, this->endpoint, Acceptor{&sockets, this});
 }
