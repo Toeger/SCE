@@ -37,7 +37,8 @@ add_custom_command(
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--grpc_python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--plugin=protoc-gen-grpc_python=${GRPC_PLUGIN_PATH}/grpc_python_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	DEPENDS interop/sce.proto
 	OUTPUT sce.grpc.pb.cc  sce.grpc.pb.h #${CMAKE_CURRENT_SOURCE_DIR}/testdata/sce_pb2_grpc.py  ${CMAKE_CURRENT_SOURCE_DIR}/testdata/sce_pb2.py
-	COMMENT "Generating RPC code for sce.proto.")
+	COMMENT "Generating RPC code for sce.proto."
+)
 
 #extra flags
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -51,6 +52,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-command-line-argument")
 	endif()
+	#extra debug flags
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -ggdb -O0 -finstrument-functions")
 	#environment flags
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} $ENV{CXX_FLAGS_DEBUG}")
 	set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} $ENV{CXX_LFLAGS_DEBUG}")
@@ -118,6 +121,7 @@ set(MISC_FILES
 	docs/description.md
 	docs/next_steps.md
 	feature_plans.md
+	gdb.sh
 	list_libs.sh
 	lsan.supp
 	run_all_test_configurations.sh

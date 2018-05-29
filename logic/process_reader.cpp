@@ -128,11 +128,6 @@ static void set_environment() {
 		setenv(environment_variable.name, environment_variable.value, true);
 	}
 }
-
-static void broken_pipe_signal_handler(int) {
-	//don't do anything in the handler, it just exists so the program doesn't get killed when reading or writing a pipe fails and instead receives an error code
-}
-
 #endif
 
 static QString resolve_placeholders(QString string) {
@@ -202,12 +197,11 @@ void Process_reader::close_input() {
 }
 
 void Process_reader::run_process(Tool tool) {
-//this function is run in a different thread, so we cannot use any GUI functions or access any gui_thread_private data directly.
-//instead we have to make the GUI thread do those things for us via Utility::gui_call
-//Note that Utility::gui_call should not capture this because it may be expired by the time it runs.
+	//this function is run in a different thread, so we cannot use any GUI functions or access any gui_thread_private data directly.
+	//instead we have to make the GUI thread do those things for us via Utility::gui_call
+	//Note that Utility::gui_call should not capture this because it may be expired by the time it runs.
 
 #if USING_TTY
-	signal(SIGPIPE, &broken_pipe_signal_handler);
 	termios terminal_settings = get_termios_settings();
 	winsize size{.ws_row = 160, .ws_col = 80, .ws_xpixel = 160 * 8, .ws_ypixel = 80 * 10};
 
@@ -218,7 +212,7 @@ void Process_reader::run_process(Tool tool) {
 	const int child_pid = fork();
 	if (child_pid == -1) {
 		shared.state = State::error;
-		Utility::gui_call([ path = tool.path, error_callback = std::move(gui_thread_private.error_callback) ] {
+		Utility::gui_call([path = tool.path, error_callback = std::move(gui_thread_private.error_callback)] {
 			error_callback(QObject::tr("Failed forking for program %1. Error: %2.").arg(path, QString{strerror(errno)}).toStdString());
 		});
 		return;
@@ -280,7 +274,7 @@ void Process_reader::run_process(Tool tool) {
 			exec_fail_string += exec_fail.read();
 		}
 		if (exec_fail_string.empty() == false) {
-			Utility::gui_call([ exec_fail_string = std::move(exec_fail_string), tool = std::move(tool) ] {
+			Utility::gui_call([exec_fail_string = std::move(exec_fail_string), tool = std::move(tool)] {
 				QMessageBox::critical(MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
 									  QString::fromStdString(exec_fail_string));
 			});
@@ -294,7 +288,7 @@ void Process_reader::run_process(Tool tool) {
 	timeval timeout{};
 	timeval *timeout_pointer = tool.timeout.count() == 0 ? nullptr : &timeout;
 
-	auto update_timeout = [&timeout, &tool, start = std::chrono::steady_clock::now() ]() {
+	auto update_timeout = [&timeout, &tool, start = std::chrono::steady_clock::now()]() {
 		//returns true while we should keep running
 		if (tool.timeout.count() == 0) {
 			return true;
@@ -328,17 +322,17 @@ void Process_reader::run_process(Tool tool) {
 	if (process.waitForFinished()) {
 		const auto output = process.readAllStandardOutput();
 		if (output.isEmpty() == false) {
-			Utility::gui_call([ s = output.toStdString(), this ] { output_callback(s); });
+			Utility::gui_call([s = output.toStdString(), this] { output_callback(s); });
 		}
 		const auto error = process.readAllStandardError();
 		if (error.isEmpty() == false) {
-			Utility::gui_call([ s = error.toStdString(), this ] { error_callback(s); });
+			Utility::gui_call([s = error.toStdString(), this] { error_callback(s); });
 		}
 	} else {
 		assert(false); //TODO: handle timeouts
 	}
 #endif
-	Utility::gui_call([ callback = std::move(gui_thread_private.completion_callback), this ] {
+	Utility::gui_call([callback = std::move(gui_thread_private.completion_callback), this] {
 		shared.state = State::finished;
 		callback(Process_reader::State::finished);
 	});
