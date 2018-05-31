@@ -13,7 +13,7 @@ class QSyntaxHighlighter;
 class QWheelEvent;
 
 //Widget for code editing
-class Edit_window : public QPlainTextEdit {
+class Edit_window final : public QPlainTextEdit {
 	Q_OBJECT
 	public:
 	Edit_window();
