@@ -78,10 +78,10 @@ void Notification_server::wait_for_connections(const std::size_t number_of_conne
 	}
 }
 
-Notification_server::Notification_thread_private::Listener::Listener(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint endpoint,
+Notification_server::Notification_thread_private::Listener::Listener(boost::asio::io_service &p_io_service, boost::asio::ip::tcp::endpoint p_endpoint,
 																	 std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> &sockets)
-	: endpoint{endpoint}
-	, io_service{io_service}
+	: endpoint{p_endpoint}
+	, io_service{p_io_service}
 	, acceptor{io_service, endpoint}
 	, socket{io_service} {
 	struct Acceptor {

@@ -15,12 +15,12 @@ namespace Utility {
 		using F = typename std::decay_t<Function>;
 		struct Event : public QEvent {
 			F function;
-			Event(F &&function)
+			Event(F &&p_function)
 				: QEvent{QEvent::None}
-				, function{std::move(function)} {}
-			Event(const F &function)
+				, function{std::move(p_function)} {}
+			Event(const F &p_function)
 				: QEvent{QEvent::None}
-				, function{function} {}
+				, function{p_function} {}
 			~Event() {
 				function();
 			}

@@ -57,9 +57,9 @@ void Syntax_highligher::load_rules(QString filename) {
 
 	std::map<QString, QColor> color_map;
 	for (const auto &name_color : QJsonObject_reference_with_proper_iterators{color_list.toObject()}) {
-		const auto &color_value = name_color.second;
-		assume(color_value.isArray());
-		const auto &color_array = color_value.toArray();
+		const auto &color_value_object = name_color.second;
+		assume(color_value_object.isArray());
+		const auto &color_array = color_value_object.toArray();
 		assume(color_array.size() == 3);
 		QColor color;
 		decltype(&QColor::setRed) color_setters[] = {&QColor::setRed, &QColor::setGreen, &QColor::setBlue};
