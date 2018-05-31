@@ -22,12 +22,11 @@ int main(int argc, char *argv[]) {
 	if (argc == 2 && std::string_view{argv[1]} == "test") {
 		test();
 		return 0;
-	} else {
-		assert([] {
-			test();
-			return true;
-		});
 	}
+#ifndef NDEBUG
+	test();
+#endif
+
 	w.show();
 
 	return a.exec();
