@@ -23,7 +23,10 @@ int main(int argc, char *argv[]) {
 		test();
 		return 0;
 	} else {
-		assert((test(), true));
+		assert([] {
+			test();
+			return true;
+		});
 	}
 	w.show();
 
