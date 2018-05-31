@@ -53,7 +53,6 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 			edit->setTextCursor(cursor);
 			edit->resize(MainWindow::get_current_edit_window()->size()); //TODO: make the edit window exactly as big as it needs to be
 			edit->show();
-			break;
 		} break;
 		case Tool_output_target::paste:
 			MainWindow::get_current_edit_window()->insertPlainText(Ansi_code_handling::strip_control_sequences_text(output));

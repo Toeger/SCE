@@ -14,7 +14,7 @@
 void test();
 
 namespace detail {
-	inline auto &out = std::cerr;
+	static auto &out = std::cerr;
 	template <class T>
 	constexpr auto is_printable(const T &t) -> decltype((out << t, std::true_type{}));
 	constexpr auto is_printable(...) -> std::false_type;

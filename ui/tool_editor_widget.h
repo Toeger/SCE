@@ -18,8 +18,8 @@ class Tool_editor_widget : public QWidget {
 	Q_OBJECT
 
 	public:
-	explicit Tool_editor_widget(QWidget *parent = 0);
-	~Tool_editor_widget();
+	explicit Tool_editor_widget(QWidget *parent = nullptr);
+	~Tool_editor_widget() override;
 	void closeEvent(QCloseEvent *event) override;
 
 	public slots:

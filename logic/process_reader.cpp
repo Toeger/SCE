@@ -70,7 +70,6 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 		return;
 	} else { //error occured
 		throw std::runtime_error("Select failed: "s + strerror(errno));
-		return;
 	}
 }
 
@@ -373,8 +372,8 @@ static void process_control_sequence_text(std::string_view text, Control_sequenc
 				control_sequence_size++; //control_sequence_finisher is part of the escape sequence
 				control_sequence_callback(text.substr(2, control_sequence_size - 3));
 				text.remove_prefix(control_sequence_size);
-			} else { //got a single character escape sequence?
-				assert(!"TODO");
+			} else {           //got a single character escape sequence?
+				assert(false); //TODO
 			}
 		}
 	}

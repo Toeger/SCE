@@ -17,7 +17,7 @@ class Edit_window : public QPlainTextEdit {
 	Q_OBJECT
 	public:
 	Edit_window();
-	~Edit_window();
+	~Edit_window() override;
 
 	struct Note {
 		QString text;
