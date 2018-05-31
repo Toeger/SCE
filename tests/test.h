@@ -54,7 +54,7 @@ namespace detail {
 	}
 
 	template <class T, class U>
-	void report_assert_failure(std::string_view function, const T &t, const U &u) {
+	[[noreturn]] void report_assert_failure(std::string_view function, const T &t, const U &u) {
 		out << Color::red << function << " failed:\n" << Color::no_color;
 		const auto ts = as_string(t);
 		const auto us = as_string(u);
@@ -68,13 +68,15 @@ namespace detail {
 		}
 		out << std::flush;
 		__builtin_trap();
+		std::terminate();
 	}
 
 	template <class T>
-	void report_assert_failure(std::string_view function, const T &t) {
+	[[noreturn]] void report_assert_failure(std::string_view function, const T &t) {
 		out << Color::red << function << " failed:\n" << Color::no_color;
 		out << "t: " << as_printable(t) << '\n' << std::flush;
 		__builtin_trap();
+		std::terminate();
 	}
 } // namespace detail
 
