@@ -27,6 +27,8 @@ addons:
 
 before_install:
     - echo $PATH
+    - PATH=$(echo $PATH | sed 's/:\/usr\/local\/clang-5.0.0\/bin//g')
+    - echo $PATH
     # gcc
     #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # clang
