@@ -10,38 +10,35 @@ addons:
             - llvm-toolchain-trusty-6.0
         packages:
             # C++17
-            #- g++-7
+            - g++-7
             # gdb
-            #- gdb
+            - gdb
             # ninja
-            #- ninja-build
+            - ninja-build
             # realpath
-            #- realpath
+            - realpath
             # boost
-            #- libboost-all-dev
+            - libboost-all-dev
             # clang
             - clang-6.0
 
-#cache:
-#    ccache: true
+cache:
+    ccache: true
 
 before_install:
-    - echo $PATH
-    - PATH=$(echo $PATH | sed 's/:\/usr\/local\/clang-5.0.0\/bin//g')
-    - echo $PATH
     # gcc
-    #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # clang
+    - export PATH=$(echo $PATH | sed 's/:\/usr\/local\/clang-5.0.0\/bin//g')
     - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 90
     - which clang++
     - file $(which clang++)
-    - false
     # ld
     - sudo add-apt-repository -y ppa:jonathonf/binutils
     # python
     - sudo add-apt-repository -y ppa:jonathonf/python-2.7
     - sudo add-apt-repository -y ppa:jonathonf/python-3.6
-    # Qt 5.9
+    # Qt
     - sudo add-apt-repository -y ppa:beineri/opt-qt-5.10.1-trusty
     # protobuf
     - git clone -b v1.10.x --single-branch --recursive https://github.com/grpc/grpc
@@ -93,6 +90,7 @@ before_script:
     - python3 --version
     - gdb --version
     - ld --version
+    - echo $PATH
 
 script:
     - ./run_all_test_configurations.sh
