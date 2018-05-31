@@ -26,6 +26,7 @@ addons:
 #    ccache: true
 
 before_install:
+    - echo $PATH
     # gcc
     #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # clang
@@ -90,7 +91,6 @@ before_script:
     - python3 --version
     - gdb --version
     - ld --version
-    - echo $PATH
 
 script:
     - ./run_all_test_configurations.sh
