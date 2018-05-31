@@ -1,9 +1,9 @@
 #ifndef NOTIFICATION_SERVER_H
 #define NOTIFICATION_SERVER_H
 
-#include <atomic>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <chrono>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -18,6 +18,7 @@ struct Notification_server {
 	//NOTE: Be careful when connecting and then asking for the number of connections.
 	//The server may answer before accepting the connection and return an unexpected result.
 	std::size_t get_number_of_established_connections();
+	void wait_for_connections(const std::size_t number_of_connections, std::chrono::milliseconds timeout = std::chrono::milliseconds{3000});
 
 	private:
 	struct {

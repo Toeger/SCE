@@ -5,7 +5,6 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/write.hpp>
 #include <future>
-#include <iostream>
 #include <sstream>
 
 Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp::endpoint> &addresses)
@@ -66,6 +65,17 @@ std::size_t Notification_server::get_number_of_established_connections() {
 	auto sockets_size_future = sockets_size_promise.get_future();
 	shared.io_service.dispatch([&sockets = notification_thread_private.sockets, &sockets_size_promise] { sockets_size_promise.set_value(sockets.size()); });
 	return sockets_size_future.get();
+}
+
+void Notification_server::wait_for_connections(const std::size_t number_of_connections, std::chrono::milliseconds timeout) {
+	const auto start_time = std::chrono::high_resolution_clock::now();
+	for (auto connections = get_number_of_established_connections(); connections < number_of_connections;
+		 connections = get_number_of_established_connections()) {
+		if (std::chrono::high_resolution_clock::now() - start_time > timeout) {
+			throw std::runtime_error{"Timeout waiting for connections"};
+		}
+		std::this_thread::yield();
+	}
 }
 
 Notification_server::Notification_thread_private::Listener::Listener(boost::asio::io_service &io_service, boost::asio::ip::tcp::endpoint endpoint,
