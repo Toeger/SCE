@@ -17,9 +17,9 @@ using namespace std::string_literals;
 #include "utility/unique_handle.h"
 
 #include <QMessageBox>
+#include <csignal>
 #include <iostream>
 #include <pty.h>
-#include <signal.h>
 #include <sstream>
 #include <unistd.h>
 
