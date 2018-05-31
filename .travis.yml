@@ -28,6 +28,10 @@ cache:
 before_install:
     # gcc
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    # clang
+    - which clang++
+    - which clang++-6.0
+    - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 90
     # ld
     - sudo add-apt-repository -y ppa:jonathonf/binutils
     # python
