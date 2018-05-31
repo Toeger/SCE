@@ -10,28 +10,28 @@ addons:
             - llvm-toolchain-trusty-6.0
         packages:
             # C++17
-            - g++-7
+            #- g++-7
             # gdb
-            - gdb
+            #- gdb
             # ninja
-            - ninja-build
+            #- ninja-build
             # realpath
-            - realpath
+            #- realpath
             # boost
-            - libboost-all-dev
+            #- libboost-all-dev
             # clang
             - clang-6.0
 
-cache:
-    ccache: true
+#cache:
+#    ccache: true
 
 before_install:
     # gcc
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    #- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     # clang
     - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 90
     - which clang++
-    - file clang++
+    - file $(which clang++)
     - false
     # ld
     - sudo add-apt-repository -y ppa:jonathonf/binutils
@@ -90,7 +90,7 @@ before_script:
     - python3 --version
     - gdb --version
     - ld --version
-    - /usr/bin/x86_64-linux-gnu-ld --version
+    - echo $PATH
 
 script:
     - ./run_all_test_configurations.sh
