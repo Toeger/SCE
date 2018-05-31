@@ -4,8 +4,9 @@
 
 #include <QApplication>
 #include <cassert>
-#include <cstring>
+#include <csignal>
 #include <sce.pb.h>
+#include <string_view>
 
 static void broken_pipe_signal_handler(int) {
 	//don't do anything in the handler, it just exists so the program doesn't get killed when reading or writing a pipe fails and instead receives an error code
@@ -18,9 +19,11 @@ int main(int argc, char *argv[]) {
 
 	QApplication a{argc, argv};
 	MainWindow w;
-	assert((test(), true)); //don't run tests in release mode
-	if (argc == 2 && std::strcmp(argv[1], "test") == 0) {
+	if (argc == 2 && std::string_view{argv[1]} == "test") {
+		test();
 		return 0;
+	} else {
+		assert((test(), true));
 	}
 	w.show();
 
