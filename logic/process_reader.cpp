@@ -23,6 +23,9 @@ using namespace std::string_literals;
 #include <sstream>
 #include <unistd.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+
 static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pipes,
 				   std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> &read_pipes, timeval *timeout) {
 	fd_set read_file_descriptors{};
@@ -72,6 +75,8 @@ static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pip
 		throw std::runtime_error("Select failed: "s + strerror(errno));
 	}
 }
+
+#pragma clang diagnostic pop
 
 static termios get_termios_settings() {
 	termios terminal_settings{};
