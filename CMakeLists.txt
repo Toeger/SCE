@@ -105,6 +105,7 @@ set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
 # Find includes in corresponding build directories
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${CMAKE_CURRENT_SOURCE_DIR} -isystem ${CMAKE_CURRENT_BINARY_DIR}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem SCE_autogen/include")
+set(CMAKE_INCLUDE_CURRENT_DIR ON) #this line is only for qt creator's ClangCodeModel plugin
 
 #disable warnings for generated protobuf and moc files
 set_source_files_properties(sce.pb.cc sce.grpc.pb.cc SCE_autogen/mocs_compilation.cpp PROPERTIES COMPILE_FLAGS -w)
