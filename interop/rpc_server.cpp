@@ -59,9 +59,19 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 	return grpc::Status::OK;
 }
 
-grpc::Status RPC_server::RPC_server_impl::SetBufferUpdateNotifications([[maybe_unused]] grpc::ServerContext *context,
-																	   const sce::proto::SetBufferUpdateNotificationsIn *request,
-																	   sce::proto::SetBufferUpdateNotificationsOut *response) {
-	//TODO: make it so that the given plugin gets notifications
-	return grpc::Status::OK;
+grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::ServerContext *context, const sce::proto::GetBufferIn *request,
+													sce::proto::GetBufferOut *response) {
+	const auto &file_state_request = request->filestate();
+	const auto &file_name = file_state_request.file();
+	const auto &file_state = file_state_request.state();
+	std::promise<Edit_window *> edit_window_promise;
+	auto edit_window_future = edit_window_promise.get_future();
+	MainWindow::get_main_window()->get_edit_window(edit_window_promise, file_name);
+	auto edit_window = edit_window_future.get();
+	if (edit_window != nullptr && edit_window->get_state() == file_state) {
+		response->set_buffer(edit_window->toPlainText().toStdString());
+		assert(response->IsInitialized());
+		return grpc::Status::OK;
+	}
+	return grpc::Status::CANCELLED;
 }

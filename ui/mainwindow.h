@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <functional>
+#include <future>
 #include <memory>
 
 namespace Ui {
@@ -24,6 +25,9 @@ class MainWindow : public QMainWindow {
 	static QString get_current_selection();
 	static void report_error(std::string_view message, std::string_view error);
 
+	public slots:
+	void get_edit_window(std::promise<Edit_window *> &promise, std::string_view file_name);
+
 	private slots:
 	void on_actionOpen_File_triggered();
 	void on_action_Edit_triggered();
@@ -36,7 +40,6 @@ class MainWindow : public QMainWindow {
 	void load_last_files();
 	void save_last_files();
 	void add_file_tab(const QString &filename);
-	void apply_to_all_edit_windows(const std::function<void(Edit_window *)> &function);
 
 	std::unique_ptr<Ui::MainWindow> ui;
 	std::unique_ptr<Tool_editor_widget> tool_editor_widget;

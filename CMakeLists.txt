@@ -131,6 +131,7 @@ set(MISC_FILES
 	docs/next_steps.md
 	feature_plans.md
 	gdb.sh
+	interop/sce.proto
 	list_libs.sh
 	lsan.supp
 	run_all_test_configurations.sh

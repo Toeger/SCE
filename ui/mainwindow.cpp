@@ -11,9 +11,35 @@
 #include <QFont>
 #include <QFontDialog>
 #include <QFontMetrics>
+#include <cassert>
 #include <iostream>
+#include <utility>
 
 static MainWindow *main_window{};
+
+template <class Function>
+static Edit_window *find_edit_window(const Function &function, std::unique_ptr<Ui::MainWindow> &ui) {
+	static_assert(std::is_convertible_v<bool, std::invoke_result_t<Function, Edit_window *>>,
+				  "Given Function must be callable with an Edit_window * and return a truthy or falsy type");
+	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
+		assert(dynamic_cast<Edit_window *>(ui->file_tabs->widget(tab_index)));
+		auto edit_window = static_cast<Edit_window *>(ui->file_tabs->widget(tab_index));
+		if (function(edit_window)) {
+			return edit_window;
+		}
+	}
+	return nullptr;
+}
+
+template <class Function>
+static void apply_to_all_edit_windows(const Function &function, std::unique_ptr<Ui::MainWindow> &ui) {
+	find_edit_window(
+		[&function](Edit_window *edit_window) {
+			function(edit_window);
+			return false;
+		},
+		ui);
+}
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
@@ -59,6 +85,15 @@ QString MainWindow::get_current_selection() {
 void MainWindow::report_error(std::string_view message, std::string_view error) {
 	//TODO: If we have a GUI show it there too.
 	std::cerr << Color::light_red << message << ' ' << Color::red << error << Color::no_color << '\n';
+}
+
+void MainWindow::get_edit_window(std::promise<Edit_window *> &promise, std::string_view file_name) {
+	const auto edit_window = find_edit_window(
+		[&file_name](Edit_window *target_edit_window) {
+			return target_edit_window->windowTitle().toStdString() == file_name; //TODO: find a better way to compare QString and std::string_view
+		},
+		ui);
+	promise.set_value(edit_window);
 }
 
 void MainWindow::on_actionOpen_File_triggered() {
@@ -115,13 +150,6 @@ void MainWindow::add_file_tab(const QString &filename) {
 	ui->file_tabs->setTabToolTip(index, filename);
 }
 
-void MainWindow::apply_to_all_edit_windows(const std::function<void(Edit_window *)> &function) {
-	for (int tab_index = 0; tab_index < ui->file_tabs->count(); tab_index++) {
-		auto edit = dynamic_cast<Edit_window *>(ui->file_tabs->widget(tab_index));
-		function(edit);
-	}
-}
-
 void MainWindow::on_action_Font_triggered() {
 	bool success;
 	const auto font = QFontDialog::getFont(&success, this);
@@ -129,7 +157,7 @@ void MainWindow::on_action_Font_triggered() {
 		return;
 	}
 	Settings::set<Settings::Key::font>(font.toString());
-	apply_to_all_edit_windows([&font](Edit_window *edit) { edit->setFont(font); });
+	apply_to_all_edit_windows([&font](Edit_window *edit) { edit->setFont(font); }, ui);
 }
 
 void MainWindow::on_action_Edit_triggered() {

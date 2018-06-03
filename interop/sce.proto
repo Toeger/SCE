@@ -26,10 +26,6 @@ message Color {
 	int32 rgb = 1; //to be interpreted as 0x00RRGGBB
 }
 
-message PluginID {
-	string pluginid = 1;
-}
-
 message TestIn {}
 message TestOut {
 	string message = 1;
@@ -56,15 +52,17 @@ message AddNoteOut {
 	bool success = 1;
 }
 
-message SetBufferUpdateNotificationsIn {
-	PluginID pluginid = 1;
-	bool activated = 2;
-}
-message SetBufferUpdateNotificationsOut {}
-
 message GetCurrentBufferIn {}
 message GetCurrentBufferOut {
 	FileState filestate = 1;
+	string buffer = 2;
+}
+
+message GetBufferIn {
+	FileState filestate = 1;
+}
+message GetBufferOut {
+	string buffer = 1;
 }
 
 service Query {
@@ -72,8 +70,14 @@ service Query {
 	rpc Test(TestIn) returns (TestOut); //returns "testresponse"
 	rpc GetCurrentFileName(GetCurrentFileNameIn) returns (GetCurrentFileNameOut);
 	rpc GetCurrentBuffer(GetCurrentBufferIn) returns (GetCurrentBufferOut);
+	rpc GetBuffer(GetBufferIn) returns (GetBufferOut);
 
 	//Analyzer functions
 	rpc AddNote(AddNoteIn) returns (AddNoteOut);
-	rpc SetBufferUpdateNotifications(SetBufferUpdateNotificationsIn) returns (SetBufferUpdateNotificationsOut);
+}
+
+//messages for the notification server
+message NotifyOnEditsIn {}
+message NotifyOnEditsOut {
+	FileState filestate = 1;
 }
