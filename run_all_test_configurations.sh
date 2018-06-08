@@ -16,8 +16,8 @@ echo "$BUILDS" | while IFS= read -r BUILD; do
 		export $BUILD
 		mkdir -p testbuild && cd testbuild
 		cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G Ninja .. | grep -v -- "--" || true
-		time ninja
-		time $RUNNER ./SCE test
+		time ninja SCE_TESTS SCE
+		time $RUNNER ./SCE_TESTS
 		cd .. && rm -R testbuild
 	done
 done

@@ -1,4 +1,3 @@
-#include "tests/test.h"
 #include "ui/mainwindow.h"
 #include "utility/raii.h"
 
@@ -19,14 +18,6 @@ int main(int argc, char *argv[]) {
 
 	QApplication a{argc, argv};
 	MainWindow w;
-	if (argc == 2 && std::string_view{argv[1]} == "test") {
-		test();
-		return 0;
-	}
-#ifndef NDEBUG
-	test();
-#endif
-
 	w.show();
 
 	return a.exec();

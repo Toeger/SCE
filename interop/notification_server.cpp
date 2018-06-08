@@ -78,15 +78,42 @@ void Notification_server::wait_for_connections(const std::size_t number_of_conne
 	}
 }
 
+std::vector<boost::asio::ip::tcp::endpoint> Notification_server::get_listening_endpoints() {
+	std::promise<std::vector<boost::asio::ip::tcp::endpoint>> endpoints_promise;
+	auto endpoints_future = endpoints_promise.get_future();
+	shared.io_service.dispatch([&listeners = notification_thread_private.listeners, &endpoints_promise] {
+		std::vector<boost::asio::ip::tcp::endpoint> endpoints;
+		endpoints.reserve(listeners.size());
+		std::transform(std::begin(listeners), std::end(listeners), std::back_inserter(endpoints),
+					   [](const std::unique_ptr<Notification_thread_private::Listener> &p) { return p->endpoint; });
+		endpoints_promise.set_value(std::move(endpoints));
+	});
+	return endpoints_future.get();
+}
+
+void Notification_server::clear_listening_endpoints() {
+	std::promise<void> promise;
+	auto future = promise.get_future();
+	shared.io_service.dispatch([&listeners = notification_thread_private.listeners, &promise] {
+		for (auto &listener : listeners) {
+			listener->acceptor.cancel();
+		}
+		listeners.clear();
+		promise.set_value();
+	});
+	future.wait();
+}
+
 Notification_server::Notification_thread_private::Listener::Listener(boost::asio::io_service &p_io_service, boost::asio::ip::tcp::endpoint p_endpoint,
 																	 std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> &p_sockets)
-	: endpoint{p_endpoint}
+	: endpoint{std::move(p_endpoint)}
 	, io_service{p_io_service}
 	, acceptor{io_service, endpoint}
 	, socket{io_service} {
 	struct Acceptor {
 		void operator()(const boost::system::error_code &error) {
 			if (error) {
+				//`this` may already be deleted, so we can't do listener->socket.close()
 				MainWindow::report_error("Failed accepting connection", error.message());
 				return;
 			}

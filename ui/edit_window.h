@@ -4,6 +4,7 @@
 #include "logic/tool.h"
 
 #include <QPlainTextEdit>
+#include <QString>
 #include <memory>
 #include <vector>
 
@@ -29,11 +30,11 @@ class Edit_window final : public QPlainTextEdit {
 	void add_note(Note note);
 	void clear_notes();
 	uint32_t get_state() const;
+	QString get_id() const;
 
 	private:
 	void wheelEvent(QWheelEvent *we) override;
 	bool event(QEvent *event) override;
-	void show_output(const QString &output, Tool_output_target::Type output_target, const QString &title, bool is_error);
 
 	int zoom_remainder{};
 	std::vector<std::unique_ptr<QAction>> actions;

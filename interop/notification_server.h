@@ -19,6 +19,8 @@ struct Notification_server {
 	//The server may answer before accepting the connection and return an unexpected result.
 	std::size_t get_number_of_established_connections();
 	void wait_for_connections(const std::size_t number_of_connections, std::chrono::milliseconds timeout = std::chrono::milliseconds{3000});
+	std::vector<boost::asio::ip::tcp::endpoint> get_listening_endpoints();
+	void clear_listening_endpoints();
 
 	private:
 	struct {

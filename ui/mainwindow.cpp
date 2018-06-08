@@ -90,10 +90,14 @@ void MainWindow::report_error(std::string_view message, std::string_view error) 
 void MainWindow::get_edit_window(std::promise<Edit_window *> &promise, std::string_view file_name) {
 	const auto edit_window = find_edit_window(
 		[&file_name](Edit_window *target_edit_window) {
-			return target_edit_window->windowTitle().toStdString() == file_name; //TODO: find a better way to compare QString and std::string_view
+			return target_edit_window->get_id().toStdString() == file_name; //TODO: find a better way to compare QString and std::string_view
 		},
 		ui);
 	promise.set_value(edit_window);
+}
+
+void MainWindow::close_notification_server() {
+	notification_server.clear_listening_endpoints();
 }
 
 void MainWindow::on_actionOpen_File_triggered() {
@@ -146,6 +150,14 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
+	//connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get(), &notification_server = notification_server] {
+	//	sce_notifications::proto::OnEditNotification edit_notification;
+	//	sce_notifications::proto::FileState file_state;
+	//	file_state.set_id(edit_window->get_id().toStdString());
+	//	file_state.set_state(edit_window->get_state());
+	//	edit_notification.set_allocated_filestate(&file_state);
+	//	notification_server.send_notification(file_state.SerializeAsString());
+	//});
 	auto index = ui->file_tabs->addTab(file_edit.release(), filename);
 	ui->file_tabs->setTabToolTip(index, filename);
 }

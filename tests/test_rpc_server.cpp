@@ -20,7 +20,6 @@ struct Test_RPC_server {
 		grpc::Status Test([[maybe_unused]] grpc::ServerContext *context, [[maybe_unused]] const sce::proto::TestIn *request,
 						  sce::proto::TestOut *response) override {
 			response->set_message(test_response);
-			assert(response->IsInitialized());
 			return grpc::Status::OK;
 		}
 	};

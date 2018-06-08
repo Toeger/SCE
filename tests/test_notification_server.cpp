@@ -13,6 +13,7 @@ static void test_simple_create_destroy() {
 
 static void test_single_connection() {
 	Notification_server ns{{{boost::asio::ip::address_v4::loopback(), 53677}}};
+	assert_equal(ns.get_listening_endpoints().size(), 1u);
 	boost::asio::io_service io_service;
 	boost::asio::ip::tcp::socket socket{io_service};
 	socket.connect({boost::asio::ip::address_v4::loopback(), 53677});

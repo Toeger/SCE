@@ -33,7 +33,7 @@ grpc::Status RPC_server::RPC_server_impl::GetCurrentBuffer([[maybe_unused]] grpc
 														   sce::proto::GetCurrentBufferOut *response) {
 	auto edit = MainWindow::get_current_edit_window();
 	sce::proto::FileState state;
-	state.set_file(MainWindow::get_current_path().toStdString());
+	state.set_id(MainWindow::get_current_path().toStdString());
 	state.set_state(edit->get_state());
 	response->set_allocated_filestate(&state);
 	return grpc::Status::OK;
@@ -45,7 +45,7 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 	if (request->has_range() == false || request->has_state() == false) {
 		return grpc::Status::CANCELLED;
 	}
-	if (request->state().state() != edit->get_state() || request->state().file() != MainWindow::get_current_path().toStdString()) { //outdated
+	if (request->state().state() != edit->get_state() || request->state().id() != MainWindow::get_current_path().toStdString()) { //outdated
 		response->set_success(false);
 		return grpc::Status::OK;
 	}
@@ -62,15 +62,14 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::ServerContext *context, const sce::proto::GetBufferIn *request,
 													sce::proto::GetBufferOut *response) {
 	const auto &file_state_request = request->filestate();
-	const auto &file_name = file_state_request.file();
+	const auto &file_id = file_state_request.id();
 	const auto &file_state = file_state_request.state();
 	std::promise<Edit_window *> edit_window_promise;
 	auto edit_window_future = edit_window_promise.get_future();
-	MainWindow::get_main_window()->get_edit_window(edit_window_promise, file_name);
+	MainWindow::get_main_window()->get_edit_window(edit_window_promise, file_id);
 	auto edit_window = edit_window_future.get();
 	if (edit_window != nullptr && edit_window->get_state() == file_state) {
 		response->set_buffer(edit_window->toPlainText().toStdString());
-		assert(response->IsInitialized());
 		return grpc::Status::OK;
 	}
 	return grpc::Status::CANCELLED;

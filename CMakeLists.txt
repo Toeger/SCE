@@ -7,6 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 
+# Create code from a list of Qt designer ui files.
+set(CMAKE_AUTOUIC ON)
+#disable autouic for every .cpp file that includes a ui_ file but doesn't have a .ui file of the same name
+set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
+
 # Find the QtWidgets library
 find_package(Qt5Widgets CONFIG REQUIRED)
 
@@ -34,7 +39,7 @@ add_custom_command(
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PLUGIN_PATH}/grpc_cpp_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--grpc_python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--plugin=protoc-gen-grpc_python=${GRPC_PLUGIN_PATH}/grpc_python_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	DEPENDS interop/sce.proto
-	OUTPUT sce.grpc.pb.cc  sce.grpc.pb.h #${CMAKE_CURRENT_SOURCE_DIR}/testdata/sce_pb2_grpc.py  ${CMAKE_CURRENT_SOURCE_DIR}/testdata/sce_pb2.py
+	OUTPUT sce.grpc.pb.cc sce.grpc.pb.h
 	COMMENT "Generating RPC code for sce.proto."
 )
 
@@ -78,14 +83,8 @@ set(SCE_SRC
 	logic/tool.cpp
 	logic/tool_actions.cpp
 	main.cpp
-	tests/test.cpp
-	tests/test_mainwindow.cpp
-	tests/test_notification_server.cpp
-	tests/test_process_reader.cpp
-	tests/test_rpc_server.cpp
-	tests/test_settings.cpp
-	tests/test_tool.cpp
-	tests/test_tool_editor_widget.cpp
+	sce.grpc.pb.cc
+	sce.grpc.pb.h
 	ui/edit_window.cpp
 	ui/mainwindow.cpp
 	ui/tool_editor_widget.cpp
@@ -97,30 +96,27 @@ set(SCE_SRC
 	utility/unique_handle.cpp
 )
 
-# Create code from a list of Qt designer ui files.
-set(CMAKE_AUTOUIC ON)
-#disable autouic for every .cpp file that includes a ui_ file but doesn't have a .ui file of the same name
-set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
-
-# Find includes in corresponding build directories
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${CMAKE_CURRENT_SOURCE_DIR} -isystem ${CMAKE_CURRENT_BINARY_DIR}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem SCE_autogen/include")
-set(CMAKE_INCLUDE_CURRENT_DIR ON) #this line is only for qt creator's ClangCodeModel plugin
-
-#disable warnings for generated protobuf and moc files
-set_source_files_properties(sce.pb.cc sce.grpc.pb.cc SCE_autogen/mocs_compilation.cpp PROPERTIES COMPILE_FLAGS -w)
-
-#create the executable
-add_executable(${PROJECT_NAME} ${SCE_SRC} ${PROTO_SRCS} ${PROTO_HDRS} sce.grpc.pb.cc  sce.grpc.pb.h)
+# Test files
+set(SCE_TEST_SRC
+	tests/test.cpp
+	tests/test_mainwindow.cpp
+	tests/test_notification_server.cpp
+	tests/test_process_reader.cpp
+	tests/test_rpc_server.cpp
+	tests/test_settings.cpp
+	tests/test_tool.cpp
+	tests/test_tool_editor_widget.cpp
+	${SCE_SRC}
+)
+list(REMOVE_ITEM SCE_TEST_SRC main.cpp)
 
 # Manuall list all .ui files so that Qt Creator lists them in the projects view
 set(UI_FILES
 	ui/mainwindow.ui
 	ui/tool_editor_widget.ui
 )
-target_sources(${PROJECT_NAME} PUBLIC ${UI_FILES})
 
-# Other files one would want to edit that are not directly part of the SCE build
+# Other files one would want to edit that are not directly part of the SCE build but we want to appear in projects
 set(MISC_FILES
 	.clang-format
 	.gitignore
@@ -136,14 +132,48 @@ set(MISC_FILES
 	lsan.supp
 	run_all_test_configurations.sh
 )
-target_sources(${PROJECT_NAME} PUBLIC ${MISC_FILES})
+add_custom_target(${PROJECT_NAME}_MISC SOURCES ${MISC_FILES} ${UI_FILES})
+
+
+# Find includes in corresponding build directories
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${CMAKE_CURRENT_SOURCE_DIR} -isystem ${CMAKE_CURRENT_BINARY_DIR}")
+set(CMAKE_INCLUDE_CURRENT_DIR ON) #this line is only for qt creator's ClangCodeModel plugin
+
+#disable warnings for generated protobuf and moc files
+set_source_files_properties(
+	sce.pb.cc
+	sce.grpc.pb.cc
+	SCE_autogen/mocs_compilation.cpp
+	PROPERTIES COMPILE_FLAGS -w
+)
+
+# add executable
+add_executable(
+	${PROJECT_NAME}
+	${SCE_SRC}
+	${PROTO_SRCS}
+	${PROTO_HDRS}
+)
+target_sources(${PROJECT_NAME} PUBLIC ${UI_FILES})
+
+#add test executable
+add_executable(${PROJECT_NAME}_TESTS
+	${SCE_TEST_SRC}
+	${PROTO_SRCS}
+	${PROTO_HDRS}
+)
+add_test(${PROJECT_NAME}_TESTS_test ${PROJECT_NAME}_TESTS)
+
+# add generated include directory
+target_compile_options(${PROJECT_NAME} PRIVATE -isystem ${PROJECT_NAME}_autogen/include)
+target_compile_options(${PROJECT_NAME}_TESTS PRIVATE -isystem ${PROJECT_NAME}_TESTS_autogen/include)
 
 # Link executable
 # Debian is fine with "util grpc++", but apparently Ubuntu wants all the libraries spelled out.
 # On a proper system that packages grpc $ENV{GRPC_LIBS} should be empty.
 # Otherwise compile from source and use `export GRPC_LIBS=$(sh print_libs.sh)` to get a list of the compiled libs.
 #message("GRPC libs: " $ENV{GRPC_LIBS})
-target_link_libraries(${PROJECT_NAME}
+set(LIBS_TO_LINK
 	Qt5::Widgets
 	${Boost_LIBRARIES}
 	${PROTOBUF_LIBRARIES}
@@ -151,6 +181,8 @@ target_link_libraries(${PROJECT_NAME}
 	grpc++
 	$ENV{GRPC_LIBS} $ENV{GRPC_LIBS} #appears twice to avoid library order issues
 )
+target_link_libraries(${PROJECT_NAME} ${LIBS_TO_LINK})
+target_link_libraries(${PROJECT_NAME}_TESTS ${LIBS_TO_LINK})
 
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)

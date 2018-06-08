@@ -42,6 +42,10 @@ uint32_t Edit_window::get_state() const {
 	return state;
 }
 
+QString Edit_window::get_id() const {
+	return windowTitle();
+}
+
 void Edit_window::wheelEvent(QWheelEvent *we) {
 	if (we->modifiers() == Qt::ControlModifier) {
 		const auto raw_zoom = we->delta() + zoom_remainder;
@@ -56,7 +60,7 @@ void Edit_window::wheelEvent(QWheelEvent *we) {
 
 bool Edit_window::event(QEvent *event) {
 	if (event->type() == QEvent::ToolTip) {
-		QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+		auto helpEvent = static_cast<QHelpEvent *>(event);
 		QTextCursor cursor = cursorForPosition(helpEvent->pos());
 		const int character = cursor.positionInBlock();
 		const int line = cursor.blockNumber();
