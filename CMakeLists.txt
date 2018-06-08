@@ -144,6 +144,7 @@ set_source_files_properties(
 	sce.pb.cc
 	sce.grpc.pb.cc
 	SCE_autogen/mocs_compilation.cpp
+	SCE_TESTS_autogen/mocs_compilation.cpp
 	PROPERTIES COMPILE_FLAGS -w
 )
 
