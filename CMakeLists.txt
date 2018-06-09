@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(SCE)
-set(TEST_PROJECT_NAME ${PROJECT_NAME}_TEST)
+set(TEST_PROJECT_NAME ${PROJECT_NAME}_TESTS)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
@@ -146,9 +146,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON) #this line is only for qt creator's ClangCodeM
 set_source_files_properties(
 	${PROJECT_NAME}_autogen/mocs_compilation.cpp
 	${TEST_PROJECT_NAME}_autogen/mocs_compilation.cpp
-	PROPERTIES COMPILE_FLAGS -w
 	sce.grpc.pb.cc
 	sce.pb.cc
+	PROPERTIES COMPILE_FLAGS -w
 )
 
 # add executable
