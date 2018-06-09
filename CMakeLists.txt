@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(SCE)
+set(TEST_PROJECT_NAME ${PROJECT_NAME}_TEST)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
@@ -75,6 +76,8 @@ add_definitions(-DTEST_DATA_PATH=\"${CMAKE_SOURCE_DIR}/testdata/\")
 
 # Source files
 set(SCE_SRC
+	${PROTO_HDRS}
+	${PROTO_SRCS}
 	interop/notification_server.cpp
 	interop/rpc_server.cpp
 	logic/process_reader.cpp
@@ -98,6 +101,7 @@ set(SCE_SRC
 
 # Test files
 set(SCE_TEST_SRC
+	${SCE_SRC}
 	tests/test.cpp
 	tests/test_mainwindow.cpp
 	tests/test_notification_server.cpp
@@ -106,7 +110,6 @@ set(SCE_TEST_SRC
 	tests/test_settings.cpp
 	tests/test_tool.cpp
 	tests/test_tool_editor_widget.cpp
-	${SCE_SRC}
 )
 list(REMOVE_ITEM SCE_TEST_SRC main.cpp)
 
@@ -141,33 +144,23 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON) #this line is only for qt creator's ClangCodeM
 
 #disable warnings for generated protobuf and moc files
 set_source_files_properties(
-	sce.pb.cc
-	sce.grpc.pb.cc
-	SCE_autogen/mocs_compilation.cpp
-	SCE_TESTS_autogen/mocs_compilation.cpp
+	${PROJECT_NAME}_autogen/mocs_compilation.cpp
+	${TEST_PROJECT_NAME}_autogen/mocs_compilation.cpp
 	PROPERTIES COMPILE_FLAGS -w
+	sce.grpc.pb.cc
+	sce.pb.cc
 )
 
 # add executable
-add_executable(
-	${PROJECT_NAME}
-	${SCE_SRC}
-	${PROTO_SRCS}
-	${PROTO_HDRS}
-)
+add_executable(${PROJECT_NAME} ${SCE_SRC})
 target_sources(${PROJECT_NAME} PUBLIC ${UI_FILES})
 
 #add test executable
-add_executable(${PROJECT_NAME}_TESTS
-	${SCE_TEST_SRC}
-	${PROTO_SRCS}
-	${PROTO_HDRS}
-)
-add_test(${PROJECT_NAME}_TESTS_test ${PROJECT_NAME}_TESTS)
+add_executable(${TEST_PROJECT_NAME} ${SCE_TEST_SRC})
 
 # add generated include directory
 target_compile_options(${PROJECT_NAME} PRIVATE -isystem ${PROJECT_NAME}_autogen/include)
-target_compile_options(${PROJECT_NAME}_TESTS PRIVATE -isystem ${PROJECT_NAME}_TESTS_autogen/include)
+target_compile_options(${TEST_PROJECT_NAME} PRIVATE -isystem ${TEST_PROJECT_NAME}_autogen/include)
 
 # Link executable
 # Debian is fine with "util grpc++", but apparently Ubuntu wants all the libraries spelled out.
@@ -183,7 +176,7 @@ set(LIBS_TO_LINK
 	$ENV{GRPC_LIBS} $ENV{GRPC_LIBS} #appears twice to avoid library order issues
 )
 target_link_libraries(${PROJECT_NAME} ${LIBS_TO_LINK})
-target_link_libraries(${PROJECT_NAME}_TESTS ${LIBS_TO_LINK})
+target_link_libraries(${TEST_PROJECT_NAME} ${LIBS_TO_LINK})
 
 # Install the executable
 #install(TARGETS SCE DESTINATION bin)
