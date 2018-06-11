@@ -13,6 +13,7 @@
 #include <QFontMetrics>
 #include <cassert>
 #include <iostream>
+#include <sce.pb.h>
 #include <utility>
 
 static MainWindow *main_window{};
@@ -150,14 +151,16 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
-	//connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get(), &notification_server = notification_server] {
-	//	sce_notifications::proto::OnEditNotification edit_notification;
-	//	sce_notifications::proto::FileState file_state;
-	//	file_state.set_id(edit_window->get_id().toStdString());
-	//	file_state.set_state(edit_window->get_state());
-	//	edit_notification.set_allocated_filestate(&file_state);
-	//	notification_server.send_notification(file_state.SerializeAsString());
-	//});
+	connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get(), &notification_server = notification_server] {
+		if (main_window == nullptr) { //TODO: Make it so signals are disconnected before ~MainWindow()
+			return;
+		}
+		sce::proto::EditNotification edit_notification;
+		sce::proto::FileState &file_state = *edit_notification.mutable_filestate();
+		file_state.set_id(edit_window->get_id().toStdString());
+		file_state.set_state(edit_window->get_state());
+		notification_server.send_notification(edit_notification);
+	});
 	auto index = ui->file_tabs->addTab(file_edit.release(), filename);
 	ui->file_tabs->setTabToolTip(index, filename);
 }

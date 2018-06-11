@@ -4,6 +4,7 @@
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/read.hpp>
+#include <sce.pb.h>
 #include <string>
 #include <string_view>
 
@@ -93,6 +94,22 @@ static void test_multiple_sends_to_multiple_connections() {
 	}
 }
 
+static void test_protbuffer_serialization() {
+	std::string buffer;
+	{
+		sce::proto::EditNotification edit_notification;
+		edit_notification.mutable_filestate()->set_id("TestID");
+		edit_notification.mutable_filestate()->set_state(42);
+		edit_notification.SerializeToString(&buffer);
+	}
+	{
+		sce::proto::EditNotification edit_notification;
+		assert_true(edit_notification.ParseFromString(buffer));
+		assert_equal(edit_notification.filestate().id(), "TestID");
+		assert_equal(edit_notification.filestate().state(), 42u);
+	}
+}
+
 void test_notification_server() {
 	test_simple_create_destroy();
 	test_single_connection();
@@ -100,4 +117,5 @@ void test_notification_server() {
 	test_inaccessible_address_skip();
 	test_multiple_sends();
 	test_multiple_sends_to_multiple_connections();
+	test_protbuffer_serialization();
 }

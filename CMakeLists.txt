@@ -93,6 +93,7 @@ set(SCE_SRC
 	ui/tool_editor_widget.cpp
 	utility/color.cpp
 	utility/pipe.cpp
+	utility/protobuffer_encoder.cpp
 	utility/raii.cpp
 	utility/thread_call.cpp
 	utility/thread_safe.cpp

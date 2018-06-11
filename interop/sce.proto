@@ -77,7 +77,6 @@ service Query {
 }
 
 //messages for the notification server
-message NotifyOnEditsIn {}
-message NotifyOnEditsOut {
+message EditNotification {
 	FileState filestate = 1;
 }
