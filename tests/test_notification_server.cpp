@@ -114,7 +114,7 @@ static void test_protbuffer_serialization() {
 	}
 }
 
-static void test_protobuffer_serialization_interop() {
+static void test_protobuffer_serialization_interop_python(int version) {
 	const auto id = "TestID";
 	{
 		std::string buffer;
@@ -127,7 +127,7 @@ static void test_protobuffer_serialization_interop() {
 	}
 	Tool script;
 	script.path = "sh";
-	script.arguments = TEST_DATA_PATH "interop_scripts/run_python_script.sh python2 " TEST_DATA_PATH "test_deserialize.py";
+	script.arguments = TEST_DATA_PATH "interop_scripts/run_python_script.sh python" + QString::number(version) + (" " TEST_DATA_PATH "test_deserialize.py");
 	script.working_directory = TEST_DATA_PATH "interop_scripts";
 	std::string output;
 	std::string error;
@@ -141,8 +141,12 @@ static void test_protobuffer_serialization_interop() {
 				   << "\"\n"
 				   << Color::no_color;
 	assert_equal(error, "");
-	assert_message.expect_test_fail();
 	assert_equal(output, "Filestate id: "s + id);
+}
+
+static void test_protobuffer_serialization_interop() {
+	test_protobuffer_serialization_interop_python(2);
+	test_protobuffer_serialization_interop_python(3);
 }
 
 void test_notification_server() {
