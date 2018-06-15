@@ -18,7 +18,6 @@ using namespace std::string_literals;
 
 #include <QMessageBox>
 #include <csignal>
-#include <iostream>
 #include <pty.h>
 #include <sstream>
 #include <unistd.h>

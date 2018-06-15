@@ -37,6 +37,8 @@ static std::string strip_carriage_return(std::string_view sv) {
 
 static void assert_executed_correctly(std::string_view code, std::string_view expected_output, std::string_view expected_error = {},
 									  std::string_view input = {}) {
+	Assert_message assert_message;
+	assert_message << "Compiling code:\n" << code;
 	const auto cpp_file = "/tmp/SCE_test_process_code.cpp";
 	const auto exe_file = "/tmp/SCE_test_process_exe";
 	assert_true(std::ofstream{cpp_file} << code);
@@ -63,7 +65,7 @@ static void test_process_reading() {
 		std::string_view code;
 		std::string_view expected_output;
 		std::string_view expected_error;
-	} test_cases[] = {
+	} const test_cases[] = {
 		{.code = R"(int main(){})", //
 		 .expected_output = "",
 		 .expected_error = ""},
@@ -97,11 +99,45 @@ static void test_process_reading() {
 				 })",
 		 .expected_output = "HelloWorld",
 		 .expected_error = ""},
+		{.code = R"(#include <iostream>
+					 int main(int argc, char *argv[]){
+						std::cout << argv[0];
+					 })",
+		 .expected_output = "/tmp/SCE_test_process_exe",
+		 .expected_error = ""},
 	};
 
 	for (auto &test_case : test_cases) {
 		assert_executed_correctly(test_case.code, test_case.expected_output, test_case.expected_error);
 	}
+}
+
+static void test_parameter_passing() {
+	const auto cpp_file = "/tmp/SCE_test_process_code.cpp";
+	const auto exe_file = "/tmp/SCE_test_process_exe";
+	const auto code = R"(#include <iostream>
+	int main(int argc, char *argv[]) {
+		std::cout << argc << '\n';
+		for (int i = 0; i < argc; i++) {
+			std::cout << argv[i] << '\n';
+		}
+	})";
+	assert_true(std::ofstream{cpp_file} << code);
+	assert_equal(QProcess::execute("g++", {"-std=c++17", cpp_file, "-o", exe_file}), 0);
+	Tool tool{};
+	tool.path = exe_file;
+	tool.working_directory = "/tmp";
+	tool.arguments = "testarg testarg2 \"test arg 3\"";
+	std::string output;
+	std::string error;
+	Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join();
+	assert_equal(error, "");
+	assert_equal(output,
+				 "4\r\n"
+				 "/tmp/SCE_test_process_exe\r\n"
+				 "testarg\r\n"
+				 "testarg2\r\n"
+				 "test arg 3\r\n");
 }
 
 static void test_is_tty() { //we need to pretend to be a tty to receive color information
@@ -168,8 +204,8 @@ int main() {
 void test_process_reader() {
 	test_args_construction();
 	test_process_reading();
+	test_parameter_passing();
 	test_is_tty();
 	test_is_character_device();
 	test_input();
-	std::cout << "Using tty: " << (using_tty ? "true" : "false") << '\n';
 }
