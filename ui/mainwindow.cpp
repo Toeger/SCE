@@ -101,6 +101,10 @@ void MainWindow::close_notification_server() {
 	notification_server.clear_listening_endpoints();
 }
 
+void MainWindow::close_rpc_server() {
+	rpc_server.close();
+}
+
 void MainWindow::on_actionOpen_File_triggered() {
 	for (const auto &filename : QFileDialog::getOpenFileNames(this, tr("Select File(s) to open"))) {
 		add_file_tab(filename);
@@ -151,6 +155,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file_edit->setFont(font);
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
+	file_edit->setWindowTitle(filename);
 	connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get(), &notification_server = notification_server] {
 		if (main_window == nullptr) { //TODO: Make it so signals are disconnected before ~MainWindow()
 			return;

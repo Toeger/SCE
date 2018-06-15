@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "interop/notification_server.h"
+#include "interop/rpc_server.h"
 
 namespace Ui {
 	class MainWindow;
@@ -30,6 +31,7 @@ class MainWindow : public QMainWindow {
 	public slots:
 	void get_edit_window(std::promise<Edit_window *> &promise, std::string_view file_name);
 	void close_notification_server();
+	void close_rpc_server();
 
 	private slots:
 	void on_actionOpen_File_triggered();
@@ -47,6 +49,7 @@ class MainWindow : public QMainWindow {
 	std::unique_ptr<Ui::MainWindow> ui;
 	std::unique_ptr<Tool_editor_widget> tool_editor_widget;
 	Notification_server notification_server;
+	RPC_server rpc_server;
 
 	private:
 	Ui::MainWindow *_; //Qt Designer only works correctly if it finds this string
