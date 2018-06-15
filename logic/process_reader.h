@@ -41,6 +41,7 @@ class Process_reader {
 				   std::function<void(std::string_view)> error_callback = [](std::string_view) {},
 				   std::function<void(State)> completion_callback = [](State) {});
 	Process_reader(const Process_reader &) = delete;
+	static void run(QString executable, QString args, std::ostream &output, std::ostream &error);
 
 	void kill();
 	void join();

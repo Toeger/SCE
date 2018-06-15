@@ -182,6 +182,14 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 		  .process_handler = std::thread{&Process_reader::run_process, this, std::move(tool)},
 	  } {}
 
+void Process_reader::run(QString executable, QString args, std::ostream &output, std::ostream &error) {
+	Tool sh_script;
+	sh_script.path = std::move(executable);
+	sh_script.arguments = std::move(args);
+	sh_script.working_directory = TEST_DATA_PATH "/interop_scripts";
+	Process_reader{sh_script, [&output](std::string_view data) { output << data; }, [&error](std::string_view data) { error << data; }}.join();
+}
+
 void Process_reader::join() {
 	while (shared.state == State::running) {
 		std::this_thread::sleep_for(std::chrono::milliseconds{100});

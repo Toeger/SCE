@@ -1,4 +1,5 @@
 #include "test.h"
+#include "logic/process_reader.h"
 #include "test_mainwindow.h"
 #include "test_notification_server.h"
 #include "test_process_reader.h"
@@ -51,6 +52,13 @@ int main(int argc, char *argv[]) {
 	//Tests use their own servers and having the mainwindow server open causes issues with ports being in use
 	main_window.close_notification_server();
 	main_window.close_rpc_server();
+
+	//set up python2
+	std::cout << "Python2 setup:\n";
+	Process_reader::run("sh", "setup_python.sh python2", std::cout, std::cerr);
+	//set up python3
+	std::cout << "Python3 setup:\n";
+	Process_reader::run("sh", "setup_python.sh python3", std::cout, std::cerr);
 
 	test_notification_server();
 	test_rpc_server();

@@ -57,27 +57,13 @@ static void test_local_rpc_call() {
 static void test_python_rpc_call() {
 	Test_RPC_server trpcs;
 
-	auto run_sh_script = [](QString script, std::ostream &output, std::ostream &error) {
-		Tool sh_script;
-		sh_script.path = "sh";
-		sh_script.arguments = std::move(script);
-		sh_script.working_directory = TEST_DATA_PATH "/interop_scripts";
-		Process_reader{sh_script, [&output](std::string_view data) { output << data; }, [&error](std::string_view data) { error << data; }}.join();
-	};
-
-	auto test_sh_script = [&run_sh_script](QString script, std::string_view expected_output, std::string_view expected_error) {
+	auto test_sh_script = [](QString script, std::string_view expected_output, std::string_view expected_error) {
 		std::ostringstream output, error;
-		run_sh_script(std::move(script), output, error);
+		Process_reader::run("sh", std::move(script), output, error);
 		assert_equal(expected_error, error.str());
 		assert_equal(expected_output, output.str());
 	};
 
-	//set up python2
-	std::cout << "Python2 setup:\n";
-	run_sh_script("setup_python.sh python2", std::cout, std::cerr);
-	//set up python3
-	std::cout << "Python3 setup:\n";
-	run_sh_script("setup_python.sh python3", std::cout, std::cerr);
 	//python2
 	test_sh_script(R"(run_python_script.sh "python2 rpc_call.py")", "testresponse", "");
 	//python3
