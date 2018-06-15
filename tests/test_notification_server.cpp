@@ -1,12 +1,16 @@
 #include "test_notification_server.h"
 #include "interop/notification_server.h"
+#include "logic/process_reader.h"
 #include "test.h"
 
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/read.hpp>
+#include <fstream>
 #include <sce.pb.h>
 #include <string>
 #include <string_view>
+
+using namespace std::string_literals;
 
 static void test_simple_create_destroy() {
 	Notification_server ns;
@@ -110,6 +114,37 @@ static void test_protbuffer_serialization() {
 	}
 }
 
+static void test_protobuffer_serialization_interop() {
+	const auto id = "TestID";
+	{
+		std::string buffer;
+		sce::proto::EditNotification edit_notification;
+		edit_notification.mutable_filestate()->set_id(id);
+		edit_notification.mutable_filestate()->set_state(42);
+		edit_notification.SerializeToString(&buffer);
+		std::ofstream f{"/tmp/SCE_test_serialization", std::ios::binary | std::ios::out};
+		f.write(buffer.data(), buffer.size());
+	}
+	Tool script;
+	script.path = "sh";
+	script.arguments = TEST_DATA_PATH "interop_scripts/run_python_script.sh python2 " TEST_DATA_PATH "test_deserialize.py";
+	script.working_directory = TEST_DATA_PATH "interop_scripts";
+	std::string output;
+	std::string error;
+	const auto start = std::chrono::high_resolution_clock::now();
+	Process_reader{script, [&output](std::string_view data) { output += data; }, [&error](std::string_view data) { error += data; }}.join();
+	const auto stop = std::chrono::high_resolution_clock::now() - start;
+	Assert_message assert_message;
+	assert_message << Color::cyan << "Running " << Color::no_color << script.path.toStdString() << ' ' << script.arguments.toStdString() << Color::cyan
+				   << "\ntook " << std::chrono::duration_cast<std::chrono::milliseconds>(stop).count() << "ms\n"
+				   << "and produced output \"" << Color::no_color << output << Color::cyan << "\"\nand error \"" << Color::no_color << error << Color::cyan
+				   << "\"\n"
+				   << Color::no_color;
+	assert_message.expect_test_fail();
+	assert_equal(error, "");
+	assert_equal(output, "Filestate id: "s + id);
+}
+
 void test_notification_server() {
 	test_simple_create_destroy();
 	test_single_connection();
@@ -118,4 +153,5 @@ void test_notification_server() {
 	test_multiple_sends();
 	test_multiple_sends_to_multiple_connections();
 	test_protbuffer_serialization();
+	test_protobuffer_serialization_interop();
 }
