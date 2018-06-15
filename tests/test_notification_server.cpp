@@ -140,8 +140,8 @@ static void test_protobuffer_serialization_interop() {
 				   << "and produced output \"" << Color::no_color << output << Color::cyan << "\"\nand error \"" << Color::no_color << error << Color::cyan
 				   << "\"\n"
 				   << Color::no_color;
-	assert_message.expect_test_fail();
 	assert_equal(error, "");
+	assert_message.expect_test_fail();
 	assert_equal(output, "Filestate id: "s + id);
 }
 
