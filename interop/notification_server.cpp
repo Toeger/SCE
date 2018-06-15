@@ -41,18 +41,30 @@ Notification_server::~Notification_server() {
 	gui_thread_private.server.join();
 }
 
+template <class... T>
+void ignore_exception(T &&... t) {
+	try {
+		std::invoke(t...);
+	} catch (...) {
+	}
+}
+
 void Notification_server::send_notification(std::string data) {
 	shared.io_service.dispatch([data = std::make_shared<std::string>(std::move(data)), &sockets = notification_thread_private.sockets] {
 		for (auto &socket : sockets) {
 			boost::asio::async_write(*socket, boost::asio::buffer(data->c_str(), data->size()),
 									 [data, &socket = socket, &sockets = sockets](const boost::system::error_code &error, std::size_t) {
 										 if (error) {
-											 std::stringstream message;
-											 message << "Failed sending notification to " << socket->local_endpoint().address() << ':'
-													 << socket->local_endpoint().port();
-											 MainWindow::report_error(message.str(), error.message());
-											 socket->shutdown(boost::asio::ip::tcp::socket::shutdown_send);
-											 socket->close();
+											 //We ignore exceptions here because not logging the error or properly shutting down the connection is fine and we
+											 //want to try all the things before exiting without leaking an exception
+											 ignore_exception([&socket, &error] {
+												 std::stringstream message;
+												 message << "Failed sending notification to " << socket->remote_endpoint().address() << ':'
+														 << socket->local_endpoint().port();
+												 MainWindow::report_error(message.str(), error.message());
+											 });
+											 ignore_exception([&socket] { socket->shutdown(socket->shutdown_both); });
+											 ignore_exception([&socket] { socket->close(); });
 											 sockets.erase(std::find(std::begin(sockets), std::end(sockets), socket));
 										 }
 									 });
@@ -118,6 +130,7 @@ Notification_server::Notification_thread_private::Listener::Listener(boost::asio
 				return;
 			}
 			listener->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
+			listener->socket.set_option(boost::asio::socket_base::keep_alive{true});
 			sockets->push_back(std::make_unique<boost::asio::ip::tcp::socket>(std::move(listener->socket)));
 			listener->acceptor.async_accept(listener->socket, listener->endpoint, Acceptor{sockets, listener});
 		}
