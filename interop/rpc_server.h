@@ -14,6 +14,7 @@ struct RPC_server {
 	RPC_server();
 	~RPC_server();
 	RPC_server(const RPC_server &) = delete;
+	void close();
 
 	private:
 	class RPC_server_impl : public sce::proto::Query::Service {

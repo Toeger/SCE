@@ -12,8 +12,14 @@ RPC_server::RPC_server()
 	, server_thread{[this] { server->Wait(); }} {}
 
 RPC_server::~RPC_server() {
-	server->Shutdown();
-	server_thread.join();
+	close();
+}
+
+void RPC_server::close() {
+	if (server_thread.joinable()) {
+		server->Shutdown();
+		server_thread.join();
+	}
 }
 
 grpc::Status RPC_server::RPC_server_impl::Test([[maybe_unused]] grpc::ServerContext *context, [[maybe_unused]] const sce::proto::TestIn *request,
@@ -61,6 +67,9 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 
 grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::ServerContext *context, const sce::proto::GetBufferIn *request,
 													sce::proto::GetBufferOut *response) {
+	if (request->has_filestate() == false) {
+		return grpc::Status::CANCELLED;
+	}
 	const auto &file_state_request = request->filestate();
 	const auto &file_id = file_state_request.id();
 	const auto &file_state = file_state_request.state();
