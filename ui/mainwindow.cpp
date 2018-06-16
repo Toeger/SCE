@@ -88,13 +88,12 @@ void MainWindow::report_error(std::string_view message, std::string_view error) 
 	std::cerr << Color::light_red << message << ' ' << Color::red << error << Color::no_color << '\n';
 }
 
-void MainWindow::get_edit_window(std::promise<Edit_window *> &promise, std::string_view file_name) {
-	const auto edit_window = find_edit_window(
-		[&file_name](Edit_window *target_edit_window) {
-			return target_edit_window->get_id().toStdString() == file_name; //TODO: find a better way to compare QString and std::string_view
+Edit_window *MainWindow::get_edit_window(std::string_view id) {
+	return find_edit_window(
+		[&id](Edit_window *target_edit_window) {
+			return target_edit_window->get_id().toStdString() == id; //TODO: find a better way to compare QString and std::string_view
 		},
 		ui);
-	promise.set_value(edit_window);
 }
 
 void MainWindow::close_notification_server() {
@@ -160,6 +159,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 		if (main_window == nullptr) { //TODO: Make it so signals are disconnected before ~MainWindow()
 			return;
 		}
+		edit_window->clear_notes();
 		sce::proto::EditNotification edit_notification;
 		sce::proto::FileState &file_state = *edit_notification.mutable_filestate();
 		file_state.set_id(edit_window->get_id().toStdString());
@@ -191,9 +191,11 @@ void MainWindow::on_action_Edit_triggered() {
 
 void MainWindow::on_action_Test_triggered() {
 	auto edit = get_current_edit_window();
-	QTextCursor tc{edit->textCursor()};
-	QTextCharFormat tcf;
-	tcf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::WaveUnderline);
-	tcf.setUnderlineColor(Qt::red);
-	tc.setCharFormat(tcf);
+	Edit_window::Note note;
+	note.line = 1;
+	note.char_start = 3;
+	note.char_end = 7;
+	note.color = 0xff0000;
+	note.text = "Test notification";
+	edit->add_note(std::move(note));
 }

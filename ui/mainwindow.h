@@ -1,13 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <functional>
-#include <future>
-#include <memory>
-
 #include "interop/notification_server.h"
 #include "interop/rpc_server.h"
+
+#include <QMainWindow>
+#include <memory>
 
 namespace Ui {
 	class MainWindow;
@@ -29,7 +27,7 @@ class MainWindow : public QMainWindow {
 	static void report_error(std::string_view message, std::string_view error);
 
 	public slots:
-	void get_edit_window(std::promise<Edit_window *> &promise, std::string_view file_name);
+	Edit_window *get_edit_window(std::string_view id);
 	void close_notification_server();
 	void close_rpc_server();
 

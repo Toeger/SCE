@@ -26,11 +26,19 @@ Edit_window::~Edit_window() {
 
 void Edit_window::add_note(Edit_window::Note note) {
 	QTextCursor tc{textCursor()};
+	tc.setVisualNavigation(true);
+	tc.setPosition(0);
+	tc.movePosition(tc.Down, tc.MoveAnchor, note.line - 1);
+	tc.movePosition(tc.Right, tc.MoveAnchor, note.char_start - 1);
+	tc.movePosition(tc.Right, tc.KeepAnchor, note.char_end - note.char_start);
+
 	QTextCharFormat tcf;
 	tcf.setUnderlineStyle(QTextCharFormat::UnderlineStyle::WaveUnderline);
 	tcf.setUnderlineColor(note.color);
-	tc.setCharFormat(tcf);
-
+	{
+		QSignalBlocker blocker(this); //Setting the format counts as editing the buffer which causes more messages.
+		tc.setCharFormat(tcf);        //To avoid an infinite update loop we don't want this to cause a textChanged signal.
+	}
 	notes.push_back(std::move(note));
 }
 

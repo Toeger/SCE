@@ -1,6 +1,7 @@
 #include "rpc_server.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
+#include "utility/thread_call.h"
 
 RPC_server::RPC_server()
 	: server{grpc::ServerBuilder{}
@@ -47,13 +48,8 @@ grpc::Status RPC_server::RPC_server_impl::GetCurrentBuffer([[maybe_unused]] grpc
 
 grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerContext *context, const sce::proto::AddNoteIn *request,
 												  sce::proto::AddNoteOut *response) {
-	auto edit = MainWindow::get_current_edit_window();
 	if (request->has_range() == false || request->has_state() == false) {
 		return grpc::Status::CANCELLED;
-	}
-	if (request->state().state() != edit->get_state() || request->state().id() != MainWindow::get_current_path().toStdString()) { //outdated
-		response->set_success(false);
-		return grpc::Status::OK;
 	}
 	Edit_window::Note note;
 	note.color = QColor::fromRgb(request->has_color() ? request->color().rgb() : Qt::red);
@@ -61,7 +57,10 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 	note.char_start = request->range().start().character();
 	note.char_end = request->range().end().character();
 	note.text = QString::fromStdString(request->note());
-	edit->add_note(std::move(note));
+	Utility::gui_call([note = std::move(note), id = std::move(request->state().id())] {
+		auto edit = MainWindow::get_main_window()->get_edit_window(id);
+		edit->add_note(std::move(note));
+	});
 	return grpc::Status::OK;
 }
 
@@ -73,10 +72,7 @@ grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::Serve
 	const auto &file_state_request = request->filestate();
 	const auto &file_id = file_state_request.id();
 	const auto &file_state = file_state_request.state();
-	std::promise<Edit_window *> edit_window_promise;
-	auto edit_window_future = edit_window_promise.get_future();
-	MainWindow::get_main_window()->get_edit_window(edit_window_promise, file_id);
-	auto edit_window = edit_window_future.get();
+	auto edit_window = MainWindow::get_main_window()->get_edit_window(file_id);
 	if (edit_window != nullptr && edit_window->get_state() == file_state) {
 		response->set_buffer(edit_window->toPlainText().toStdString());
 		return grpc::Status::OK;

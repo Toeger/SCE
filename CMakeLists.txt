@@ -134,10 +134,10 @@ set(MISC_FILES
 	interop/sce.proto
 	list_libs.sh
 	lsan.supp
+	plugins/c++/clang-syntax-checker.py
 	run_all_test_configurations.sh
 )
 add_custom_target(${PROJECT_NAME}_MISC SOURCES ${MISC_FILES} ${UI_FILES})
-
 
 # Find includes in corresponding build directories
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${CMAKE_CURRENT_SOURCE_DIR} -isystem ${CMAKE_CURRENT_BINARY_DIR}")
