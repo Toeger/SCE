@@ -5,6 +5,7 @@
 #include "interop/rpc_server.h"
 
 #include <QMainWindow>
+#include <QTimer>
 #include <memory>
 
 namespace Ui {
@@ -38,14 +39,17 @@ class MainWindow : public QMainWindow {
 	void on_action_Test_triggered();
 	void on_file_tabs_tabCloseRequested(int index);
 	void closeEvent(QCloseEvent *event) override;
+	void edit_buffer_changed(Edit_window *edit_window);
 
 	private:
 	void load_last_files();
 	void save_last_files();
 	void add_file_tab(const QString &filename);
 
-	std::unique_ptr<Ui::MainWindow> ui;
+	int timer_delay_ms = 1000;
+	std::map<QString, QTimer> timers;
 	std::unique_ptr<Tool_editor_widget> tool_editor_widget;
+	std::unique_ptr<Ui::MainWindow> ui;
 	Notification_server notification_server;
 	RPC_server rpc_server;
 
