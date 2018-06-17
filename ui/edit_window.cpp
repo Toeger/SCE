@@ -70,14 +70,14 @@ bool Edit_window::event(QEvent *event) {
 	if (event->type() == QEvent::ToolTip) {
 		auto helpEvent = static_cast<QHelpEvent *>(event);
 		QTextCursor cursor = cursorForPosition(helpEvent->pos());
-		const int character = cursor.positionInBlock();
-		const int line = cursor.blockNumber();
+		const int character = cursor.positionInBlock() + 1;
+		const int line = cursor.blockNumber() + 1;
 		if (line == 0) {
 			QToolTip::hideText();
 			return true;
 		}
 		for (const auto &note : notes) {
-			if (note.line == line && note.char_start < character && note.char_end > character) {
+			if (note.line == line && note.char_start <= character && note.char_end >= character) {
 				QToolTip::showText(helpEvent->globalPos(), note.text);
 				return true;
 			}
