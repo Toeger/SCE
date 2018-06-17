@@ -7,3 +7,4 @@
 - [ ] Make up editor API that allows tools to access editor and content functionality
   - [ ] RPC API
   - [ ] Notification API
+  - [ ] Support cquery/LSP
