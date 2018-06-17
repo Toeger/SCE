@@ -48,9 +48,7 @@ message AddNoteIn {
 	}
 	Type type = 5;
 }
-message AddNoteOut {
-	bool success = 1;
-}
+message AddNoteOut {}
 
 message GetCurrentBufferIn {}
 message GetCurrentBufferOut {
@@ -65,12 +63,18 @@ message GetBufferOut {
 	string buffer = 1;
 }
 
+message GetCurrentDocumentsIn {}
+message GetCurrentDocumentsOut {
+	repeated FileState filestates = 1;
+}
+
 service Query {
 	//Generic functions
 	rpc Test(TestIn) returns (TestOut); //returns "testresponse"
 	rpc GetCurrentFileName(GetCurrentFileNameIn) returns (GetCurrentFileNameOut);
 	rpc GetCurrentBuffer(GetCurrentBufferIn) returns (GetCurrentBufferOut);
 	rpc GetBuffer(GetBufferIn) returns (GetBufferOut);
+	rpc GetCurrentDocuments(GetCurrentDocumentsIn) returns (GetCurrentDocumentsOut);
 
 	//Analyzer functions
 	rpc AddNote(AddNoteIn) returns (AddNoteOut);

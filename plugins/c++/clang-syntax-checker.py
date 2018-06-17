@@ -73,6 +73,49 @@ def message_severity_to_type(severity):
 notification_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 notification_socket.connect(('127.0.0.1', 53677))
 
+def handle_buffer(filestate):
+    getBufferIn = sce_pb2.GetBufferIn()
+    getBufferIn.filestate.id = filestate.id;
+    getBufferIn.filestate.state = filestate.state;
+    print("getBufferIn.filestate.id: ", getBufferIn.filestate.id)
+    try:
+        getBufferOut = stub.GetBuffer(getBufferIn)
+    except Exception as e:
+        print e.__doc__
+        print e.message
+        return
+
+    #pass it to clang
+    process = Popen(["clang++", "-std=c++17", "-x", "c++", "-fsyntax-only", "-I" + dirname(getBufferIn.filestate.id), "-"], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=-1)
+    output = process.communicate(getBufferOut.buffer.encode("utf-8"))[0].decode("utf-8")
+
+    #parse clang's output
+    issues = parse_error_message_information(output)
+
+    #add appropriate squigglies to the text buffer
+    for issue in issues:
+        note = sce_pb2.AddNoteIn()
+        note.state.id = filestate.id
+        note.state.state = filestate.state
+        note.range.start.line = issue["line"]
+        note.range.start.character = issue["character"]
+        note.range.end.line = issue["line"]
+        note.range.end.character = issue["character"] + 1
+        note.note = issue["message"]
+        note.color.rgb = message_severity_to_color(issue["severity"])
+        note.type = message_severity_to_type(issue["severity"])
+        try:
+            addNoteOut = stub.AddNote(note)
+        except Exception as e:
+            print e.__doc__
+            print e.message
+            continue
+
+GetCurrentDocumentsIn = sce_pb2.GetCurrentDocumentsIn()
+GetCurrentDocumentsOut = stub.GetCurrentDocuments(GetCurrentDocumentsIn)
+for filestate in GetCurrentDocumentsOut.filestates:
+    handle_buffer(filestate)
+
 #wait for buffer change notification
 while True:
     #get notification
@@ -91,41 +134,4 @@ while True:
     print("EditNotification.filestate.state: ", edit_notification.filestate.state)
 
     #get buffer
-    getBufferIn = sce_pb2.GetBufferIn()
-    getBufferIn.filestate.id = edit_notification.filestate.id;
-    getBufferIn.filestate.state = edit_notification.filestate.state;
-    print("getBufferIn.filestate.id: ", getBufferIn.filestate.id)
-    try:
-        getBufferOut = stub.GetBuffer(getBufferIn)
-    except Exception as e:
-        print e.__doc__
-        print e.message
-        continue
-
-    #pass it to clang
-    process = Popen(["clang++", "-std=c++17", "-x", "c++", "-fsyntax-only", "-I" + dirname(getBufferIn.filestate.id), "-"], stdin=PIPE, stdout=PIPE, stderr=STDOUT, bufsize=-1)
-    output = process.communicate(getBufferOut.buffer.encode("utf-8"))[0].decode("utf-8")
-
-    #parse clang's output
-    issues = parse_error_message_information(output)
-
-    #add appropriate squigglies to the text buffer
-    for issue in issues:
-        note = sce_pb2.AddNoteIn()
-        note.state.id = edit_notification.filestate.id
-        note.state.state = edit_notification.filestate.state
-        note.range.start.line = issue["line"]
-        note.range.start.character = issue["character"]
-        note.range.end.line = issue["line"]
-        note.range.end.character = issue["character"] + 1
-        note.note = issue["message"]
-        note.color.rgb = message_severity_to_color(issue["severity"])
-        note.type = message_severity_to_type(issue["severity"])
-        try:
-            addNoteOut = stub.AddNote(note)
-        except Exception as e:
-            print e.__doc__
-            print e.message
-            continue
-
-    #go back to waiting for buffer change notification
+    handle_buffer(edit_notification.filestate)

@@ -80,9 +80,28 @@ grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::Serve
 		const auto &file_state = file_state_request.state();
 		const auto edit_window = MainWindow::get_main_window()->get_edit_window(file_id);
 		if (edit_window != nullptr && edit_window->get_state() == file_state) {
-			response->set_buffer(edit_window->toPlainText().toStdString());
+			*response->mutable_buffer() = edit_window->get_buffer().toStdString();
 			return grpc::Status::OK;
 		}
 		return grpc::Status::CANCELLED;
 	});
+}
+
+grpc::Status RPC_server::RPC_server_impl::GetCurrentDocuments([[maybe_unused]] grpc::ServerContext *context,
+															  [[maybe_unused]] const sce::proto::GetCurrentDocumentsIn *request,
+															  sce::proto::GetCurrentDocumentsOut *response) {
+	auto file_states = Utility::gui_call([] {
+		std::vector<std::pair<int, std::string>> current_documents;
+		//TODO: currently we only support a single open document
+		//once you can have side-by-side edit windows each window must be returned
+		const auto edit_window = MainWindow::get_current_edit_window();
+		current_documents.emplace_back(edit_window->get_state(), edit_window->get_id().toStdString());
+		return current_documents;
+	});
+	for (auto &file_state : file_states) {
+		const auto response_file_state = response->add_filestates();
+		response_file_state->set_state(file_state.first);
+		*response_file_state->mutable_id() = std::move(file_state.second);
+	}
+	return grpc::Status::OK;
 }

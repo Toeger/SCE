@@ -25,6 +25,8 @@ struct RPC_server {
 									  sce::proto::GetCurrentBufferOut *response) override;
 		grpc::Status AddNote(grpc::ServerContext *context, const sce::proto::AddNoteIn *request, sce::proto::AddNoteOut *response) override;
 		grpc::Status GetBuffer(grpc::ServerContext *context, const sce::proto::GetBufferIn *request, sce::proto::GetBufferOut *response) override;
+		grpc::Status GetCurrentDocuments(grpc::ServerContext *context, const sce::proto::GetCurrentDocumentsIn *request,
+										 sce::proto::GetCurrentDocumentsOut *response) override;
 	};
 
 	RPC_server_impl rpc_server;
