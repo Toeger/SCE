@@ -223,7 +223,7 @@ void Process_reader::run_process(Tool tool) {
 	const int child_pid = fork();
 	if (child_pid == -1) {
 		shared.state = State::error;
-		Utility::gui_call([path = tool.path, error_callback = std::move(gui_thread_private.error_callback)] {
+		Utility::async_gui_call([path = tool.path, error_callback = std::move(gui_thread_private.error_callback)] {
 			error_callback(QObject::tr("Failed forking for program %1. Error: %2.").arg(path, QString{strerror(errno)}).toStdString());
 		});
 		return;
@@ -285,7 +285,7 @@ void Process_reader::run_process(Tool tool) {
 			exec_fail_string += exec_fail.read();
 		}
 		if (exec_fail_string.empty() == false) {
-			Utility::gui_call([exec_fail_string = std::move(exec_fail_string), tool = std::move(tool)] {
+			Utility::async_gui_call([exec_fail_string = std::move(exec_fail_string), tool = std::move(tool)] {
 				QMessageBox::critical(MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
 									  QString::fromStdString(exec_fail_string));
 			});
@@ -343,7 +343,7 @@ void Process_reader::run_process(Tool tool) {
 		assert(false); //TODO: handle timeouts
 	}
 #endif
-	Utility::gui_call([callback = std::move(gui_thread_private.completion_callback), this] {
+	Utility::async_gui_call([callback = std::move(gui_thread_private.completion_callback), this] {
 		shared.state = State::finished;
 		callback(Process_reader::State::finished);
 	});

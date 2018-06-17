@@ -54,6 +54,10 @@ QString Edit_window::get_id() const {
 	return windowTitle();
 }
 
+QString Edit_window::get_buffer() const {
+	return toPlainText();
+}
+
 void Edit_window::wheelEvent(QWheelEvent *we) {
 	if (we->modifiers() == Qt::ControlModifier) {
 		const auto raw_zoom = we->delta() + zoom_remainder;

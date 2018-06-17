@@ -4,14 +4,14 @@
 #include <QCoreApplication>
 #include <QEvent>
 #include <QObject>
+#include <future>
 #include <type_traits>
-
 #include <ui/mainwindow.h>
 
 namespace Utility {
 	//this function executes a function fun owned by the owning thread of object
 	template <class Function>
-	void thread_call(QObject *object, Function &&function) {
+	void async_thread_call(QObject *object, Function &&function) {
 		using F = typename std::decay_t<Function>;
 		struct Event : public QEvent {
 			F function;
@@ -28,8 +28,24 @@ namespace Utility {
 		QCoreApplication::postEvent(object->thread() ? object : qApp, new Event(std::forward<Function>(function)));
 	}
 	template <class Function>
-	void gui_call(Function &&function) {
-		thread_call(MainWindow::get_main_window(), std::forward<Function>(function));
+	void async_gui_call(Function &&function) {
+		async_thread_call(MainWindow::get_main_window(), std::forward<Function>(function));
+	}
+	template <class Function, class... Args>
+	auto gui_call(Function &&function, Args &&... args) {
+		using Return_type = decltype(std::invoke(function, std::forward<Args>(args)...));
+		std::promise<Return_type> promise;
+		auto future = promise.get_future();
+		async_thread_call(MainWindow::get_main_window(),
+						  [&promise, function = std::forward<Function>(function), tuple_args = std::forward_as_tuple<Args...>(args...)] {
+							  if constexpr (std::is_same_v<void, decltype(std::apply(function, std::move(tuple_args)))>) {
+								  std::apply(function, std::move(tuple_args));
+								  promise.set_value();
+							  } else {
+								  promise.set_value(std::apply(function, std::move(tuple_args)));
+							  }
+						  });
+		return future.get();
 	}
 } // namespace Utility
 

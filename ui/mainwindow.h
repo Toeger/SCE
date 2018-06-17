@@ -26,9 +26,9 @@ class MainWindow : public QMainWindow {
 	static MainWindow *get_main_window();
 	static QString get_current_selection();
 	static void report_error(std::string_view message, std::string_view error);
+	Edit_window *get_edit_window(std::string_view id);
 
 	public slots:
-	Edit_window *get_edit_window(std::string_view id);
 	void close_notification_server();
 	void close_rpc_server();
 

@@ -31,6 +31,7 @@ class Edit_window final : public QPlainTextEdit {
 	void clear_notes();
 	uint32_t get_state() const;
 	QString get_id() const;
+	QString get_buffer() const;
 
 	private:
 	void wheelEvent(QWheelEvent *we) override;

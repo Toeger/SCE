@@ -3,6 +3,11 @@
 #include "ui/mainwindow.h"
 #include "utility/thread_call.h"
 
+#include <tuple>
+
+/* The callbacks in this file are run by the RPC_server thread which is different from the GUI thread. Therefore all access to GUI-related functions such as
+ * MainWindow must be encapsulated in a Utility::gui_call. */
+
 RPC_server::RPC_server()
 	: server{grpc::ServerBuilder{}
 				 .SetDefaultCompressionLevel(GRPC_COMPRESS_LEVEL_NONE)
@@ -31,23 +36,24 @@ grpc::Status RPC_server::RPC_server_impl::Test([[maybe_unused]] grpc::ServerCont
 grpc::Status RPC_server::RPC_server_impl::GetCurrentFileName([[maybe_unused]] grpc::ServerContext *context,
 															 [[maybe_unused]] const sce::proto::GetCurrentFileNameIn *request,
 															 sce::proto::GetCurrentFileNameOut *response) {
-	response->set_filename(MainWindow::get_current_path().toStdString());
+	response->set_filename(Utility::gui_call(MainWindow::get_current_path).toStdString());
 	return grpc::Status::OK;
 }
 
 grpc::Status RPC_server::RPC_server_impl::GetCurrentBuffer([[maybe_unused]] grpc::ServerContext *context,
 														   [[maybe_unused]] const sce::proto::GetCurrentBufferIn *request,
 														   sce::proto::GetCurrentBufferOut *response) {
-	auto edit = MainWindow::get_current_edit_window();
-	sce::proto::FileState state;
-	state.set_id(MainWindow::get_current_path().toStdString());
-	state.set_state(edit->get_state());
-	response->set_allocated_filestate(&state);
+	int state;
+	std::tie(state, *response->mutable_filestate()->mutable_id(), *response->mutable_buffer()) = Utility::gui_call([] {
+		auto edit = MainWindow::get_current_edit_window();
+		return std::make_tuple(edit->get_state(), edit->get_id().toStdString(), edit->get_buffer().toStdString());
+	});
+	response->mutable_filestate()->set_state(state);
 	return grpc::Status::OK;
 }
 
 grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerContext *context, const sce::proto::AddNoteIn *request,
-												  sce::proto::AddNoteOut *response) {
+												  [[maybe_unused]] sce::proto::AddNoteOut *response) {
 	if (request->has_range() == false || request->has_state() == false) {
 		return grpc::Status::CANCELLED;
 	}
@@ -57,7 +63,7 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 	note.char_start = request->range().start().character();
 	note.char_end = request->range().end().character();
 	note.text = QString::fromStdString(request->note());
-	Utility::gui_call([note = std::move(note), id = std::move(request->state().id())] {
+	Utility::async_gui_call([note = std::move(note), id = std::move(request->state().id())]() mutable {
 		auto edit = MainWindow::get_main_window()->get_edit_window(id);
 		edit->add_note(std::move(note));
 	});
@@ -69,13 +75,14 @@ grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::Serve
 	if (request->has_filestate() == false) {
 		return grpc::Status::CANCELLED;
 	}
-	const auto &file_state_request = request->filestate();
-	const auto &file_id = file_state_request.id();
-	const auto &file_state = file_state_request.state();
-	auto edit_window = MainWindow::get_main_window()->get_edit_window(file_id);
-	if (edit_window != nullptr && edit_window->get_state() == file_state) {
-		response->set_buffer(edit_window->toPlainText().toStdString());
-		return grpc::Status::OK;
-	}
-	return grpc::Status::CANCELLED;
+	return Utility::gui_call([&file_state_request = request->filestate(), response] {
+		const auto &file_id = file_state_request.id();
+		const auto &file_state = file_state_request.state();
+		const auto edit_window = MainWindow::get_main_window()->get_edit_window(file_id);
+		if (edit_window != nullptr && edit_window->get_state() == file_state) {
+			response->set_buffer(edit_window->toPlainText().toStdString());
+			return grpc::Status::OK;
+		}
+		return grpc::Status::CANCELLED;
+	});
 }
