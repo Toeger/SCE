@@ -133,7 +133,6 @@ set(MISC_FILES
 	feature_plans.md
 	gdb.sh
 	interop/sce.proto
-	list_libs.sh
 	lsan.supp
 	plugins/c++/clang-syntax-checker.py
 	run_all_test_configurations.sh
