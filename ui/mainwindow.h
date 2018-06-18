@@ -3,6 +3,7 @@
 
 #include "interop/notification_server.h"
 #include "interop/rpc_server.h"
+#include "utility/thread_check.h"
 
 #include <QMainWindow>
 #include <QTimer>
@@ -15,7 +16,7 @@ namespace Ui {
 class Edit_window;
 class Tool_editor_widget;
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow, private Thread_check {
 	Q_OBJECT
 
 	public:

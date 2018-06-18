@@ -145,6 +145,7 @@ bool Tool_editor_widget::need_to_save() {
 }
 
 void Tool_editor_widget::update_tools_list() {
+	thread_check();
 	const int old_index = std::max(ui->tools_listWidget->currentRow(), 0);
 	ui->tools_listWidget->clear();
 	auto old_tools = std::move(tools);
@@ -157,6 +158,7 @@ void Tool_editor_widget::update_tools_list() {
 }
 
 void Tool_editor_widget::update_current_tool() {
+	thread_check();
 	if (ui->tools_listWidget->count() == 0) {
 		return;
 	}
@@ -166,6 +168,7 @@ void Tool_editor_widget::update_current_tool() {
 }
 
 void Tool_editor_widget::update_current_tool_name() {
+	thread_check();
 	const auto current_path = tools[ui->tools_listWidget->currentRow()].path;
 	auto current_tool_name = current_path.split('/').back();
 	ui->tools_listWidget->currentItem()->setText(current_tool_name);

@@ -25,6 +25,7 @@ Edit_window::~Edit_window() {
 }
 
 void Edit_window::add_note(Edit_window::Note note) {
+	thread_check();
 	QTextCursor tc{textCursor()};
 	tc.setVisualNavigation(true);
 	tc.setPosition(0);
@@ -51,14 +52,17 @@ uint32_t Edit_window::get_state() const {
 }
 
 QString Edit_window::get_id() const {
+	thread_check();
 	return windowTitle();
 }
 
 QString Edit_window::get_buffer() const {
+	thread_check();
 	return toPlainText();
 }
 
 void Edit_window::wheelEvent(QWheelEvent *we) {
+	thread_check();
 	if (we->modifiers() == Qt::ControlModifier) {
 		const auto raw_zoom = we->delta() + zoom_remainder;
 		const auto zoom = raw_zoom / QWheelEvent::DefaultDeltasPerStep;
@@ -71,6 +75,7 @@ void Edit_window::wheelEvent(QWheelEvent *we) {
 }
 
 bool Edit_window::event(QEvent *event) {
+	thread_check();
 	if (event->type() == QEvent::ToolTip) {
 		auto helpEvent = static_cast<QHelpEvent *>(event);
 		QTextCursor cursor = cursorForPosition(helpEvent->pos());

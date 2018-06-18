@@ -134,12 +134,18 @@ static void set_environment() {
 #endif
 
 static QString resolve_placeholders(QString string) {
+	QString current_path;
+	QString current_selection;
+	if (MainWindow::get_main_window()) {
+		std::tie(current_path, current_selection) =
+			Utility::gui_call([] { return std::make_pair(MainWindow::get_current_path(), MainWindow::get_current_selection()); });
+	}
 	struct Placeholder_value {
 		QString placeholder;
 		QString value;
 	} const placeholder_values[] = {
-		{"$FilePath", MainWindow::get_current_path()},       //
-		{"$Selection", MainWindow::get_current_selection()}, //
+		{"$FilePath", current_path},       //
+		{"$Selection", current_selection}, //
 	};
 	for (const auto &placeholder_value : placeholder_values) {
 		string.replace(placeholder_value.placeholder, placeholder_value.value);
@@ -343,10 +349,15 @@ void Process_reader::run_process(Tool tool) {
 		assert(false); //TODO: handle timeouts
 	}
 #endif
-	Utility::async_gui_call([callback = std::move(gui_thread_private.completion_callback), this] {
+	auto finalizer = [callback = std::move(gui_thread_private.completion_callback), this] {
 		shared.state = State::finished;
 		callback(Process_reader::State::finished);
-	});
+	};
+	if (MainWindow::get_main_window()) {
+		Utility::async_gui_call(finalizer);
+	} else {
+		finalizer();
+	}
 }
 
 template <class Control_sequence_callback, class Plaintext_callback>

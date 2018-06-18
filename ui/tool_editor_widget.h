@@ -2,6 +2,7 @@
 #define TOOL_EDITOR_WIDGET_H
 
 #include "logic/tool.h"
+#include "utility/thread_check.h"
 
 #include <QWidget>
 #include <memory>
@@ -14,13 +15,12 @@ namespace Ui {
 struct QComboBox;
 
 //This window is to specify how to use external tools such as compilers.
-class Tool_editor_widget : public QWidget {
+class Tool_editor_widget : public QWidget, private Thread_check {
 	Q_OBJECT
 
 	public:
 	explicit Tool_editor_widget(QWidget *parent = nullptr);
 	~Tool_editor_widget() override;
-	void closeEvent(QCloseEvent *event) override;
 
 	public slots:
 	void update_tools_list();
@@ -28,6 +28,7 @@ class Tool_editor_widget : public QWidget {
 	void update_current_tool_name();
 
 	private:
+	void closeEvent(QCloseEvent *event) override;
 	void load_tools_from_settings();
 	void save_tools_to_settings() const;
 	bool need_to_save();

@@ -96,6 +96,7 @@ set(SCE_SRC
 	utility/protobuffer_encoder.cpp
 	utility/raii.cpp
 	utility/thread_call.cpp
+	utility/thread_check.cpp
 	utility/thread_safe.cpp
 	utility/unique_handle.cpp
 )
@@ -136,6 +137,9 @@ set(MISC_FILES
 	lsan.supp
 	plugins/c++/clang-syntax-checker.py
 	run_all_test_configurations.sh
+	testdata/test.sh
+	testdata/interop_scripts/setup_python.sh
+	testdata/interop_scripts/run_python_script.sh
 )
 add_custom_target(${PROJECT_NAME}_MISC SOURCES ${MISC_FILES} ${UI_FILES})
 

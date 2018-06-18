@@ -2,6 +2,7 @@
 #define EDIT_WINDOW_H
 
 #include "logic/tool.h"
+#include "utility/thread_check.h"
 
 #include <QPlainTextEdit>
 #include <QString>
@@ -14,7 +15,7 @@ class QSyntaxHighlighter;
 class QWheelEvent;
 
 //Widget for code editing
-class Edit_window final : public QPlainTextEdit {
+class Edit_window final : public QPlainTextEdit, private Thread_check {
 	Q_OBJECT
 	public:
 	Edit_window();

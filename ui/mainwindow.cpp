@@ -57,6 +57,7 @@ MainWindow::~MainWindow() { //required for destructors of otherwise incomplete t
 }
 
 Edit_window *MainWindow::get_current_edit_window() {
+	main_window->thread_check();
 	return dynamic_cast<Edit_window *>(main_window->ui->file_tabs->currentWidget());
 }
 
@@ -64,6 +65,7 @@ QString MainWindow::get_current_path() {
 	if (main_window == nullptr) {
 		return {};
 	}
+	main_window->thread_check();
 	const auto tab_bar = main_window->ui->file_tabs->tabBar();
 	return tab_bar->tabText(tab_bar->currentIndex());
 }
@@ -76,6 +78,7 @@ QString MainWindow::get_current_selection() {
 	if (main_window == nullptr) {
 		return {};
 	}
+	main_window->thread_check();
 	auto edit_window = dynamic_cast<Edit_window *>(main_window->ui->file_tabs->currentWidget());
 	if (edit_window == nullptr) {
 		return {};
@@ -97,10 +100,12 @@ Edit_window *MainWindow::get_edit_window(std::string_view id) {
 }
 
 void MainWindow::close_notification_server() {
+	thread_check();
 	notification_server.clear_listening_endpoints();
 }
 
 void MainWindow::close_rpc_server() {
+	thread_check();
 	rpc_server.close();
 }
 
