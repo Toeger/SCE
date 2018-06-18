@@ -140,7 +140,10 @@ set(MISC_FILES
 	testdata/interop_scripts/setup_python.sh
 	testdata/interop_scripts/run_python_script.sh
 )
-add_custom_target(${PROJECT_NAME}_MISC SOURCES ${MISC_FILES} ${UI_FILES})
+add_custom_target(MISC_FILES
+	COMMENT "This target only exists to list files in IDEs"
+	SOURCES ${MISC_FILES} ${UI_FILES}
+)
 
 add_custom_target(python_environment
 	${CMAKE_SOURCE_DIR}/testdata/interop_scripts/setup_python.sh python2
