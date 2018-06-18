@@ -11,6 +11,7 @@ addons:
         packages:
             # C++17
             - g++-8
+            - clang-6.0
             # gdb
             - gdb
             # ninja
@@ -19,13 +20,13 @@ addons:
             - realpath
             # boost
             - libboost-all-dev
-            # clang
-            - clang-6.0
 
 cache:
     ccache: true
 
 before_install:
+    # tell apt to allow parallel downloads
+    - sudo sh -c "echo 'Acquire::Queue-Mode "host";' >> /etc/apt/apt.conf"
     # gcc
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
     # clang
@@ -35,24 +36,23 @@ before_install:
     - file $(which clang++)
     # ld
     - sudo add-apt-repository -y ppa:jonathonf/binutils
+    - PACKAGES=${PACKAGES}"binutils "
     # python
     - sudo add-apt-repository -y ppa:jonathonf/python-2.7
+    - PACKAGES=${PACKAGES}"python2.7 "
     - sudo add-apt-repository -y ppa:jonathonf/python-3.6
+    - PACKAGES=${PACKAGES}"python3.6 "
     # Qt
     - sudo add-apt-repository -y ppa:beineri/opt-qt-5.10.1-trusty
+    - PACKAGES=${PACKAGES}"qt510base "
     # protobuf
     - git clone -b v1.10.x --single-branch --recursive https://github.com/grpc/grpc
     # Update sources
     - sudo apt-get update
 
 install:
-    # ld
-    - sudo apt-get install binutils
-    # python
-    - sudo apt-get install python2.7
-    - sudo apt-get install python3.6
-    # Qt
-    - sudo apt-get install qt510base
+    #install packages
+    - sudo apt-get install ${PACKAGES}
     # ccache
     - which clang++
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
