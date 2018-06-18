@@ -93,6 +93,10 @@ before_script:
     - echo $PATH
 
 script:
+    - mkdir build && cd build
+    - cmake .. -G Ninja
+    - ninja python_environment
+    - cd .. && rm -R build
     - ./run_all_test_configurations.sh
 
 after_script:

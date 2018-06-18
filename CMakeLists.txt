@@ -143,6 +143,13 @@ set(MISC_FILES
 )
 add_custom_target(${PROJECT_NAME}_MISC SOURCES ${MISC_FILES} ${UI_FILES})
 
+add_custom_target(python_environment
+	${CMAKE_SOURCE_DIR}/testdata/interop_scripts/setup_python.sh python2
+	COMMAND ${CMAKE_SOURCE_DIR}/testdata/interop_scripts/setup_python.sh python3
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testdata/interop_scripts
+	COMMENT "Setting up python environment"
+)
+
 # Find includes in corresponding build directories
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${CMAKE_CURRENT_SOURCE_DIR} -isystem ${CMAKE_CURRENT_BINARY_DIR}")
 set(CMAKE_INCLUDE_CURRENT_DIR ON) #this line is only for qt creator's ClangCodeModel plugin
