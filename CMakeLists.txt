@@ -136,7 +136,6 @@ set(MISC_FILES
 	lsan.supp
 	plugins/c++/clang-syntax-checker.py
 	run_all_test_configurations.sh
-	testdata/test.sh
 	testdata/interop_scripts/setup_python.sh
 	testdata/interop_scripts/run_python_script.sh
 )
