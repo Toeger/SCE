@@ -47,11 +47,19 @@ int main(int argc, char *argv[]) {
 
 	QApplication a{argc, argv};
 
-	test_notification_server();
-	test_rpc_server();
-	test_process_reader();
-	test_settings();
-	test_tool();
-	test_tool_editor_widget();
-	test_mainwindow();
+#define TESTS_LIST                                                                                                                                             \
+	X(test_notification_server), X(test_rpc_server), X(test_process_reader), X(test_settings), X(test_tool), X(test_tool_editor_widget), X(test_mainwindow),
+
+#define X(TEST)                                                                                                                                                \
+	{ &TEST, #TEST }
+	struct {
+		void (*test_function)();
+		const char *test_name;
+	} const tests[] = {TESTS_LIST};
+	for (const auto &test : tests) {
+		std::clog << "Running " << test.test_name;
+		const auto start = std::chrono::high_resolution_clock::now();
+		test.test_function();
+		std::clog << " (" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() << "ms)\n";
+	}
 }
