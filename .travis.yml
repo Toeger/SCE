@@ -91,12 +91,13 @@ before_script:
     - gdb --version
     - ld --version
     - echo $PATH
-
-script:
+    # set up python environment
     - mkdir build && cd build
     - cmake -G Ninja ..
     - ninja python_environment
     - cd .. && rm -R build
+
+script:
     - ./run_all_test_configurations.sh
 
 after_script:
