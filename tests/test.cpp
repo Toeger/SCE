@@ -6,6 +6,7 @@
 #include "test_settings.h"
 #include "test_tool.h"
 #include "test_tool_editor_widget.h"
+#include "utility/color.h"
 #include "utility/raii.h"
 
 #include <QApplication>
@@ -57,9 +58,10 @@ int main(int argc, char *argv[]) {
 		const char *test_name;
 	} const tests[] = {TESTS_LIST};
 	for (const auto &test : tests) {
-		std::clog << "Running " << test.test_name;
+		std::clog << Color::green << "Running " << test.test_name << Color::no_color;
 		const auto start = std::chrono::high_resolution_clock::now();
 		test.test_function();
-		std::clog << " (" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() << "ms)\n";
+		std::clog << Color::green << " (" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()
+				  << "ms)" << Color::no_color << '\n';
 	}
 }
