@@ -1,14 +1,13 @@
-#include "test_tool.h"
 #include "logic/tool.h"
 #include "test.h"
 
-void test_tool() {
+TEST_CASE("Testing tool", "[tool]") {
 	Tool t1{}, t2{};
-	assert_equal(t1, t2);
-	assert_equal(t1.to_string(), t2.to_string());
-	assert_equal(Tool::from_string(t1.to_string()), t1);
+	REQUIRE(t1 == t2);
+	REQUIRE(t1.to_string() == t2.to_string());
+	REQUIRE(Tool::from_string(t1.to_string()) == t1);
 	t1.path = "/some/path";
-	assert_not_equal(t1, t2);
-	assert_not_equal(t1.to_string(), t2.to_string());
-	assert_equal(Tool::from_string(t1.to_string()), t1);
+	REQUIRE(t1 != t2);
+	REQUIRE(t1.to_string() != t2.to_string());
+	REQUIRE(Tool::from_string(t1.to_string()) == t1);
 }

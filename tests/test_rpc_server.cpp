@@ -1,4 +1,3 @@
-#include "test_rpc_server.h"
 #include "logic/process_reader.h"
 #include "test.h"
 
@@ -43,34 +42,27 @@ struct Test_RPC_server {
 	std::thread server_thread;
 };
 
-static void test_local_rpc_call() {
+TEST_CASE("Testing RPC server", "[rpc_server]") {
 	Test_RPC_server rpc_server;
-	//make an RPC call
-	sce::proto::TestOut reply;
-	grpc::ClientContext client_context;
-	auto stub = sce::proto::Query::NewStub(grpc::CreateChannel(Test_RPC_server::rpc_address, grpc::InsecureChannelCredentials()));
-	auto status = stub->Test(&client_context, {}, &reply);
-	assert_true(status.ok());
-	assert_equal(reply.message(), Test_RPC_server::test_response);
-}
+	WHEN("Testing local RPC call") {
+		sce::proto::TestOut reply;
+		grpc::ClientContext client_context;
+		auto stub = sce::proto::Query::NewStub(grpc::CreateChannel(Test_RPC_server::rpc_address, grpc::InsecureChannelCredentials()));
+		auto status = stub->Test(&client_context, {}, &reply);
+		CHECK(status.ok());
+		REQUIRE(reply.message() == Test_RPC_server::test_response);
+	}
+	WHEN("Testing rpc call via python") {
+		auto test_sh_script = [](QString script, std::string_view expected_output, std::string_view expected_error) {
+			std::ostringstream output, error;
+			Process_reader::run("sh", std::move(script), output, error);
+			REQUIRE(expected_error == error.str());
+			REQUIRE(expected_output == output.str());
+		};
 
-static void test_python_rpc_call() {
-	Test_RPC_server trpcs;
-
-	auto test_sh_script = [](QString script, std::string_view expected_output, std::string_view expected_error) {
-		std::ostringstream output, error;
-		Process_reader::run("sh", std::move(script), output, error);
-		assert_equal(expected_error, error.str());
-		assert_equal(expected_output, output.str());
-	};
-
-	//python2
-	test_sh_script(R"(run_python_script.sh "python2 rpc_call.py")", "testresponse", "");
-	//python3
-	test_sh_script(R"(run_python_script.sh "python3 rpc_call.py")", "testresponse", "");
-}
-
-void test_rpc_server() {
-	test_local_rpc_call();
-	test_python_rpc_call();
+		//python2
+		test_sh_script(R"(run_python_script.sh "python2 rpc_call.py")", "testresponse", "");
+		//python3
+		test_sh_script(R"(run_python_script.sh "python3 rpc_call.py")", "testresponse", "");
+	}
 }

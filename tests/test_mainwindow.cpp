@@ -1,4 +1,3 @@
-#include "test_mainwindow.h"
 #include "logic/settings.h"
 #include "test.h"
 #include "ui/mainwindow.h"
@@ -8,26 +7,30 @@
 #include <QTemporaryFile>
 
 struct MainWindow_tester : MainWindow {
-	void test() {
-		test_add_file_tab();
-	}
-	void test_add_file_tab() {
+	using MainWindow::add_file_tab;
+	using MainWindow::on_file_tabs_tabCloseRequested;
+	using MainWindow::ui;
+};
+
+TEST_CASE_METHOD(MainWindow_tester, "Testing main window") {
+	Settings::Keeper keeper;
+	WHEN("Adding file tabs") {
 		ui->file_tabs->clear();
-		{ // check behavior when loading a file that we cannot access
-			assert_equal(ui->file_tabs->count(), 0);
+		REQUIRE(ui->file_tabs->count() == 0);
+		WHEN("File cannot be accessed") {
 			const constexpr auto non_existing_filename = "not-existing-file";
 			add_file_tab(non_existing_filename);
-			assert_equal(ui->file_tabs->count(), 1);
+			REQUIRE(ui->file_tabs->count() == 1);
 			auto edit = dynamic_cast<QPlainTextEdit *>(ui->file_tabs->currentWidget());
 			assert(edit);
-			assert_equal(edit->toPlainText(), "");
-			assert_equal(edit->placeholderText(), tr("Failed reading file %1").arg(non_existing_filename));
+			REQUIRE(edit->toPlainText() == "");
+			REQUIRE(edit->placeholderText() == QObject::tr("Failed reading file %1").arg(non_existing_filename));
 		}
-		{ // check closing tab
+		WHEN("Closing tab") { // check closing tab
 			on_file_tabs_tabCloseRequested(0);
-			assert_equal(ui->file_tabs->count(), 0);
+			REQUIRE(ui->file_tabs->count() == 0);
 		}
-		{ // check loading existing file
+		WHEN("Loading existing file") {
 			QTemporaryFile tempfile{};
 			tempfile.open();
 			const constexpr auto tempfile_contents = R"(#include <iostream>
@@ -38,15 +41,10 @@ int main(){
 			tempfile.write(tempfile_contents);
 			tempfile.flush();
 			add_file_tab(tempfile.fileName());
-			assert_equal(ui->file_tabs->count(), 1);
+			REQUIRE(ui->file_tabs->count() == 1);
 			auto edit = dynamic_cast<QPlainTextEdit *>(ui->file_tabs->currentWidget());
 			assert(edit);
-			assert_equal(edit->toPlainText(), tempfile_contents);
+			REQUIRE(edit->toPlainText() == tempfile_contents);
 		}
 	}
-};
-
-void test_mainwindow() {
-	Settings::Keeper keeper;
-	MainWindow_tester{}.test();
 }
