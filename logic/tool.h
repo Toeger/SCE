@@ -42,8 +42,25 @@ struct Tool { //how to use an external tool such as a compiler. It specifies inp
 	QString get_name() const;
 };
 
-bool operator==(const Tool &lhs, const Tool &rhs);
+int operator_spaceship(const Tool &lhs, const Tool &rhs); //TODO: fixme in C++20
 
-bool operator<(const Tool &lhs, const Tool &rhs);
+inline bool operator==(const Tool &lhs, const Tool &rhs) {
+	return operator_spaceship(lhs, rhs) == 0;
+}
+inline bool operator!=(const Tool &lhs, const Tool &rhs) {
+	return operator_spaceship(lhs, rhs) != 0;
+}
+inline bool operator<(const Tool &lhs, const Tool &rhs) {
+	return operator_spaceship(lhs, rhs) < 0;
+}
+inline bool operator>(const Tool &lhs, const Tool &rhs) {
+	return operator_spaceship(lhs, rhs) > 0;
+}
+inline bool operator<=(const Tool &lhs, const Tool &rhs) {
+	return operator_spaceship(lhs, rhs) <= 0;
+}
+inline bool operator>=(const Tool &lhs, const Tool &rhs) {
+	return operator_spaceship(lhs, rhs) >= 0;
+}
 
 #endif // TOOL_H

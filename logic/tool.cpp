@@ -88,10 +88,12 @@ static bool compare(const Tool &lhs, const Tool &rhs, std::index_sequence<indexe
 	return Comparator{}(std::tie(lhs.*std::get<indexes>(members)...), std::tie(rhs.*std::get<indexes>(members)...));
 }
 
-bool operator==(const Tool &lhs, const Tool &rhs) {
-	return compare<std::equal_to<>>(lhs, rhs, std::make_index_sequence<std::tuple_size_v<decltype(get_members())>>());
-}
-
-bool operator<(const Tool &lhs, const Tool &rhs) {
-	return compare<std::less<>>(lhs, rhs, std::make_index_sequence<std::tuple_size_v<decltype(get_members())>>());
+int operator_spaceship(const Tool &lhs, const Tool &rhs) {
+	if (compare<std::less<>>(lhs, rhs, std::make_index_sequence<std::tuple_size_v<decltype(get_members())>>())) {
+		return -1;
+	}
+	if (compare<std::less<>>(rhs, lhs, std::make_index_sequence<std::tuple_size_v<decltype(get_members())>>())) {
+		return 1;
+	}
+	return 0;
 }
