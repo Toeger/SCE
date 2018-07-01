@@ -18,7 +18,7 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 
 # Boost
 find_package(Boost 1.54 COMPONENTS system REQUIRED)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 # Set up protobuffer
 if (NOT DEFINED ENV{TRAVIS})
@@ -41,7 +41,7 @@ add_custom_command(
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--grpc_python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--plugin=protoc-gen-grpc_python=${GRPC_PLUGIN_PATH}/grpc_python_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	DEPENDS interop/sce.proto
 	OUTPUT sce.grpc.pb.cc sce.grpc.pb.h
-	COMMENT "Generating RPC code for sce.proto."
+	COMMENT "Generating RPC code for sce.proto"
 )
 
 #extra flags
@@ -84,6 +84,7 @@ add_definitions(-DTEST_DATA_PATH=\"${CMAKE_SOURCE_DIR}/testdata/\")
 set(SCE_SRC
 	${PROTO_HDRS}
 	${PROTO_SRCS}
+	interop/language_server_protocol.cpp
 	interop/notification_server.cpp
 	interop/rpc_server.cpp
 	logic/process_reader.cpp
@@ -105,12 +106,14 @@ set(SCE_SRC
 	utility/thread_check.cpp
 	utility/thread_safe.cpp
 	utility/unique_handle.cpp
+	utility/utility.cpp
 )
 
 # Test files
 set(SCE_TEST_SRC
 	${SCE_SRC}
 	tests/test.cpp
+	tests/test_language_server_protocol.cpp
 	tests/test_mainwindow.cpp
 	tests/test_notification_server.cpp
 	tests/test_process_reader.cpp
@@ -142,8 +145,8 @@ set(MISC_FILES
 	lsan.supp
 	plugins/c++/clang-syntax-checker.py
 	run_all_test_configurations.sh
-	testdata/interop_scripts/setup_python.sh
 	testdata/interop_scripts/run_python_script.sh
+	testdata/interop_scripts/setup_python.sh
 )
 add_custom_target(MISC_FILES
 	COMMENT "This target only exists to list files in IDEs"
@@ -159,7 +162,9 @@ add_custom_target(python_environment
 
 # Find includes in corresponding build directories
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${CMAKE_CURRENT_SOURCE_DIR} -isystem ${CMAKE_CURRENT_BINARY_DIR}")
-set(CMAKE_INCLUDE_CURRENT_DIR ON) #this line is only for qt creator's ClangCodeModel plugin
+set(CMAKE_INCLUDE_CURRENT_DIR ON) #redundant, but required for Qt Creator to find generated files
+
+include_directories(SYSTEM external)
 
 #disable warnings for generated protobuf and moc files
 set_source_files_properties(

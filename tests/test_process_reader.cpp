@@ -1,20 +1,64 @@
 #include "logic/process_reader.h"
 #include "logic/settings.h"
 #include "test.h"
+#include "utility/color.h"
+#include "utility/utility.h"
 
 #include <QProcess>
 #include <QString>
 #include <QStringList>
 #include <fstream>
+#include <sstream>
 
-static std::string strip_carriage_return(std::string_view sv) {
-	std::string retval;
-	retval.reserve(sv.size());
-	std::copy_if(std::begin(sv), std::end(sv), std::back_inserter(retval), [](char c) { return c != '\r'; });
-	return retval;
+static constexpr auto mwv = Utility::make_whitespaces_visible;
+
+namespace TTY {
+	enum TTY { on = 1, off = 2, both = 3 };
 }
 
 TEST_CASE("Testing process reader", "[process_reader]") {
+	WHEN("Testing what printf produces") {
+		std::stringstream output;
+		std::stringstream error;
+		{
+			INFO("When simply printing \"abc\"");
+			REQUIRE(Process_reader::run("printf", "abc", output, error, false));
+			REQUIRE(error.str() == "");
+			REQUIRE(mwv(output.str()) == mwv("abc"));
+		}
+
+		output.str("");
+		error.str("");
+		{
+			INFO("When simply printing \"abc\" in tty mode");
+			REQUIRE(Process_reader::run("printf", "abc", output, error));
+			REQUIRE(error.str() == "");
+			REQUIRE(mwv(output.str()) == mwv("abc"));
+		}
+
+		output.str("");
+		error.str("");
+		{
+			INFO("In tty mode \\n should turn into \\r\\n");
+			REQUIRE(Process_reader::run("printf", "\n", output, error));
+			REQUIRE(error.str() == "");
+			REQUIRE(mwv(output.str()) == mwv("\r\n"));
+		}
+
+		output.str("");
+		error.str("");
+		{
+			INFO("Without tty mode \\n should stay \\n");
+			REQUIRE(Process_reader::run("printf", "\\n", output, error, false));
+			REQUIRE(error.str() == "");
+			REQUIRE(mwv(output.str()) == mwv("\n"));
+		}
+	}
+	WHEN("Simply creating and destroying") {
+		Tool tool;
+		tool.path = "ls";
+		Process_reader p{tool};
+	}
 	WHEN("Testing arguments construction") {
 		struct Test_case {
 			QString arg_text;
@@ -34,27 +78,58 @@ TEST_CASE("Testing process reader", "[process_reader]") {
 			REQUIRE(detail::create_arguments_list(test_case.arg_text) == test_case.args);
 		}
 	}
-	auto assert_executed_correctly = [](std::string_view code, std::string_view expected_output, std::string_view expected_error, std::string_view input) {
+	auto assert_executed_correctly = [](std::string_view code, std::string_view expected_output, std::string_view expected_error, std::string_view input,
+										TTY::TTY tty = TTY::both) {
 		INFO("Compiling code:\n" << code);
 		const auto cpp_file = "/tmp/SCE_test_process_code.cpp";
 		const auto exe_file = "/tmp/SCE_test_process_exe";
 		CHECK(std::ofstream{cpp_file} << code);
 		REQUIRE(QProcess::execute("g++", {"-std=c++17", cpp_file, "-o", exe_file}) == 0);
-		Tool tool{};
+		Tool tool;
 		tool.path = exe_file;
 		tool.working_directory = "/tmp";
-		std::string output;
-		std::string error;
-		Process_reader p{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }};
-		while (input.size() > 0) {
-			const auto input_size = std::min(std::size_t{10}, input.size());
-			p.send_input({input.begin(), input_size});
-			input.remove_prefix(input_size);
+		std::string (*process)(std::string_view data);
+		auto run = [&] {
+			std::string output;
+			std::string error;
+			auto local_input = input;
+			Process_reader p{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }};
+			while (local_input.size() > 0) {
+				const auto input_size = std::min(std::size_t{10}, local_input.size());
+				p.send_input({local_input.begin(), input_size});
+				local_input.remove_prefix(input_size);
+			}
+			p.close_input();
+			REQUIRE(p.join());
+			INFO(Color::yellow << "Input          : " << mwv(local_input) << Color::no_color << '\n');
+			INFO(Color::yellow << "Expected output: " << Color::yellow << mwv(expected_output) << '\n');
+			INFO(Color::yellow << "Actual output  : " << Color::yellow << mwv(output) << '\n');
+			INFO(Color::yellow << "Expected error : " << Color::yellow << mwv(expected_error) << '\n');
+			INFO(Color::yellow << "Actual error   : " << Color::yellow << mwv(error) << '\n');
+			REQUIRE(mwv(error) == mwv(process(expected_error)));
+			REQUIRE(mwv(output) == mwv(process(expected_output)));
+		};
+		if (tty & TTY::on) {
+			process = [](std::string_view data) {
+				std::string returnvalue;
+				for (const auto &character : data) {
+					if (character == '\n') {
+						returnvalue += '\r';
+					}
+					returnvalue += character;
+				}
+				return returnvalue;
+			};
+			tool.use_tty_mode = true;
+			INFO("With TTY");
+			run();
 		}
-		p.close_input();
-		p.join();
-		REQUIRE(strip_carriage_return(error) == expected_error);
-		REQUIRE(strip_carriage_return(output) == expected_output);
+		if (tty & TTY::off) {
+			process = [](std::string_view data) { return Utility::to_string(data); };
+			tool.use_tty_mode = false;
+			INFO("Without TTY");
+			run();
+		}
 	};
 	WHEN("Reading the output of compiled programs") {
 		struct Test_case {
@@ -119,20 +194,20 @@ TEST_CASE("Testing process reader", "[process_reader]") {
 		})";
 		CHECK(std::ofstream{cpp_file} << code);
 		REQUIRE(QProcess::execute("g++", {"-std=c++17", cpp_file, "-o", exe_file}) == 0);
-		Tool tool{};
+		Tool tool;
+		tool.use_tty_mode = false;
 		tool.path = exe_file;
 		tool.working_directory = "/tmp";
 		tool.arguments = "testarg testarg2 \"test arg 3\"";
 		std::string output;
 		std::string error;
-		Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join();
-		REQUIRE(error == "");
-		REQUIRE(output ==
-				"4\r\n"
-				"/tmp/SCE_test_process_exe\r\n"
-				"testarg\r\n"
-				"testarg2\r\n"
-				"test arg 3\r\n");
+		REQUIRE(Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join());
+		REQUIRE(mwv(error) == mwv(""));
+		REQUIRE(mwv(output) == mwv("4\n"
+								   "/tmp/SCE_test_process_exe\n"
+								   "testarg\n"
+								   "testarg2\n"
+								   "test arg 3\n"));
 	}
 	WHEN("Checking if we can simulate a tty to get color output") {
 		const auto code = R"(
@@ -149,8 +224,8 @@ int main() {
 }
 #endif
 	)";
-		const auto expected_output = using_tty ? "11\n" : "00\n";
-		assert_executed_correctly(code, expected_output, "", "");
+		assert_executed_correctly(code, "11\n", "", "", TTY::on);
+		assert_executed_correctly(code, "00\n", "", "", TTY::off);
 	}
 	WHEN("Checking if we are considered a character device") {
 		const auto code = R"(
@@ -170,10 +245,28 @@ int main() {
 }
 #endif
 	)";
-		const auto expected_output = using_tty ? "1\n" : "0\n";
-		assert_executed_correctly(code, expected_output, "", "");
+		assert_executed_correctly(code, "1\n", "", "", TTY::on);
+		assert_executed_correctly(code, "0\n", "", "", TTY::off);
 	}
 	WHEN("Testing if input is passed correctly") {
+		const auto code = R"(
+#include <cstdio>
+#include <iostream>
+
+int main() {
+	for (auto c = std::getchar(); c != EOF; c = std::getchar()) {
+		std::cout << static_cast<char>(c);
+	}
+}
+)";
+		const auto text = R"(This
+						  is
+						  a
+						  test.
+)";
+		assert_executed_correctly(code, text, "", text);
+	}
+	WHEN("Testing if \\r and \\n are passed correctly") {
 		const auto code = R"(
 #include <iostream>
 #include <string>
@@ -185,11 +278,7 @@ int main() {
 	}
 }
 	)";
-		const auto text = R"(This
-						  is
-						  a
-						  test.
-)";
+		const auto text = "\r\n\r\n";
 		assert_executed_correctly(code, text, "", text);
 	}
 }

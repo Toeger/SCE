@@ -1,6 +1,6 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include "tests/catch.hpp"
+#include <catch.hpp>
 
 #endif

@@ -20,6 +20,8 @@ addons:
             - realpath
             # boost
             - libboost-all-dev
+            # LSP server clangd
+            - clang-tools-6.0
 
 cache:
     ccache: true
@@ -90,6 +92,7 @@ before_script:
     - python3 --version
     - gdb --version
     - ld --version
+    - clangd-6.0 --version
     - echo $PATH
     # set up python environment
     - mkdir build && cd build

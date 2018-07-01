@@ -12,7 +12,6 @@
 
 using namespace std::string_literals;
 
-#if USING_TTY
 #include "utility/pipe.h"
 #include "utility/unique_handle.h"
 
@@ -131,7 +130,6 @@ static void set_environment() {
 		setenv(environment_variable.name, environment_variable.value, true);
 	}
 }
-#endif
 
 static QString resolve_placeholders(QString string) {
 	QString current_path;
@@ -188,21 +186,30 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 		  .process_handler = std::thread{&Process_reader::run_process, this, std::move(tool)},
 	  } {}
 
-void Process_reader::run(QString executable, QString args, std::ostream &output, std::ostream &error) {
+Process_reader::~Process_reader() {
+	if (gui_thread_private.process_handler.joinable()) {
+		join();
+	}
+}
+
+bool Process_reader::run(QString executable, QString args, std::ostream &output, std::ostream &error, bool use_tty) {
 	Tool sh_script;
+	sh_script.use_tty_mode = use_tty;
 	sh_script.path = std::move(executable);
 	sh_script.arguments = std::move(args);
 	sh_script.working_directory = TEST_DATA_PATH "/interop_scripts";
-	Process_reader{sh_script, [&output](std::string_view data) { output << data; }, [&error](std::string_view data) { error << data; }}.join();
+	return Process_reader{sh_script, [&output](std::string_view data) { output << data; }, [&error](std::string_view data) { error << data; }}.join();
 }
 
-void Process_reader::join() {
+bool Process_reader::join() {
+	assert(gui_thread_private.process_handler.joinable());
 	while (shared.state == State::running) {
 		std::this_thread::sleep_for(std::chrono::milliseconds{100});
 		QApplication::processEvents();
 	}
 	shared.standard_input.lock().get().close_write_channel();
 	gui_thread_private.process_handler.join();
+	return shared.state == Process_reader::State::finished;
 }
 
 void Process_reader::send_input(std::string_view input) {
@@ -218,12 +225,17 @@ void Process_reader::run_process(Tool tool) {
 	//instead we have to make the GUI thread do those things for us via Utility::gui_call
 	//Note that Utility::gui_call should not capture this because it may be expired by the time it runs.
 
-#if USING_TTY
 	termios terminal_settings = get_termios_settings();
 	winsize size{.ws_row = 160, .ws_col = 80, .ws_xpixel = 160 * 8, .ws_ypixel = 80 * 10};
 
-	Pipe standard_output{terminal_settings, size};
-	Pipe standard_error{terminal_settings, size};
+	auto make_pipe = [&tool, &terminal_settings, &size] {
+		if (tool.use_tty_mode) {
+			return Pipe{terminal_settings, size};
+		}
+		return Pipe{};
+	};
+	Pipe standard_output = make_pipe();
+	Pipe standard_error = make_pipe();
 	Pipe exec_fail;
 
 	const int child_pid = fork();
@@ -328,27 +340,6 @@ void Process_reader::run_process(Tool tool) {
 		}
 		select(write_pipes, read_pipes, timeout_pointer);
 	}
-#else //not using tty
-	QProcess process;
-	process.setWorkingDirectory(tool.working_directory);
-	process.start(tool.path, detail::create_arguments_list(resolve_placeholders(tool.arguments)));
-	const auto selection = resolve_placeholders(tool.input).toUtf8();
-	const auto bytes_written = process.write(selection);
-	assert(selection.size() == bytes_written); //TODO: handle partial writes
-	process.closeWriteChannel();
-	if (process.waitForFinished()) {
-		const auto output = process.readAllStandardOutput();
-		if (output.isEmpty() == false) {
-			Utility::gui_call([s = output.toStdString(), this] { output_callback(s); });
-		}
-		const auto error = process.readAllStandardError();
-		if (error.isEmpty() == false) {
-			Utility::gui_call([s = error.toStdString(), this] { error_callback(s); });
-		}
-	} else {
-		assert(false); //TODO: handle timeouts
-	}
-#endif
 	auto finalizer = [callback = std::move(gui_thread_private.completion_callback), this] {
 		shared.state = State::finished;
 		callback(Process_reader::State::finished);

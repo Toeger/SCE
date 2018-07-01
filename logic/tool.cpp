@@ -14,7 +14,8 @@
 	X(activation)                                                                                                                                              \
 	X(activation_keyboard_shortcut)                                                                                                                            \
 	X(working_directory)                                                                                                                                       \
-	X(timeout)
+	X(timeout)                                                                                                                                                 \
+	X(use_tty_mode)
 
 static void write(const QString &data, const QString &name, QJsonObject &json) {
 	json[name] = data;
@@ -31,6 +32,9 @@ static void write(const QKeySequence &data, const QString &name, QJsonObject &js
 static void write(const std::chrono::milliseconds &data, const QString &name, QJsonObject &json) {
 	json[name] = qint64{data.count()};
 }
+static void write(bool data, const QString &name, QJsonObject &json) {
+	json[name] = data;
+}
 
 static void read(QString &data, const QString &name, QJsonObject &json) {
 	data = json[name].toString();
@@ -46,6 +50,9 @@ static void read(QKeySequence &data, const QString &name, QJsonObject &json) {
 }
 static void read(std::chrono::milliseconds &data, const QString &name, QJsonObject &json) {
 	data = std::chrono::milliseconds{static_cast<long>(json[name].toDouble())};
+}
+static void read(bool &data, const QString &name, QJsonObject &json) {
+	data = json[name].toBool();
 }
 
 QString Tool::to_string() const {

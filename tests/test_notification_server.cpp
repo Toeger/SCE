@@ -6,7 +6,6 @@
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/read.hpp>
 #include <fstream>
-#include <sce.pb.h>
 #include <string>
 #include <string_view>
 
