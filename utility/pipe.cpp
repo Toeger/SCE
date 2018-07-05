@@ -1,4 +1,5 @@
 #include "pipe.h"
+#include "error.h"
 
 #include <array>
 #include <cassert>
@@ -7,10 +8,16 @@
 #include <pty.h>
 #include <unistd.h>
 
+[[noreturn]] static void throw_error(const std::string &message) {
+	//lots of unnecessary string copy and allocation going on in this function, but it is error reporting which doesn't happen frequently
+	auto error_message = message + ": " + errno_error_description();
+	throw std::runtime_error(std::move(error_message));
+}
+
 Pipe::Pipe() {
 	std::array<int, 2> file_descriptors;
 	if (pipe(file_descriptors.data()) != 0) {
-		throw std::runtime_error("Failed creating pipe");
+		throw_error("Failed creating pipe");
 	}
 	read_channel = file_descriptors[0];
 	write_channel = file_descriptors[1];
@@ -19,7 +26,7 @@ Pipe::Pipe() {
 Pipe::Pipe(const termios &terminal_settings, const winsize &window_size) {
 	std::array<int, 2> file_descriptors;
 	if (openpty(&file_descriptors[0], &file_descriptors[1], nullptr, &terminal_settings, &window_size) != 0) {
-		throw std::runtime_error(strerror(errno));
+		throw_error("Failed opening pty pipe");
 	}
 	read_channel = file_descriptors[0];
 	write_channel = file_descriptors[1];
@@ -50,7 +57,7 @@ void Pipe::write(std::string_view &s) {
 void Pipe::write_all(std::string_view s) {
 	while (s.size()) {
 		if (is_open() == false) {
-			throw std::runtime_error("Failed writing to pipe");
+			throw_error("Failed writing to pipe");
 		}
 		write(s);
 	}
@@ -76,19 +83,19 @@ std::string Pipe::read() {
 
 void Pipe::set_standard_input() {
 	if (dup2(read_channel.get(), STDIN_FILENO) != STDIN_FILENO) {
-		throw std::runtime_error("Failed setting standard input");
+		throw_error("Failed setting standard input");
 	}
 }
 
 void Pipe::set_standard_output() {
 	if (dup2(write_channel.get(), STDOUT_FILENO) != STDOUT_FILENO) {
-		throw std::runtime_error("Failed setting standard output");
+		throw_error("Failed setting standard output");
 	}
 }
 
 void Pipe::set_standard_error() {
 	if (dup2(write_channel.get(), STDERR_FILENO) != STDERR_FILENO) {
-		throw std::runtime_error("Failed setting standard error");
+		throw_error("Failed setting standard error");
 	}
 }
 
@@ -102,6 +109,6 @@ int Pipe::get_write_channel() {
 
 void Pipe::File_descriptor_policy::close(int file_descriptor) {
 	if (::close(file_descriptor) != 0) {
-		throw std::runtime_error("Failed to close file descriptor");
+		throw_error("Failed to close file descriptor");
 	}
 }

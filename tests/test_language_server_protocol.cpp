@@ -9,9 +9,8 @@
 TEST_CASE("Testing Language Server Protocol", "[lsp]") {
 	WHEN("Creating and destroying an LSP client") {
 		Tool tool;
-		tool.use_tty_mode = true;
+		tool.use_tty_mode = false;
 		tool.path = "clangd-6.0";
-		{ LSP::Client client{tool}; }
-		INFO("Done");
+		LSP::Client client{tool};
 	}
 }

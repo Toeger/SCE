@@ -268,13 +268,12 @@ int main() {
 	}
 	WHEN("Testing if \\r and \\n are passed correctly") {
 		const auto code = R"(
+#include <cstdio>
 #include <iostream>
-#include <string>
 
 int main() {
-	std::string s;
-	while (std::getline(std::cin, s)) {
-		std::cout << s << '\n';
+	for (auto c = std::getchar(); c != EOF; c = std::getchar()) {
+		std::cout << static_cast<char>(c);
 	}
 }
 	)";

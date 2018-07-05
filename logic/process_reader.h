@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <functional>
+#include <future>
 #include <string_view>
 #include <thread>
 
@@ -41,17 +42,17 @@ class Process_reader {
 	void close_input();
 
 	private:
-	void run_process(Tool tool);
+	void run_process(Tool tool, std::promise<Pipe> standard_in_promise);
 
 	struct {
 		std::function<void(std::string_view)> output_callback;
 		std::function<void(std::string_view)> error_callback;
 		std::function<void(State)> completion_callback;
 		std::thread process_handler;
+		Pipe standard_input;
 	} gui_thread_private;
 	struct {
 		std::atomic<State> state{State::running};
-		Thread_safe<Pipe> standard_input;
 	} shared;
 };
 

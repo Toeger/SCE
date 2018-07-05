@@ -102,6 +102,7 @@ set(SCE_SRC
 	ui/mainwindow.cpp
 	ui/tool_editor_widget.cpp
 	utility/color.cpp
+	utility/error.cpp
 	utility/pipe.cpp
 	utility/protobuffer_encoder.cpp
 	utility/raii.cpp

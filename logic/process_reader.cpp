@@ -1,72 +1,50 @@
 #include "process_reader.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
-#include "utility/thread_call.h"
-
-#include <QApplication>
-#include <QPlainTextEdit>
-#include <QProcess>
-#include <cassert>
-#include <initializer_list>
-#include <sstream>
-
-using namespace std::string_literals;
-
 #include "utility/pipe.h"
+#include "utility/thread_call.h"
 #include "utility/unique_handle.h"
 
+#include <QApplication>
 #include <QMessageBox>
+#include <QPlainTextEdit>
+#include <QProcess>
+#include <array>
+#include <cassert>
 #include <csignal>
+#include <exception>
 #include <pty.h>
 #include <sstream>
 #include <unistd.h>
 
+using namespace std::string_literals;
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
 
-static void select(std::vector<std::pair<Pipe *, std::string_view *>> &write_pipes,
-				   std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> &read_pipes, timeval *timeout) {
+static void select(Pipe &out, std::function<void(std::string_view)> &out_report, Pipe &err, std::function<void(std::string_view)> &err_report,
+				   timeval *timeout) {
 	fd_set read_file_descriptors{};
-	fd_set write_file_descriptors{};
 	int max_file_descriptor = 0;
-	for (auto it = std::begin(write_pipes); it != std::end(write_pipes);) {
-		if (it->first->is_open()) {
-			FD_SET(it->first->get_write_channel(), &write_file_descriptors);
-			max_file_descriptor = std::max(max_file_descriptor, it->first->get_write_channel());
-			++it;
-		} else {
-			it = write_pipes.erase(it);
+	for (auto p : {&out, &err}) {
+		if (p->is_open()) {
+			FD_SET(p->get_read_channel(), &read_file_descriptors);
+			max_file_descriptor = std::max(max_file_descriptor, p->get_read_channel());
 		}
 	}
-	for (auto it = std::begin(read_pipes); it != std::end(read_pipes);) {
-		if (it->first->is_open()) {
-			FD_SET(it->first->get_read_channel(), &read_file_descriptors);
-			max_file_descriptor = std::max(max_file_descriptor, it->first->get_read_channel());
-			++it;
-		} else {
-			it = read_pipes.erase(it);
-		}
-	}
-	const auto selected = ::select(max_file_descriptor + 1, &read_file_descriptors, &write_file_descriptors, nullptr, timeout);
+	const auto selected = ::select(max_file_descriptor + 1, &read_file_descriptors, nullptr, nullptr, timeout);
 
 	if (selected > 0) {
-		for (auto &read_pipe : read_pipes) {
-			if (FD_ISSET(read_pipe.first->get_read_channel(), &read_file_descriptors)) {
-				(*read_pipe.second)(read_pipe.first->read());
-			}
-		}
-		for (auto &write_pipe : write_pipes) {
-			if (FD_ISSET(write_pipe.first->get_write_channel(), &write_file_descriptors)) {
-				write_pipe.first->write(*write_pipe.second);
+		const std::array<std::pair<Pipe &, std::function<void(std::string_view)>>, 2> pipes = {{{out, out_report}, {err, err_report}}};
+		for (auto &read_pipe : pipes) {
+			if (FD_ISSET(read_pipe.first.get_read_channel(), &read_file_descriptors)) {
+				read_pipe.second(read_pipe.first.read());
 			}
 		}
 	} else if (selected == 0) { //timeout occured
 								//TODO: handle timeout properly
-		for (auto &read_pipe : read_pipes) {
-			read_pipe.first->close_read_channel();
-		}
-		for (auto &write_pipe : write_pipes) {
-			write_pipe.first->close_write_channel();
+		for (auto &read_pipe : {&out, &err}) {
+			read_pipe->close_read_channel();
 		}
 		return;
 	} else { //error occured
@@ -178,13 +156,18 @@ Process_reader::State Process_reader::get_state() const {
 }
 
 Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
-							   std::function<void(State)> completion_callback)
-	: gui_thread_private{
-		  .output_callback = std::move(output_callback),
-		  .error_callback = std::move(error_callback),
-		  .completion_callback = std::move(completion_callback),
-		  .process_handler = std::thread{&Process_reader::run_process, this, std::move(tool)},
-	  } {}
+							   std::function<void(State)> completion_callback) {
+	std::promise<Pipe> standard_input_promise;
+	auto standard_input_future = standard_input_promise.get_future();
+	gui_thread_private.output_callback = std::move(output_callback);
+	gui_thread_private.error_callback = std::move(error_callback);
+	gui_thread_private.completion_callback = std::move(completion_callback);
+	gui_thread_private.process_handler = std::thread{&Process_reader::run_process, this, std::move(tool), std::move(standard_input_promise)};
+	gui_thread_private.standard_input = standard_input_future.get();
+
+	std::string write_data = resolve_placeholders(tool.input).toStdString();
+	send_input(write_data);
+}
 
 Process_reader::~Process_reader() {
 	if (gui_thread_private.process_handler.joinable()) {
@@ -207,20 +190,20 @@ bool Process_reader::join() {
 		std::this_thread::sleep_for(std::chrono::milliseconds{100});
 		QApplication::processEvents();
 	}
-	shared.standard_input.lock().get().close_write_channel();
+	gui_thread_private.standard_input.close_write_channel();
 	gui_thread_private.process_handler.join();
 	return shared.state == Process_reader::State::finished;
 }
 
 void Process_reader::send_input(std::string_view input) {
-	shared.standard_input.lock().get().write_all(input);
+	gui_thread_private.standard_input.write_all(input);
 }
 
 void Process_reader::close_input() {
-	shared.standard_input.lock().get().close_write_channel();
+	gui_thread_private.standard_input.close_write_channel();
 }
 
-void Process_reader::run_process(Tool tool) {
+void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promise) {
 	//this function is run in a different thread, so we cannot use any GUI functions or access any gui_thread_private data directly.
 	//instead we have to make the GUI thread do those things for us via Utility::gui_call
 	//Note that Utility::gui_call should not capture this because it may be expired by the time it runs.
@@ -237,6 +220,7 @@ void Process_reader::run_process(Tool tool) {
 	Pipe standard_output = make_pipe();
 	Pipe standard_error = make_pipe();
 	Pipe exec_fail;
+	Pipe standard_input;
 
 	const int child_pid = fork();
 	if (child_pid == -1) {
@@ -246,12 +230,11 @@ void Process_reader::run_process(Tool tool) {
 		});
 		return;
 	}
-	auto standard_input = shared.standard_input.lock();
 	if (child_pid == 0) { //in child
-		standard_input.get().close_write_channel();
+		standard_input.close_write_channel();
 		standard_output.close_read_channel();
 		standard_error.close_read_channel();
-		standard_input.get().set_standard_input();
+		standard_input.set_standard_input();
 		standard_output.set_standard_output();
 		standard_error.set_standard_error();
 		exec_fail.close_read_channel();
@@ -289,13 +272,10 @@ void Process_reader::run_process(Tool tool) {
 	}
 
 	//in parent
-	standard_input.get().close_read_channel();
+	standard_input.close_read_channel();
 	standard_output.close_write_channel();
 	standard_error.close_write_channel();
 	exec_fail.close_write_channel();
-
-	std::string write_data = resolve_placeholders(tool.input).toStdString();
-	std::string_view write_data_view = write_data;
 
 	{
 		std::string exec_fail_string;
@@ -303,17 +283,16 @@ void Process_reader::run_process(Tool tool) {
 			exec_fail_string += exec_fail.read();
 		}
 		if (exec_fail_string.empty() == false) {
+			standard_in_promise.set_exception(std::make_exception_ptr(std::runtime_error(exec_fail_string)));
 			Utility::async_gui_call([exec_fail_string = std::move(exec_fail_string), tool = std::move(tool)] {
 				QMessageBox::critical(MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
 									  QString::fromStdString(exec_fail_string));
 			});
 			return;
 		}
+		standard_in_promise.set_value(std::move(standard_input));
 	}
 
-	std::vector<std::pair<Pipe *, std::string_view *>> write_pipes = {{&standard_input.get(), &write_data_view}};
-	std::vector<std::pair<Pipe *, std::function<void(std::string_view)> *>> read_pipes = {{&standard_output, &gui_thread_private.output_callback},
-																						  {&standard_error, &gui_thread_private.error_callback}};
 	timeval timeout{};
 	timeval *timeout_pointer = tool.timeout.count() == 0 ? nullptr : &timeout;
 
@@ -334,11 +313,8 @@ void Process_reader::run_process(Tool tool) {
 		return true;
 	};
 
-	while ((standard_input.get().is_open() || standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
-		if (write_data_view.empty()) {
-			standard_input.get().close_write_channel();
-		}
-		select(write_pipes, read_pipes, timeout_pointer);
+	while ((standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
+		select(standard_output, gui_thread_private.output_callback, standard_error, gui_thread_private.error_callback, timeout_pointer);
 	}
 	auto finalizer = [callback = std::move(gui_thread_private.completion_callback), this] {
 		shared.state = State::finished;

@@ -53,9 +53,6 @@ namespace LSP {
 		~Client();
 		Response call(const Request &request);
 		void notify(const Notification &notification);
-		//In theory LSP requires exactly "\r\n". In practice various things do conversions of newline characters and I have not figured out which and why.
-		std::string_view newline_out = "\r\n";
-		std::string_view newline_in = "\r\r\n";
 
 		private:
 		Process_reader process_reader;
