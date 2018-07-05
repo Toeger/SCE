@@ -48,7 +48,7 @@ before_install:
     - sudo add-apt-repository -y ppa:beineri/opt-qt-5.10.1-trusty
     - PACKAGES=${PACKAGES}"qt510base "
     # protobuf
-    - git clone -b v1.10.x --single-branch --recursive https://github.com/grpc/grpc
+    - git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc
     # Update sources
     - sudo apt-get update
 
