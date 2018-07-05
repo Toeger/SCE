@@ -79,6 +79,7 @@ before_script:
     - export QT_FATAL_WARNINGS=1
     # Sanitizer settings
     - export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-6.0/bin/llvm-symbolizer
+    - file /usr/lib/llvm-6.0/bin/llvm-symbolizer
     - export UBSAN_OPTIONS=print_stacktrace=1
     - export LSAN_OPTIONS=suppressions=../lsan.supp #ignore Qt's memory leaks
     # print versions
