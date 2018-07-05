@@ -78,8 +78,11 @@ before_script:
     - source /opt/qt510/bin/qt510-env.sh
     - export QT_FATAL_WARNINGS=1
     # Sanitizer settings
-    - export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-6.0/bin/llvm-symbolizer
-    - file /usr/lib/llvm-6.0/bin/llvm-symbolizer
+    - sudo apt-get install locate
+    - sudo updatedb
+    - locate llvm-symbolizer
+    - export ASAN_SYMBOLIZER_PATH=/usr/local/lib/llvm-6.0/bin/llvm-symbolizer
+    - file /usr/local/lib/llvm-6.0/bin/llvm-symbolizer
     - export UBSAN_OPTIONS=print_stacktrace=1
     - export LSAN_OPTIONS=suppressions=../lsan.supp #ignore Qt's memory leaks
     # print versions
