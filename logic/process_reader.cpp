@@ -1,6 +1,7 @@
 #include "process_reader.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
+#include "utility/error.h"
 #include "utility/pipe.h"
 #include "utility/thread_call.h"
 #include "utility/unique_handle.h"
@@ -24,6 +25,7 @@ using namespace std::string_literals;
 
 static void select(Pipe &out, std::function<void(std::string_view)> &out_report, Pipe &err, std::function<void(std::string_view)> &err_report,
 				   timeval *timeout) {
+	assert(out.is_open() || err.is_open());
 	fd_set read_file_descriptors{};
 	int max_file_descriptor = 0;
 	for (auto p : {&out, &err}) {
@@ -35,8 +37,11 @@ static void select(Pipe &out, std::function<void(std::string_view)> &out_report,
 	const auto selected = ::select(max_file_descriptor + 1, &read_file_descriptors, nullptr, nullptr, timeout);
 
 	if (selected > 0) {
-		const std::array<std::pair<Pipe &, std::function<void(std::string_view)>>, 2> pipes = {{{out, out_report}, {err, err_report}}};
+		const std::array<std::pair<Pipe &, std::function<void(std::string_view)> &>, 2> pipes = {{{out, out_report}, {err, err_report}}};
 		for (auto &read_pipe : pipes) {
+			if (read_pipe.first.is_open() == false) {
+				continue;
+			}
 			if (FD_ISSET(read_pipe.first.get_read_channel(), &read_file_descriptors)) {
 				read_pipe.second(read_pipe.first.read());
 			}
@@ -156,11 +161,13 @@ Process_reader::State Process_reader::get_state() const {
 }
 
 Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
-							   std::function<void(State)> completion_callback) {
+							   std::function<void(State)> completion_callback)
+	: runner_thread_private{
+		  .output_callback = std::move(output_callback),
+		  .error_callback = std::move(error_callback),
+	  } {
 	std::promise<Pipe> standard_input_promise;
 	auto standard_input_future = standard_input_promise.get_future();
-	gui_thread_private.output_callback = std::move(output_callback);
-	gui_thread_private.error_callback = std::move(error_callback);
 	gui_thread_private.completion_callback = std::move(completion_callback);
 	gui_thread_private.process_handler = std::thread{&Process_reader::run_process, this, std::move(tool), std::move(standard_input_promise)};
 	gui_thread_private.standard_input = standard_input_future.get();
@@ -225,9 +232,7 @@ void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promi
 	const int child_pid = fork();
 	if (child_pid == -1) {
 		shared.state = State::error;
-		Utility::async_gui_call([path = tool.path, error_callback = std::move(gui_thread_private.error_callback)] {
-			error_callback(QObject::tr("Failed forking for program %1. Error: %2.").arg(path, QString{strerror(errno)}).toStdString());
-		});
+		runner_thread_private.error_callback("Failed forking for program " + tool.path.toStdString() + ". Error: " + errno_error_description());
 		return;
 	}
 	if (child_pid == 0) { //in child
@@ -314,7 +319,7 @@ void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promi
 	};
 
 	while ((standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
-		select(standard_output, gui_thread_private.output_callback, standard_error, gui_thread_private.error_callback, timeout_pointer);
+		select(standard_output, runner_thread_private.output_callback, standard_error, runner_thread_private.error_callback, timeout_pointer);
 	}
 	auto finalizer = [callback = std::move(gui_thread_private.completion_callback), this] {
 		shared.state = State::finished;

@@ -45,8 +45,6 @@ class Process_reader {
 	void run_process(Tool tool, std::promise<Pipe> standard_in_promise);
 
 	struct {
-		std::function<void(std::string_view)> output_callback;
-		std::function<void(std::string_view)> error_callback;
 		std::function<void(State)> completion_callback;
 		std::thread process_handler;
 		Pipe standard_input;
@@ -54,6 +52,10 @@ class Process_reader {
 	struct {
 		std::atomic<State> state{State::running};
 	} shared;
+	struct {
+		std::function<void(std::string_view)> output_callback;
+		std::function<void(std::string_view)> error_callback;
+	} runner_thread_private;
 };
 
 #endif // PROCESS_READER_H
