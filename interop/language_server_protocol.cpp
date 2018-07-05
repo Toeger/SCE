@@ -80,7 +80,7 @@ static bool is_complete_lsp_message(std::string_view data) {
 		return false;
 	}
 	const auto header_end = header_end_match.position() + header_end_match.length();
-	return header_end + content_length >= data.size();
+	return header_end + content_length <= data.size();
 }
 
 struct LSP_response {
