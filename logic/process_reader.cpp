@@ -160,57 +160,9 @@ Process_reader::State Process_reader::get_state() const {
 	return shared.state;
 }
 
-Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
-							   std::function<void(State)> completion_callback)
-	: runner_thread_private{
-		  .output_callback = std::move(output_callback),
-		  .error_callback = std::move(error_callback),
-	  } {
-	std::promise<Pipe> standard_input_promise;
-	auto standard_input_future = standard_input_promise.get_future();
-	gui_thread_private.completion_callback = std::move(completion_callback);
-	gui_thread_private.process_handler = std::thread{&Process_reader::run_process, this, std::move(tool), std::move(standard_input_promise)};
-	gui_thread_private.standard_input = standard_input_future.get();
-
-	std::string write_data = resolve_placeholders(tool.input).toStdString();
-	send_input(write_data);
-}
-
-Process_reader::~Process_reader() {
-	if (gui_thread_private.process_handler.joinable()) {
-		join();
-	}
-}
-
-bool Process_reader::run(QString executable, QString args, std::ostream &output, std::ostream &error, bool use_tty) {
-	Tool sh_script;
-	sh_script.use_tty_mode = use_tty;
-	sh_script.path = std::move(executable);
-	sh_script.arguments = std::move(args);
-	sh_script.working_directory = TEST_DATA_PATH "/interop_scripts";
-	return Process_reader{sh_script, [&output](std::string_view data) { output << data; }, [&error](std::string_view data) { error << data; }}.join();
-}
-
-bool Process_reader::join() {
-	assert(gui_thread_private.process_handler.joinable());
-	while (shared.state == State::running) {
-		std::this_thread::sleep_for(std::chrono::milliseconds{100});
-		QApplication::processEvents();
-	}
-	gui_thread_private.standard_input.close_write_channel();
-	gui_thread_private.process_handler.join();
-	return shared.state == Process_reader::State::finished;
-}
-
-void Process_reader::send_input(std::string_view input) {
-	gui_thread_private.standard_input.write_all(input);
-}
-
-void Process_reader::close_input() {
-	gui_thread_private.standard_input.close_write_channel();
-}
-
-void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promise) {
+void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promise, Process_reader::Shared_data &shared,
+								 std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
+								 std::function<void(Process_reader::State)> completion_callback) {
 	//this function is run in a different thread, so we cannot use any GUI functions or access any gui_thread_private data directly.
 	//instead we have to make the GUI thread do those things for us via Utility::gui_call
 	//Note that Utility::gui_call should not capture this because it may be expired by the time it runs.
@@ -231,8 +183,8 @@ void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promi
 
 	const int child_pid = fork();
 	if (child_pid == -1) {
-		shared.state = State::error;
-		runner_thread_private.error_callback("Failed forking for program " + tool.path.toStdString() + ". Error: " + errno_error_description());
+		shared.state = Process_reader::State::error;
+		error_callback("Failed forking for program " + tool.path.toStdString() + ". Error: " + errno_error_description());
 		return;
 	}
 	if (child_pid == 0) { //in child
@@ -319,17 +271,56 @@ void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promi
 	};
 
 	while ((standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
-		select(standard_output, runner_thread_private.output_callback, standard_error, runner_thread_private.error_callback, timeout_pointer);
+		select(standard_output, output_callback, standard_error, error_callback, timeout_pointer);
 	}
-	auto finalizer = [callback = std::move(gui_thread_private.completion_callback), this] {
-		shared.state = State::finished;
-		callback(Process_reader::State::finished);
-	};
-	if (MainWindow::get_main_window()) {
-		Utility::async_gui_call(finalizer);
-	} else {
-		finalizer();
+	shared.state = Process_reader::State::finished;
+	completion_callback(Process_reader::State::finished);
+}
+
+Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
+							   std::function<void(State)> completion_callback) {
+	std::promise<Pipe> standard_input_promise;
+	auto standard_input_future = standard_input_promise.get_future();
+	process_handler = std::thread{&Process_reader::run_process, std::move(tool),           std::move(standard_input_promise), std::ref(shared),
+								  std::move(output_callback),   std::move(error_callback), std::move(completion_callback)};
+	standard_input = standard_input_future.get();
+
+	std::string write_data = resolve_placeholders(tool.input).toStdString();
+	send_input(write_data);
+}
+
+Process_reader::~Process_reader() {
+	if (process_handler.joinable()) {
+		join();
 	}
+}
+
+bool Process_reader::run(QString executable, QString args, std::ostream &output, std::ostream &error, bool use_tty) {
+	Tool sh_script;
+	sh_script.use_tty_mode = use_tty;
+	sh_script.path = std::move(executable);
+	sh_script.arguments = std::move(args);
+	sh_script.working_directory = TEST_DATA_PATH "/interop_scripts";
+	return Process_reader{sh_script, [&output](std::string_view data) { output << data; }, [&error](std::string_view data) { error << data; }}.join();
+}
+
+bool Process_reader::join() {
+	assert(process_handler.joinable());
+	while (shared.state == State::running) {
+		std::this_thread::sleep_for(std::chrono::milliseconds{100});
+		QApplication::processEvents();
+	}
+	standard_input.close_write_channel();
+	process_handler.join();
+	return shared.state == Process_reader::State::finished;
+}
+
+void Process_reader::send_input(std::string_view input) {
+	standard_input.write_all(input);
+}
+
+void Process_reader::close_input() {
+	standard_input.close_write_channel();
 }
 
 template <class Control_sequence_callback, class Plaintext_callback>
