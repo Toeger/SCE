@@ -99,6 +99,7 @@ set(SCE_SRC
 	sce.grpc.pb.cc
 	sce.grpc.pb.h
 	ui/edit_window.cpp
+	ui/helptext_label_widget.cpp
 	ui/mainwindow.cpp
 	ui/tool_editor_widget.cpp
 	utility/color.cpp

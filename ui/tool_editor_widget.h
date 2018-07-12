@@ -1,6 +1,7 @@
 #ifndef TOOL_EDITOR_WIDGET_H
 #define TOOL_EDITOR_WIDGET_H
 
+#include "helptext_label_widget.h"
 #include "logic/tool.h"
 #include "utility/thread_check.h"
 

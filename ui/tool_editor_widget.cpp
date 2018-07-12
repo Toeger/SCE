@@ -18,7 +18,7 @@ static auto get_ui_inputs_tool_attributes(Ui::Tool_editor_widget *ui) {
 						   ui->arguments_lineEdit, &Tool::arguments,                            //
 						   ui->input_lineEdit, &Tool::input,                                    //
 						   ui->output_comboBox, &Tool::output,                                  //
-						   ui->errors_comboBox, &Tool::error,                                   //
+						   ui->error_comboBox, &Tool::error,                                    //
 						   ui->working_dir_lineEdit, &Tool::working_directory,                  //
 						   ui->activation_comboBox, &Tool::activation,                          //
 						   ui->activation_keySequenceEdit, &Tool::activation_keyboard_shortcut, //
@@ -90,15 +90,49 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	ui->setupUi(this);
 	load_tools_from_settings();
 	fill_combobox<Tool_output_target::get_texts>(ui->output_comboBox);
-	fill_combobox<Tool_output_target::get_texts>(ui->errors_comboBox);
+	fill_combobox<Tool_output_target::get_texts>(ui->error_comboBox);
 	fill_combobox<Tool_activation::get_texts>(ui->activation_comboBox);
 	update_tools_list();
-	ui->splitter->setSizes({1, 1});
-	ui->current_file_path_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_path()));
-	ui->selection_placeholder_label->setToolTip(tr("Currently set to %1").arg(MainWindow::get_current_selection()));
-	ui->working_dir_label->setToolTip(
-		tr("Current working directory of the executable. If you set this to $FilePath you can use just the file name in arguments. Default when left empty: %1")
-			.arg(QDir::currentPath()));
+
+	{
+		std::pair<Helptext_label_widget *, QString> labels[] = {
+			{ui->type_label,
+			 tr(R"(<html><head/><body><p>Type of the tool.</p><p>Generic means it is a tool you simply want to execute, like git push.</p><p>LSP Server means a tool that implements the server side of the Language Server Protocol. See <a href="https://langserver.org/"><span style=" text-decoration: underline; color:#007af4;">langserver.org</span></a> for details.</p></body></html>)")},
+			{ui->path_label, tr("Path to the executable. Use the ... to browse for it.")},
+			{ui->working_dir_label, tr("Current working directory of the executable. If you set this to $FilePath you can use just the file name in arguments. "
+									   "Default when left empty: %1")
+										.arg(QDir::currentPath())},
+			{ui->arguments_label, tr("Arguments passed to the tool, like --verbose. Note that path expansions like * will not work unless you start a shell "
+									 "first and tell the shell to "
+									 "execute the program.")},
+			{ui->input_label,
+			 tr(R"(<html><head/><body><p>The text to pass into the programs standard input, similarly to doing <span style=" font-family:monospace;">echo input | tool</span>.</p></body></html>)")},
+			{ui->output_label, tr("What to do with the text that the tool prints to standard output.")},
+			{ui->error_label, tr("What to do with the text that the tool prints to standard error.")},
+			{ui->activation_label, tr("How to make the tool run.")},
+			{ui->timeout_label, tr("Timeout in seconds until a popup asks you to kill the process. 0 means infinite.")},
+		};
+		for (auto &l : labels) {
+			l.first->help_text = std::move(l.second);
+			l.first->title = tr("Tool property: \"%1\"").arg(l.first->label->text());
+		}
+	}
+
+	{
+		std::pair<Helptext_label_widget *, std::function<QString()>> dyn_labels[] = {
+			{ui->current_file_path_placeholder_label, [] { return tr("Currently set to %1.").arg(MainWindow::get_current_path()); }},
+			{ui->selection_placeholder_label, [] {
+				 const auto &selection = MainWindow::get_current_selection();
+				 if (selection.isEmpty()) {
+					 return tr("The current selection is empty.");
+				 }
+				 return tr("The current selection is \"%1\".").arg(selection);
+			 }}};
+		for (auto &l : dyn_labels) {
+			l.first->help_text = std::move(l.second);
+			l.first->title = tr("Tool Variable: \"%1\"").arg(l.first->label->text());
+		}
+	}
 }
 
 Tool_editor_widget::~Tool_editor_widget() {}
