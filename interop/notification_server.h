@@ -49,39 +49,39 @@ struct Notification_server {
 		~Notifier();
 
 		template <class F>
-		auto run_async(F &&f) -> decltype((std::invoke_result_t<F>(), std::declval<void>())) {
+		auto run_async(F &&f) -> std::enable_if_t<std::is_invocable_v<F>> {
 			io_service.dispatch(std::forward<F>(f));
 		}
 		template <class F>
-		auto run_async(F &&f) -> decltype((std::invoke_result_t<F, Sockets_t &>(), std::declval<void>())) {
+		auto run_async(F &&f) -> std::enable_if_t<std::is_invocable_v<F, Sockets_t &>> {
 			run_async_helper(std::forward<F>(f), sockets);
 		}
 		template <class F>
-		auto run_async(F &&f) -> decltype((std::invoke_result_t<F, Listeners_t &>(), std::declval<void>())) {
+		auto run_async(F &&f) -> std::enable_if_t<std::is_invocable_v<F, Listeners_t &>> {
 			run_async_helper(std::forward<F>(f), listeners);
 		}
 		template <class F>
-		auto run_sync(F &&f) -> decltype(std::invoke_result_t<F>()) {
+		auto run_sync(F &&f) -> std::invoke_result_t<F> {
 			return run_sync_helper(std::forward<F>(f));
 		}
 		template <class F>
-		auto run_sync(F &&f) -> decltype(std::invoke_result_t<F, Sockets_t &>()) {
+		auto run_sync(F &&f) -> std::invoke_result_t<F, Sockets_t &> {
 			return run_sync_helper(std::forward<F>(f), sockets);
 		}
 		template <class F>
-		auto run_sync(F &&f) -> decltype(std::invoke_result_t<F, Listeners_t &>()) {
+		auto run_sync(F &&f) -> std::invoke_result_t<F, Listeners_t &> {
 			return run_sync_helper(std::forward<F>(f), listeners);
 		}
 
 		private:
-		template <class F, class... Args, class Ret_t = decltype(std::invoke_result_t<F, Args...>())>
+		template <class F, class... Args, class Ret_t = std::invoke_result_t<F, Args...>>
 		auto run_async_helper(F &&f, Args &&... args) {
 			run_async([func = std::forward<F>(f), arguments = std::forward_as_tuple(args...)]() mutable {
 				std::apply(std::forward<decltype(func)>(func), std::move(arguments));
 			});
 		}
 
-		template <class F, class... Args, class Ret_t = decltype(std::invoke_result_t<F, Args...>())>
+		template <class F, class... Args, class Ret_t = std::invoke_result_t<F, Args...>>
 		auto run_sync_helper(F &&f, Args &&... args) {
 			std::promise<Ret_t> promise;
 			auto future = promise.get_future();
