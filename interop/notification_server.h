@@ -6,6 +6,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <chrono>
+#include <future>
 #include <memory>
 #include <thread>
 #include <type_traits>
@@ -30,14 +31,7 @@ struct Notification_server {
 	void clear_listening_endpoints();
 
 	private:
-	struct {
-		boost::asio::io_service io_service;
-	} shared;
-	struct {
-		boost::asio::io_service::work work;
-		std::thread server;
-	} gui_thread_private;
-	struct Notification_thread_private {
+	struct Notifier {
 		struct Listener {
 			boost::asio::ip::tcp::endpoint endpoint;
 			boost::asio::io_service &io_service;
@@ -47,9 +41,71 @@ struct Notification_server {
 					 std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> &p_sockets);
 			Listener(const Listener &) = delete;
 		};
-		std::vector<std::unique_ptr<Listener>> listeners;
-		std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> sockets;
-	} notification_thread_private;
+
+		using Sockets_t = std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>>;
+		using Listeners_t = std::vector<std::unique_ptr<Listener>>;
+
+		Notifier(const std::vector<boost::asio::ip::tcp::endpoint> &addresses);
+		~Notifier();
+
+		template <class F>
+		auto run_async(F &&f) -> decltype((std::invoke_result_t<F>(), std::declval<void>())) {
+			io_service.dispatch(std::forward<F>(f));
+		}
+		template <class F>
+		auto run_async(F &&f) -> decltype((std::invoke_result_t<F, Sockets_t &>(), std::declval<void>())) {
+			run_async_helper(std::forward<F>(f), sockets);
+		}
+		template <class F>
+		auto run_async(F &&f) -> decltype((std::invoke_result_t<F, Listeners_t &>(), std::declval<void>())) {
+			run_async_helper(std::forward<F>(f), listeners);
+		}
+		template <class F>
+		auto run_sync(F &&f) -> decltype(std::invoke_result_t<F>()) {
+			return run_sync_helper(std::forward<F>(f));
+		}
+		template <class F>
+		auto run_sync(F &&f) -> decltype(std::invoke_result_t<F, Sockets_t &>()) {
+			return run_sync_helper(std::forward<F>(f), sockets);
+		}
+		template <class F>
+		auto run_sync(F &&f) -> decltype(std::invoke_result_t<F, Listeners_t &>()) {
+			return run_sync_helper(std::forward<F>(f), listeners);
+		}
+
+		private:
+		template <class F, class... Args, class Ret_t = decltype(std::invoke_result_t<F, Args...>())>
+		auto run_async_helper(F &&f, Args &&... args) {
+			run_async([func = std::forward<F>(f), arguments = std::forward_as_tuple(args...)]() mutable {
+				std::apply(std::forward<decltype(func)>(func), std::move(arguments));
+			});
+		}
+
+		template <class F, class... Args, class Ret_t = decltype(std::invoke_result_t<F, Args...>())>
+		auto run_sync_helper(F &&f, Args &&... args) {
+			std::promise<Ret_t> promise;
+			auto future = promise.get_future();
+			run_async([func = std::forward<F>(f), &promise, arguments = std::forward_as_tuple(args...)]() mutable {
+				try {
+					if constexpr (std::is_same_v<Ret_t, void>) {
+						std::apply(std::forward<decltype(func)>(func), std::move(arguments));
+						promise.set_value();
+					} else {
+						promise.set_value(std::apply(std::forward<decltype(func)>(func), std::move(arguments)));
+					}
+				} catch (...) {
+					promise.set_exception(std::current_exception());
+				}
+			});
+			return future.get();
+		}
+
+		boost::asio::io_service io_service;
+		boost::asio::io_service::work work;
+		Sockets_t sockets;
+		Listeners_t listeners;
+		std::thread server;
+	} notifier;
 };
 
 #endif //NOTIFICATION_SERVER_H
