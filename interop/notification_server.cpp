@@ -121,7 +121,6 @@ Notification_server::Notifier::Notifier(const std::vector<boost::asio::ip::tcp::
 		} catch (const boost::system::system_error &e) {
 			MainWindow::report_error("Failed running notification server", e.what());
 		}
-		std::clog << "server thread exit\n";
 	}};
 }
 
