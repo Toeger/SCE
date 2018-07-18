@@ -13,9 +13,10 @@
 
 template <typename T, typename Tuple>
 struct has_type;
-
 template <typename T, typename... Us>
 struct has_type<T, std::tuple<Us...>> : std::disjunction<std::is_same<T, Us>...> {};
+template <class T, class... Us>
+constexpr bool has_type_v = has_type<T, Us...>::value;
 
 //helpers for QSettings' persistent storage
 namespace Settings {
@@ -25,6 +26,7 @@ namespace Settings {
 		3. Add the type of the value to Key_types.
 		The indexes must match (Key_names[key] must produce the correct name for that key and tuple_element_t<key, Key_types> must give us the right type).
 		TODO: Someone figure out how to do this in 1 step without overhead or ugly macros.
+		If you add new types you will also need to add cases for the get and set functions in order to (de)serialize those types.
 	*/
 
 	//use these key names instead of hardcoding strings to avoid typos and having a list of all settings available
@@ -47,7 +49,7 @@ namespace Settings {
 	//get and set values in a semi-type-safe manner
 	template <Key::Key key, class Default_type, class Return_type = std::tuple_element_t<key, Key_types>>
 	Return_type get(const Default_type &default_value) {
-		static_assert(has_type<Return_type, Key_types>::value, "Missing code to deal with this Return_type");
+		static_assert(has_type_v<Return_type, Key_types>, "Missing code to deal with this Return_type");
 		if constexpr (std::is_same_v<Return_type, int>) {
 			return QSettings{}.value(Key_names[key], default_value).toInt();
 		} else if constexpr (std::is_same_v<Return_type, QStringList>) {

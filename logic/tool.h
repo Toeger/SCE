@@ -27,6 +27,7 @@ namespace Tool_activation { //when to run a tool
 } // namespace Tool_activation
 
 struct Tool { //how to use an external tool such as a compiler. It specifies input, output, how to activate the tool and so on.
+	enum class Tool_type { Generic, LSP_server } type{};
 	QString path{};
 	QString arguments{};
 	QString input{};

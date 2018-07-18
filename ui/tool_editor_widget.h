@@ -33,6 +33,7 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 	void load_tools_from_settings();
 	void save_tools_to_settings() const;
 	bool need_to_save();
+	void set_tool_ui(Tool::Tool_type type);
 
 	std::vector<Tool> tools;
 	std::unique_ptr<Ui::Tool_editor_widget> ui;
@@ -45,6 +46,7 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 	void on_buttonBox_accepted();
 	void on_buttonBox_rejected();
 	void on_activation_comboBox_currentIndexChanged(int index);
+	void on_type_comboBox_currentIndexChanged(int index);
 
 	private:
 	Ui::Tool_editor_widget *_; //Qt Designer only works correctly if it finds this string

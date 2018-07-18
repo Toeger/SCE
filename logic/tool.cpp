@@ -6,6 +6,7 @@
 #include <QStringList>
 
 #define TOOL_MEMBERS /*someone please replace this with something sane*/                                                                                       \
+	X(type)                                                                                                                                                    \
 	X(path)                                                                                                                                                    \
 	X(arguments)                                                                                                                                               \
 	X(input)                                                                                                                                                   \
@@ -17,6 +18,9 @@
 	X(timeout)                                                                                                                                                 \
 	X(use_tty_mode)
 
+static void write(const Tool::Tool_type &data, const QString &name, QJsonObject &json) {
+	json[name] = static_cast<int>(data);
+}
 static void write(const QString &data, const QString &name, QJsonObject &json) {
 	json[name] = data;
 }
@@ -36,6 +40,9 @@ static void write(bool data, const QString &name, QJsonObject &json) {
 	json[name] = data;
 }
 
+static void read(Tool::Tool_type &data, const QString &name, QJsonObject &json) {
+	data = static_cast<Tool::Tool_type>(json[name].toInt());
+}
 static void read(QString &data, const QString &name, QJsonObject &json) {
 	data = json[name].toString();
 }

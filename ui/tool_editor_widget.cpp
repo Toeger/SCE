@@ -14,7 +14,8 @@
 
 //this lists the association between ui elements and Tool members
 static auto get_ui_inputs_tool_attributes(Ui::Tool_editor_widget *ui) {
-	return std::make_tuple(ui->path_lineEdit, &Tool::path,                                      //
+	return std::make_tuple(ui->type_comboBox, &Tool::type,                                      //
+						   ui->path_lineEdit, &Tool::path,                                      //
 						   ui->arguments_lineEdit, &Tool::arguments,                            //
 						   ui->input_lineEdit, &Tool::input,                                    //
 						   ui->output_comboBox, &Tool::output,                                  //
@@ -25,6 +26,9 @@ static auto get_ui_inputs_tool_attributes(Ui::Tool_editor_widget *ui) {
 						   ui->timeout_doubleSpinBox, &Tool::timeout);
 }
 //set ui elements based on a Tool member
+static void tool_to_ui(QComboBox *combo_box, Tool::Tool_type Tool::*member, const Tool &tool) {
+	combo_box->setCurrentIndex(static_cast<int>(tool.*member));
+}
 static void tool_to_ui(QLineEdit *line_edit, QString Tool::*member, const Tool &tool) {
 	line_edit->setText(tool.*member);
 }
@@ -52,6 +56,9 @@ static void tool_to_ui(Ui::Tool_editor_widget *ui, const Tool &tool) {
 }
 
 //set tool values from ui
+static void ui_to_tool(QComboBox *combo_box, Tool::Tool_type Tool::*member, Tool &tool) {
+	tool.*member = static_cast<Tool::Tool_type>(combo_box->currentIndex());
+}
 static void ui_to_tool(QLineEdit *line_edit, QString Tool::*member, Tool &tool) {
 	tool.*member = line_edit->text();
 }
@@ -97,7 +104,7 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	{
 		std::pair<Helptext_label_widget *, QString> labels[] = {
 			{ui->type_label,
-			 tr(R"(<html><head/><body><p>Type of the tool.</p><p>Generic means it is a tool you simply want to execute, like git push.</p><p>LSP Server means a tool that implements the server side of the Language Server Protocol. See <a href="https://langserver.org/"><span style=" text-decoration: underline; color:#007af4;">langserver.org</span></a> for details.</p></body></html>)")},
+			 tr(R"(<html><head/><body><p>Type of the tool.</p><p>Generic means it is a tool you simply want to execute and display the results, like <span style=" font-family:monospace;">git push</span> or <span style=" font-family:monospace;">sort</sort>.</p><p>LSP Server means a tool that implements the server side of the Language Server Protocol. See <a href="https://langserver.org/"><span style=" text-decoration: underline; color:#007af4;">langserver.org</span></a> for details.</p></body></html>)")},
 			{ui->path_label, tr("Path to the executable. Use the ... to browse for it.")},
 			{ui->working_dir_label, tr("Current working directory of the executable. If you set this to $FilePath you can use just the file name in arguments. "
 									   "Default when left empty: %1")
@@ -176,6 +183,37 @@ bool Tool_editor_widget::need_to_save() {
 	}
 	swap(old_tools, tools);
 	return true;
+}
+
+void Tool_editor_widget::set_tool_ui(Tool::Tool_type type) {
+	//const QWidget *other_widgets[] = {
+	//	ui->type_label, ui->type_comboBox, ui->path_label, ui->path_lineEdit, ui->path_browse_pushButton,
+	//};
+	QWidget *const lsp_tool_hidden_widgets[] = {
+		ui->working_dir_label,
+		ui->working_dir_lineEdit,
+		ui->arguments_label,
+		ui->arguments_lineEdit,
+		ui->input_label,
+		ui->input_lineEdit,
+		ui->output_label,
+		ui->output_comboBox,
+		ui->error_label,
+		ui->error_comboBox,
+		ui->activation_label,
+		ui->activation_comboBox,
+		ui->activation_keySequenceEdit,
+		ui->timeout_label,
+		ui->timeout_doubleSpinBox,
+		ui->variables_label,
+		ui->current_file_path_placeholder_label,
+		ui->current_file_path_explanation_label,
+		ui->selection_placeholder_label,
+		ui->selection_explanation_label,
+	};
+	for (auto &widget : lsp_tool_hidden_widgets) {
+		widget->setVisible(type != Tool::Tool_type::LSP_server);
+	}
 }
 
 void Tool_editor_widget::update_tools_list() {
@@ -257,4 +295,7 @@ void Tool_editor_widget::on_buttonBox_rejected() {
 
 void Tool_editor_widget::on_activation_comboBox_currentIndexChanged(int index) {
 	ui->activation_keySequenceEdit->setVisible(index == Tool_activation::Type::keyboard_shortcut);
+}
+void Tool_editor_widget::on_type_comboBox_currentIndexChanged(int index) {
+	set_tool_ui(static_cast<Tool::Tool_type>(index));
 }
