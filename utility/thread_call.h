@@ -1,6 +1,7 @@
 #ifndef THREAD_CALL_H
 #define THREAD_CALL_H
 
+#include <QApplication>
 #include <QCoreApplication>
 #include <QEvent>
 #include <QObject>
@@ -11,7 +12,7 @@
 namespace Utility {
 	//this function executes a function fun owned by the owning thread of object
 	template <class Function>
-	void async_thread_call(QObject *object, Function &&function) {
+	void async_owner_thread_execute(QObject *object, Function &&function) {
 		using F = typename std::decay_t<Function>;
 		struct Event : public QEvent {
 			F function;
@@ -28,19 +29,19 @@ namespace Utility {
 		QCoreApplication::postEvent(object->thread() ? object : qApp, new Event(std::forward<Function>(function)));
 	}
 	template <class Function>
-	void async_gui_call(Function &&function) {
-		const auto mw = MainWindow::get_main_window();
-		assert(mw);
-		async_thread_call(mw, std::forward<Function>(function));
+	void async_gui_thread_execute(Function &&function) {
+		auto &mw = MainWindow::get_main_window();
+		async_owner_thread_execute(&mw, std::forward<Function>(function));
 	}
 	template <class Function, class... Args>
-	auto gui_call(Function &&function, Args &&... args) {
-		const auto mw = MainWindow::get_main_window();
-		assert(mw);
+	auto sync_gui_thread_execute(Function &&function, Args &&... args) {
+		if (MainWindow::currently_in_gui_thread()) {
+			return std::invoke(std::forward<Function>(function), std::forward<Args>(args)...);
+		}
 		using Return_type = decltype(std::invoke(function, std::forward<Args>(args)...));
 		std::promise<Return_type> promise;
 		auto future = promise.get_future();
-		async_thread_call(mw, [&promise, function = std::forward<Function>(function), tuple_args = std::forward_as_tuple<Args...>(args...)] {
+		async_gui_thread_execute([&promise, function = std::forward<Function>(function), tuple_args = std::forward_as_tuple<Args...>(args...)] {
 			if constexpr (std::is_same_v<void, decltype(std::apply(function, std::move(tuple_args)))>) {
 				std::apply(function, std::move(tuple_args));
 				promise.set_value();
@@ -48,6 +49,21 @@ namespace Utility {
 				promise.set_value(std::apply(function, std::move(tuple_args)));
 			}
 		});
+		return future.get();
+	}
+	template <class T>
+	auto get_future_value_from_gui_thread(std::future<T> &&future) {
+		assert(MainWindow::currently_in_gui_thread());
+		while (future.wait_for(std::chrono::milliseconds{16}) == std::future_status::timeout) {
+			QApplication::processEvents();
+		}
+		return future.get();
+	}
+	template <class T>
+	auto get_future_value(std::future<T> &&future) {
+		if (MainWindow::currently_in_gui_thread()) {
+			return get_future_value_from_gui_thread(std::move(future));
+		}
 		return future.get();
 	}
 } // namespace Utility

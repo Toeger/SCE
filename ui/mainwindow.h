@@ -15,6 +15,7 @@ namespace Ui {
 
 class Edit_window;
 class Tool_editor_widget;
+class LSP_feature_setup_widget;
 
 class MainWindow : public QMainWindow, private Thread_check {
 	Q_OBJECT
@@ -24,10 +25,11 @@ class MainWindow : public QMainWindow, private Thread_check {
 	~MainWindow() override;
 	static Edit_window *get_current_edit_window();
 	static QString get_current_path();
-	static MainWindow *get_main_window();
+	static MainWindow &get_main_window();
 	static QString get_current_selection();
 	static void report_error(std::string_view message, std::string_view error);
 	Edit_window *get_edit_window(std::string_view id);
+	static bool currently_in_gui_thread();
 
 	public slots:
 	void close_notification_server();
@@ -36,6 +38,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	private slots:
 	void on_actionOpen_File_triggered();
 	void on_action_Edit_triggered();
+	void on_actionLSP_Setup_triggered();
 	void on_action_Font_triggered();
 	void on_action_Test_triggered();
 	void on_file_tabs_tabCloseRequested(int index);
@@ -50,6 +53,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	int timer_delay_ms = 1000;
 	std::map<QString, QTimer> timers;
 	std::unique_ptr<Tool_editor_widget> tool_editor_widget;
+	std::unique_ptr<LSP_feature_setup_widget> lsp_feature_setup_widget;
 	std::unique_ptr<Ui::MainWindow> ui;
 	Notification_server notification_server;
 	RPC_server rpc_server;

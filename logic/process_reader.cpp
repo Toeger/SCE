@@ -115,12 +115,8 @@ static void set_environment() {
 }
 
 static QString resolve_placeholders(QString string) {
-	QString current_path;
-	QString current_selection;
-	if (MainWindow::get_main_window()) {
-		std::tie(current_path, current_selection) =
-			Utility::gui_call([] { return std::make_pair(MainWindow::get_current_path(), MainWindow::get_current_selection()); });
-	}
+	auto [current_path, current_selection] =
+		Utility::sync_gui_thread_execute([] { return std::make_pair(MainWindow::get_current_path(), MainWindow::get_current_selection()); });
 	struct Placeholder_value {
 		QString placeholder;
 		QString value;
@@ -160,7 +156,7 @@ Process_reader::State Process_reader::get_state() const {
 	return shared.state;
 }
 
-void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promise, Process_reader::Shared_data &shared,
+void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<Pipe> standard_in_promise, Process_reader::Shared_data &shared,
 								 std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
 								 std::function<void(Process_reader::State)> completion_callback) {
 	//this function is run in a different thread, so we cannot use any GUI functions or access any gui_thread_private data directly.
@@ -204,14 +200,12 @@ void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promi
 			exec_fail.close_write_channel();
 			exit(-1);
 		}
-		auto qlist_arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
-		qlist_arguments.push_front(tool.path);
+		arguments.push_front(tool.path);
 		std::vector<std::string> string_arguments;
-		string_arguments.reserve(qlist_arguments.size());
-		std::transform(std::begin(qlist_arguments), std::end(qlist_arguments), std::back_inserter(string_arguments),
-					   [](const QString &arg) { return arg.toStdString(); });
+		string_arguments.reserve(arguments.size());
+		std::transform(std::begin(arguments), std::end(arguments), std::back_inserter(string_arguments), [](const QString &arg) { return arg.toStdString(); });
 		std::vector<char *> char_p_arguments;
-		char_p_arguments.reserve(qlist_arguments.size() + 1);
+		char_p_arguments.reserve(arguments.size() + 1);
 		std::transform(std::begin(string_arguments), std::end(string_arguments), std::back_inserter(char_p_arguments),
 					   [](std::string &arg) { return arg.data(); });
 		char_p_arguments.push_back(nullptr);
@@ -241,8 +235,8 @@ void Process_reader::run_process(Tool tool, std::promise<Pipe> standard_in_promi
 		}
 		if (exec_fail_string.empty() == false) {
 			standard_in_promise.set_exception(std::make_exception_ptr(std::runtime_error(exec_fail_string)));
-			Utility::async_gui_call([exec_fail_string = std::move(exec_fail_string), tool = std::move(tool)] {
-				QMessageBox::critical(MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
+			Utility::async_gui_thread_execute([exec_fail_string = std::move(exec_fail_string), tool = std::move(tool)] {
+				QMessageBox::critical(&MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
 									  QString::fromStdString(exec_fail_string));
 			});
 			return;
@@ -281,15 +275,23 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 							   std::function<void(State)> completion_callback) {
 	std::promise<Pipe> standard_input_promise;
 	auto standard_input_future = standard_input_promise.get_future();
-	process_handler = std::thread{&Process_reader::run_process, std::move(tool),           std::move(standard_input_promise), std::ref(shared),
-								  std::move(output_callback),   std::move(error_callback), std::move(completion_callback)};
-	standard_input = standard_input_future.get();
+	auto arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
+	process_handler =
+		std::thread{&Process_reader::run_process, std::move(tool),           std::move(arguments),          std::move(standard_input_promise), std::ref(shared),
+					std::move(output_callback),   std::move(error_callback), std::move(completion_callback)};
+	try {
+		standard_input = standard_input_future.get();
 
-	std::string write_data = resolve_placeholders(tool.input).toStdString();
-	send_input(write_data);
+		std::string write_data = resolve_placeholders(tool.input).toStdString();
+		send_input(write_data);
+	} catch (...) {
+		process_handler.join();
+		throw;
+	}
 }
 
 Process_reader::~Process_reader() {
+	close_input();
 	if (process_handler.joinable()) {
 		join();
 	}

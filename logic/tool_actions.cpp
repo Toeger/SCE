@@ -36,7 +36,7 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 		case Tool_output_target::ignore:
 			break;
 		case Tool_output_target::popup: {
-			auto edit = new QPlainTextEdit(MainWindow::get_main_window());
+			auto edit = new QPlainTextEdit(&MainWindow::get_main_window());
 			/* Note: in theory the mainwindow owns the edit window and cleans up resources when it is closed.
 			 * In practice if you close the mainwindow before the edit window this actually works.
 			 * If you close the edit window first, however, LeakSanitizer reports 64 bytes leaked in 2 objects.

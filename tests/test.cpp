@@ -1,6 +1,8 @@
 #define CATCH_CONFIG_RUNNER
 
 #include "test.h"
+#include "test_mainwindow.h"
+#include "ui/mainwindow.h"
 #include "utility/color.h"
 #include "utility/raii.h"
 
@@ -12,6 +14,8 @@
 #include <csignal>
 #include <sce.pb.h>
 #include <string_view>
+
+MainWindow_tester *test_main_window;
 
 static void broken_pipe_signal_handler(int) {
 	//don't do anything in the handler, it just exists so the program doesn't get killed when reading or writing a pipe fails and instead receives an error code
@@ -39,6 +43,16 @@ int main(int argc, char *argv[]) {
 	old_handler = qInstallMessageHandler(message_handler);
 
 	QApplication a{argc, argv};
+	MainWindow_tester mw;
+	test_main_window = &mw;
+	mw.close_notification_server();
+	mw.close_rpc_server();
 
-	return Catch::Session().run(argc, argv);
+	std::thread tester{[&] {
+		Catch::Session().run(argc, argv);
+		a.exit(42);
+	}};
+	while (a.exec() != 42) {
+	}
+	tester.join();
 }

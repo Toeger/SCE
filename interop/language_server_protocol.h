@@ -53,6 +53,7 @@ namespace LSP {
 		~Client();
 		Response call(const Request &request);
 		void notify(const Notification &notification);
+		nlohmann::json capabilities;
 
 		private:
 		Process_reader process_reader;

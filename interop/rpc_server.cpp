@@ -36,7 +36,7 @@ grpc::Status RPC_server::RPC_server_impl::Test([[maybe_unused]] grpc::ServerCont
 grpc::Status RPC_server::RPC_server_impl::GetCurrentFileName([[maybe_unused]] grpc::ServerContext *context,
 															 [[maybe_unused]] const sce::proto::GetCurrentFileNameIn *request,
 															 sce::proto::GetCurrentFileNameOut *response) {
-	response->set_filename(Utility::gui_call(MainWindow::get_current_path).toStdString());
+	response->set_filename(Utility::sync_gui_thread_execute(MainWindow::get_current_path).toStdString());
 	return grpc::Status::OK;
 }
 
@@ -44,7 +44,7 @@ grpc::Status RPC_server::RPC_server_impl::GetCurrentBuffer([[maybe_unused]] grpc
 														   [[maybe_unused]] const sce::proto::GetCurrentBufferIn *request,
 														   sce::proto::GetCurrentBufferOut *response) {
 	int state;
-	std::tie(state, *response->mutable_filestate()->mutable_id(), *response->mutable_buffer()) = Utility::gui_call([] {
+	std::tie(state, *response->mutable_filestate()->mutable_id(), *response->mutable_buffer()) = Utility::sync_gui_thread_execute([] {
 		auto edit = MainWindow::get_current_edit_window();
 		return std::make_tuple(edit->get_state(), edit->get_id().toStdString(), edit->get_buffer().toStdString());
 	});
@@ -63,8 +63,8 @@ grpc::Status RPC_server::RPC_server_impl::AddNote([[maybe_unused]] grpc::ServerC
 	note.char_start = request->range().start().character();
 	note.char_end = request->range().end().character();
 	note.text = QString::fromStdString(request->note());
-	Utility::async_gui_call([note = std::move(note), id = std::move(request->state().id())]() mutable {
-		auto edit = MainWindow::get_main_window()->get_edit_window(id);
+	Utility::async_gui_thread_execute([note = std::move(note), id = std::move(request->state().id())]() mutable {
+		auto edit = MainWindow::get_main_window().get_edit_window(id);
 		edit->add_note(std::move(note));
 	});
 	return grpc::Status::OK;
@@ -75,10 +75,10 @@ grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::Serve
 	if (request->has_filestate() == false) {
 		return grpc::Status::CANCELLED;
 	}
-	return Utility::gui_call([&file_state_request = request->filestate(), response] {
+	return Utility::sync_gui_thread_execute([&file_state_request = request->filestate(), response] {
 		const auto &file_id = file_state_request.id();
 		const auto &file_state = file_state_request.state();
-		const auto edit_window = MainWindow::get_main_window()->get_edit_window(file_id);
+		const auto edit_window = MainWindow::get_main_window().get_edit_window(file_id);
 		if (edit_window != nullptr && edit_window->get_state() == file_state) {
 			*response->mutable_buffer() = edit_window->get_buffer().toStdString();
 			return grpc::Status::OK;
@@ -90,7 +90,7 @@ grpc::Status RPC_server::RPC_server_impl::GetBuffer([[maybe_unused]] grpc::Serve
 grpc::Status RPC_server::RPC_server_impl::GetCurrentDocuments([[maybe_unused]] grpc::ServerContext *context,
 															  [[maybe_unused]] const sce::proto::GetCurrentDocumentsIn *request,
 															  sce::proto::GetCurrentDocumentsOut *response) {
-	auto file_states = Utility::gui_call([] {
+	auto file_states = Utility::sync_gui_thread_execute([] {
 		std::vector<std::pair<int, std::string>> current_documents;
 		//TODO: currently we only support a single open document
 		//once you can have side-by-side edit windows each window must be returned

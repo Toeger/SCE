@@ -61,6 +61,7 @@
      <string>&amp;Tools</string>
     </property>
     <addaction name="action_Edit"/>
+    <addaction name="actionLSP_Setup"/>
     <addaction name="separator"/>
     <addaction name="action_Test"/>
    </widget>
@@ -104,7 +105,7 @@
   </action>
   <action name="action_Edit">
    <property name="text">
-    <string>&amp;Edit</string>
+    <string>&amp;Setup tools ...</string>
    </property>
   </action>
   <action name="action_Test">
@@ -113,6 +114,11 @@
    </property>
    <property name="text">
     <string>&amp;Test</string>
+   </property>
+  </action>
+  <action name="actionLSP_Setup">
+   <property name="text">
+    <string>&amp;LSP Setup ...</string>
    </property>
   </action>
  </widget>

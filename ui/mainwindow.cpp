@@ -2,6 +2,7 @@
 #include "edit_window.h"
 #include "logic/settings.h"
 #include "logic/tool_actions.h"
+#include "lsp_feature_setup_widget.h"
 #include "tool_editor_widget.h"
 #include "ui_mainwindow.h"
 #include "utility/color.h"
@@ -16,7 +17,7 @@
 #include <sce.pb.h>
 #include <utility>
 
-static MainWindow *main_window{};
+static MainWindow *main_window;
 
 template <class Function>
 static Edit_window *find_edit_window(const Function &function, std::unique_ptr<Ui::MainWindow> &ui) {
@@ -51,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent)
 	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
 }
 
-MainWindow::~MainWindow() { //required for destructors of otherwise incomplete type Ui::MainWindow
+MainWindow::~MainWindow() {
 	save_last_files();
 	main_window = nullptr;
 }
@@ -62,22 +63,17 @@ Edit_window *MainWindow::get_current_edit_window() {
 }
 
 QString MainWindow::get_current_path() {
-	if (main_window == nullptr) {
-		return {};
-	}
 	main_window->thread_check();
 	const auto tab_bar = main_window->ui->file_tabs->tabBar();
 	return tab_bar->tabText(tab_bar->currentIndex());
 }
 
-MainWindow *MainWindow::get_main_window() {
-	return main_window;
+MainWindow &MainWindow::get_main_window() {
+	assert(main_window);
+	return *main_window;
 }
 
 QString MainWindow::get_current_selection() {
-	if (main_window == nullptr) {
-		return {};
-	}
 	main_window->thread_check();
 	auto edit_window = dynamic_cast<Edit_window *>(main_window->ui->file_tabs->currentWidget());
 	if (edit_window == nullptr) {
@@ -97,6 +93,10 @@ Edit_window *MainWindow::get_edit_window(std::string_view id) {
 			return target_edit_window->get_id().toStdString() == id; //TODO: find a better way to compare QString and std::string_view
 		},
 		ui);
+}
+
+bool MainWindow::currently_in_gui_thread() {
+	return main_window->is_in_same_thread();
 }
 
 void MainWindow::close_notification_server() {
@@ -120,10 +120,12 @@ void MainWindow::on_file_tabs_tabCloseRequested(int index) {
 }
 void MainWindow::closeEvent(QCloseEvent *event) {
 	tool_editor_widget = nullptr;
+	lsp_feature_setup_widget = nullptr;
 	event->accept();
 }
 
 void MainWindow::edit_buffer_changed(Edit_window *edit_window) {
+	main_window->thread_check();
 	auto id = edit_window->get_id();
 	auto timer_it = timers.find(id);
 	if (timer_it == std::end(timers)) {
@@ -207,6 +209,15 @@ void MainWindow::on_action_Edit_triggered() {
 	} else {
 		tool_editor_widget = std::make_unique<Tool_editor_widget>();
 		tool_editor_widget->show();
+	}
+}
+
+void MainWindow::on_actionLSP_Setup_triggered() {
+	if (lsp_feature_setup_widget != nullptr && lsp_feature_setup_widget->isVisible()) {
+		lsp_feature_setup_widget->activateWindow();
+	} else {
+		lsp_feature_setup_widget = std::make_unique<LSP_feature_setup_widget>();
+		lsp_feature_setup_widget->show();
 	}
 }
 

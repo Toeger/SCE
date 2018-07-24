@@ -7,7 +7,6 @@
 #include <QAction>
 #include <QColor>
 #include <QEvent>
-#include <QMessageBox>
 #include <QToolTip>
 #include <QWheelEvent>
 #include <memory>

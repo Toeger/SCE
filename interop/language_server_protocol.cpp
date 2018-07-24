@@ -1,5 +1,6 @@
 #include "language_server_protocol.h"
 #include "utility/color.h"
+#include "utility/thread_call.h"
 #include "utility/utility.h"
 
 #include <iostream>
@@ -12,7 +13,7 @@ static constexpr auto mwv = Utility::make_whitespaces_visible;
 
 static thread_local unsigned int message_counter;
 
-static std::string write_lsp_message(std::string_view method, const nlohmann::json &params, bool is_notification) {
+static std::string make_lsp_message_string(std::string_view method, const nlohmann::json &params, bool is_notification) {
 	std::string data;
 	std::string content;
 	//content
@@ -135,7 +136,10 @@ static LSP_response parse_lsp_message(std::string_view data) {
 }
 
 LSP::Client::Client(Tool tool)
-	: process_reader{std::move(tool),
+	: process_reader{[ltool = std::move(tool)]() mutable {
+						 ltool.use_tty_mode = false; //never use tty mode with LSP tools
+						 return std::move(ltool);
+					 }(),
 					 [this, received = std::string{}](std::string_view output) mutable {
 						 received += output;
 						 std::clog << Color::green << mwv(output) << Color::no_color;
@@ -160,9 +164,7 @@ LSP::Client::Client(Tool tool)
 	}
 	if (response.result) {
 		auto &result = response.result.value();
-		(void)result;
-		//std::cout << result.dump(1, '\t') << '\n';
-		//TODO: remember results and use reported capabilities
+		capabilities = result["capabilities"];
 	}
 }
 
@@ -193,15 +195,15 @@ LSP::Client::~Client() {
 LSP::Response LSP::Client::call(const LSP::Request &request) {
 	response_promise = std::promise<Response>{};
 	auto response_future = response_promise.get_future();
-	const auto message = write_lsp_message(request.method, request.params, false);
+	const auto message = make_lsp_message_string(request.method, request.params, false);
 	target_id = message_counter;
 	std::clog << Color::yellow << mwv(message) << Color::no_color << '\n';
 	process_reader.send_input(message);
-	return response_future.get();
+	return Utility::get_future_value(std::move(response_future));
 }
 
 void LSP::Client::notify(const LSP::Notification &notification) {
-	const auto lsp_message = write_lsp_message(notification.method, notification.params, true);
+	const auto lsp_message = make_lsp_message_string(notification.method, notification.params, true);
 	std::clog << Color::yellow << mwv(lsp_message) << Color::no_color << '\n';
 	process_reader.send_input(lsp_message);
 }

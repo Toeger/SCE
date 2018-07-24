@@ -1,19 +1,13 @@
+#include "test_mainwindow.h"
 #include "logic/settings.h"
 #include "test.h"
-#include "ui/mainwindow.h"
-#include "ui_mainwindow.h"
+#include "utility/thread_call.h"
 
 #include <QPlainTextEdit>
 #include <QTemporaryFile>
 
-struct MainWindow_tester : MainWindow {
-	using MainWindow::add_file_tab;
-	using MainWindow::on_file_tabs_tabCloseRequested;
-	using MainWindow::ui;
-};
-
-TEST_CASE_METHOD(MainWindow_tester, "Testing main window") {
-	Settings::Keeper keeper;
+void MainWindow_tester::test() {
+	CHECK(currently_in_gui_thread());
 	WHEN("Adding file tabs") {
 		ui->file_tabs->clear();
 		REQUIRE(ui->file_tabs->count() == 0);
@@ -47,4 +41,9 @@ int main(){
 			REQUIRE(edit->toPlainText() == tempfile_contents);
 		}
 	}
+}
+
+TEST_CASE("Testing main window", "[mainwindow]") {
+	Settings::Keeper keeper;
+	Utility::sync_gui_thread_execute([] { test_main_window->test(); }); //we must test the gui in the gui thread
 }

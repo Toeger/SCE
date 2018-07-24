@@ -48,7 +48,7 @@ class Process_reader {
 		std::atomic<State> state{State::running};
 	} shared;
 
-	static void run_process(Tool tool, std::promise<Pipe> standard_in_promise, Process_reader::Shared_data &shared,
+	static void run_process(Tool tool, QStringList arguments, std::promise<Pipe> standard_in_promise, Process_reader::Shared_data &shared,
 							std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
 							std::function<void(Process_reader::State)> completion_callback);
 };
