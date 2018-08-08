@@ -38,11 +38,11 @@ namespace Utility {
 		if (MainWindow::currently_in_gui_thread()) {
 			return std::invoke(std::forward<Function>(function), std::forward<Args>(args)...);
 		}
-		using Return_type = decltype(std::invoke(function, std::forward<Args>(args)...));
+		using Return_type = std::invoke_result_t<decltype(function)>;
 		std::promise<Return_type> promise;
 		auto future = promise.get_future();
-		async_gui_thread_execute([&promise, function = std::forward<Function>(function), tuple_args = std::forward_as_tuple<Args...>(args...)] {
-			if constexpr (std::is_same_v<void, decltype(std::apply(function, std::move(tuple_args)))>) {
+		async_gui_thread_execute([&promise, function = std::forward<Function>(function), tuple_args = std::forward_as_tuple<Args...>(args...)]() mutable {
+			if constexpr (std::is_same_v<void, std::invoke_result_t<decltype(function)>>) {
 				std::apply(function, std::move(tuple_args));
 				promise.set_value();
 			} else {
