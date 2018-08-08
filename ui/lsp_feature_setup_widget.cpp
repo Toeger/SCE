@@ -1,15 +1,15 @@
 #include "lsp_feature_setup_widget.h"
+#include "checkbox_widget.h"
 #include "interop/language_server_protocol.h"
 #include "logic/settings.h"
 #include "ui_lsp_feature_setup_widget.h"
 #include "utility/thread_call.h"
 
-#include <QCheckBox>
-
 LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
 	: QWidget(parent)
 	, ui(new Ui::LSP_feature_setup_widget) {
 	ui->setupUi(this);
+	ui->splitter->setSizes({1, 2});
 	update_lsp_features();
 }
 
@@ -37,7 +37,7 @@ struct LSP_feature_table {
 					table->setRowCount(row + 1);
 					table->setVerticalHeaderItem(row++, new QTableWidgetItem{QString::fromStdString(it_feature)});
 				}
-				table->setCellWidget(it->second, info.tool_index, new QCheckBox);
+				table->setCellWidget(it->second, info.tool_index, new Checkbox_widget);
 			}
 		});
 	}

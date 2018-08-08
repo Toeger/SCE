@@ -98,6 +98,7 @@ set(SCE_SRC
 	main.cpp
 	sce.grpc.pb.cc
 	sce.grpc.pb.h
+	ui/checkbox_widget.cpp
 	ui/edit_window.cpp
 	ui/helptext_label_widget.cpp
 	ui/lsp_feature_setup_widget.cpp

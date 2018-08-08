@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>767</width>
+    <width>953</width>
     <height>574</height>
    </rect>
   </property>
@@ -75,6 +75,9 @@
        </item>
        <item>
         <widget class="QTableWidget" name="lsp_features_tableWidget">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::NoSelection</enum>
+         </property>
          <attribute name="horizontalHeaderStretchLastSection">
           <bool>true</bool>
          </attribute>
