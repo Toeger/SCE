@@ -105,7 +105,7 @@ static LSP_response parse_lsp_message(std::string_view data) {
 	}
 	const auto header_end = match.position() + match.length();
 
-	assert(header_end + content_length >= data.size());
+	assert(header_end + content_length <= data.size());
 
 	data.remove_prefix(header_end);
 	data.remove_suffix(data.size() - content_length);
@@ -192,14 +192,14 @@ LSP::Client::~Client() {
 	}
 }
 
-LSP::Response LSP::Client::call(const LSP::Request &request) {
+LSP::Response LSP::Client::call(const LSP::Request &request, const std::chrono::milliseconds &timeout) {
 	response_promise = std::promise<Response>{};
 	auto response_future = response_promise.get_future();
 	const auto message = make_lsp_message_string(request.method, request.params, false);
 	target_id = message_counter;
 	std::clog << Color::yellow << mwv(message) << Color::no_color << '\n';
 	process_reader.send_input(message);
-	return Utility::get_future_value(std::move(response_future));
+	return Utility::get_future_value(std::move(response_future), timeout);
 }
 
 void LSP::Client::notify(const LSP::Notification &notification) {

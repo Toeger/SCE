@@ -5,6 +5,7 @@
 #include <QCoreApplication>
 #include <QEvent>
 #include <QObject>
+#include <chrono>
 #include <future>
 #include <type_traits>
 #include <ui/mainwindow.h>
@@ -52,17 +53,25 @@ namespace Utility {
 		return future.get();
 	}
 	template <class T>
-	auto get_future_value_from_gui_thread(std::future<T> &&future) {
+	auto get_future_value_from_gui_thread(std::future<T> &&future,
+										  const std::chrono::milliseconds timeout = std::numeric_limits<std::chrono::milliseconds>::max()) {
 		assert(MainWindow::currently_in_gui_thread());
+		auto start = std::chrono::high_resolution_clock::now();
 		while (future.wait_for(std::chrono::milliseconds{16}) == std::future_status::timeout) {
+			if (std::chrono::high_resolution_clock::now() - start > timeout) {
+				throw std::runtime_error{"future timeout"};
+			}
 			QApplication::processEvents();
 		}
 		return future.get();
 	}
 	template <class T>
-	auto get_future_value(std::future<T> &&future) {
+	auto get_future_value(std::future<T> &&future, const std::chrono::milliseconds timeout = std::numeric_limits<std::chrono::milliseconds>::max()) {
 		if (MainWindow::currently_in_gui_thread()) {
-			return get_future_value_from_gui_thread(std::move(future));
+			return get_future_value_from_gui_thread(std::move(future), timeout);
+		}
+		if (future.wait_for(timeout) == std::future_status::timeout) {
+			throw std::runtime_error{"future timeout"};
 		}
 		return future.get();
 	}

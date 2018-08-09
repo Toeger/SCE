@@ -2,6 +2,7 @@
 #define LANGUAGE_SERVER_PROTOCOL_H
 
 #include <atomic>
+#include <chrono>
 #include <future>
 #include <iosfwd>
 #include <json.hpp>
@@ -51,7 +52,7 @@ namespace LSP {
 	struct Client {
 		Client(Tool tool);
 		~Client();
-		Response call(const Request &request);
+		Response call(const Request &request, const std::chrono::milliseconds &timeout = std::chrono::milliseconds{3000});
 		void notify(const Notification &notification);
 		nlohmann::json capabilities;
 

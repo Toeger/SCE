@@ -91,14 +91,19 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		return;
 	}
 	const int max_steps = tools.size();
-	int current_steps = 1;
+	int current_steps = 0;
 	std::vector<QString> features;
 	int tool_index = 0;
 	for (auto &tool : tools) {
-		LSP::Client lsp_client{tool};
 		set_progress_percentage(current_steps++ * 100 / max_steps);
-		features.resize(lsp_client.capabilities.size());
-		auto capability_names = lsp_client.capabilities.items();
+		std::optional<nlohmann::json> capabilities;
+		try {
+			capabilities = LSP::Client{tool}.capabilities;
+		} catch (const std::runtime_error &) {
+			continue;
+		}
+		features.resize(capabilities->size());
+		auto capability_names = capabilities->items();
 		std::transform(std::begin(capability_names), std::end(capability_names), std::begin(features),
 					   [](auto json_key_value) { return QString::fromStdString(json_key_value.key()); });
 		add_features({std::move(features), tool_index++});
