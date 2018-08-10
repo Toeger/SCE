@@ -6,6 +6,7 @@
 #include "utility/thread_call.h"
 
 #include <QSpacerItem>
+#include <variant>
 
 LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
 	: QWidget(parent)
@@ -22,7 +23,7 @@ LSP_feature_setup_widget::~LSP_feature_setup_widget() {
 }
 
 struct LSP_feature_info {
-	std::vector<QString> features;
+	std::variant<std::vector<QString>, QString> features_or_error;
 	int tool_index;
 };
 
@@ -66,7 +67,13 @@ struct LSP_feature_table {
 	}
 	void set(LSP_feature_info &&info) {
 		Utility::sync_gui_thread_execute([this, info = std::move(info)]() mutable {
-			for (auto &feature : info.features) {
+			if (std::holds_alternative<QString>(info.features_or_error)) { //error
+				table->horizontalHeaderItem(info.tool_index)->setTextColor(Qt::red);
+				table->horizontalHeaderItem(info.tool_index)->setToolTip(std::get<QString>(info.features_or_error));
+				return;
+			}
+			//no error
+			for (auto &feature : std::get<std::vector<QString>>(info.features_or_error)) {
 				auto [it, inserted] = feature_to_row.try_emplace(std::move(feature));
 				auto &[it_feature, it_row] = *it;
 				if (inserted) {
@@ -99,7 +106,8 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		std::optional<nlohmann::json> capabilities;
 		try {
 			capabilities = LSP::Client{tool}.capabilities;
-		} catch (const std::runtime_error &) {
+		} catch (const std::runtime_error &e) {
+			add_features({e.what(), tool_index++});
 			continue;
 		}
 		features.resize(capabilities->size());
