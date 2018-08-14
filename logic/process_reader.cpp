@@ -7,7 +7,6 @@
 #include "utility/unique_handle.h"
 
 #include <QApplication>
-#include <QMessageBox>
 #include <QPlainTextEdit>
 #include <QProcess>
 #include <array>
@@ -235,9 +234,8 @@ void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<
 		}
 		if (exec_fail_string.empty() == false) {
 			standard_in_promise.set_exception(std::make_exception_ptr(std::runtime_error(exec_fail_string)));
-			Utility::async_gui_thread_execute([exec_fail_string = std::move(exec_fail_string), tool = std::move(tool)] {
-				QMessageBox::critical(&MainWindow::get_main_window(), QObject::tr("Failed executing tool %1").arg(tool.get_name()),
-									  QString::fromStdString(exec_fail_string));
+			Utility::async_gui_thread_execute([exec_fail_string = std::move(exec_fail_string), tool_name = tool.get_name().toStdString()] {
+				MainWindow::report_error("Failed executing tool " + tool_name, exec_fail_string);
 			});
 			return;
 		}
