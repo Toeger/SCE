@@ -152,13 +152,13 @@ QStringList detail::create_arguments_list(const QString &args_string) {
 }
 
 Process_reader::State Process_reader::get_state() const {
-	return shared.state;
+	return state;
 }
 
-void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<Pipe> standard_in_promise, Process_reader::Shared_data &shared,
+void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<Pipe> standard_in_promise, std::atomic<State> &state,
 								 std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
 								 std::function<void(Process_reader::State)> completion_callback) {
-	//this function is run in a different thread, so we cannot use any GUI functions or access any gui_thread_private data directly.
+	//this function is run in a different thread, so we cannot use any GUI functions directly.
 	//instead we have to make the GUI thread do those things for us via Utility::gui_call
 	//Note that Utility::gui_call should not capture this because it may be expired by the time it runs.
 
@@ -178,7 +178,7 @@ void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<
 
 	const int child_pid = fork();
 	if (child_pid == -1) {
-		shared.state = Process_reader::State::error;
+		state = Process_reader::State::error;
 		error_callback("Failed forking for program " + tool.path.toStdString() + ". Error: " + errno_error_description());
 		return;
 	}
@@ -234,9 +234,7 @@ void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<
 		}
 		if (exec_fail_string.empty() == false) {
 			standard_in_promise.set_exception(std::make_exception_ptr(std::runtime_error(exec_fail_string)));
-			Utility::async_gui_thread_execute([exec_fail_string = std::move(exec_fail_string), tool_name = tool.get_name().toStdString()] {
-				MainWindow::report_error("Failed executing tool " + tool_name, exec_fail_string);
-			});
+			MainWindow::report_error("Failed executing tool " + tool.get_name().toStdString(), exec_fail_string);
 			return;
 		}
 		standard_in_promise.set_value(std::move(standard_input));
@@ -265,7 +263,7 @@ void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<
 	while ((standard_output.is_open() || standard_error.is_open()) && update_timeout()) {
 		select(standard_output, output_callback, standard_error, error_callback, timeout_pointer);
 	}
-	shared.state = Process_reader::State::finished;
+	state = Process_reader::State::finished;
 	completion_callback(Process_reader::State::finished);
 }
 
@@ -275,7 +273,7 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 	auto standard_input_future = standard_input_promise.get_future();
 	auto arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
 	process_handler =
-		std::thread{&Process_reader::run_process, std::move(tool),           std::move(arguments),          std::move(standard_input_promise), std::ref(shared),
+		std::thread{&Process_reader::run_process, std::move(tool),           std::move(arguments),          std::move(standard_input_promise), std::ref(state),
 					std::move(output_callback),   std::move(error_callback), std::move(completion_callback)};
 	try {
 		standard_input = standard_input_future.get();
@@ -306,13 +304,13 @@ bool Process_reader::run(QString executable, QString args, std::ostream &output,
 
 bool Process_reader::join() {
 	assert(process_handler.joinable());
-	while (shared.state == State::running) {
+	while (state == State::running) {
 		std::this_thread::sleep_for(std::chrono::milliseconds{100});
 		QApplication::processEvents();
 	}
 	standard_input.close_write_channel();
 	process_handler.join();
-	return shared.state == Process_reader::State::finished;
+	return state == Process_reader::State::finished;
 }
 
 void Process_reader::send_input(std::string_view input) {

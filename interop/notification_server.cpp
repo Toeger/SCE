@@ -8,11 +8,7 @@
 #include <sstream>
 
 Notification_server::Notification_server(const std::vector<boost::asio::ip::tcp::endpoint> &addresses)
-	: notifier(addresses) {
-	//gui_thread_private.server = std::thread{notifier}
-}
-
-Notification_server::~Notification_server() {}
+	: notifier(addresses) {}
 
 template <class... T>
 void ignore_exception(T &&... t) {
@@ -88,19 +84,19 @@ Notification_server::Notifier::Listener::Listener(boost::asio::io_service &p_io_
 	struct Acceptor {
 		void operator()(const boost::system::error_code &error) {
 			if (error) {
-				//`this` may already be deleted, so we can't do listener->socket.close()
+				//`this` may already be deleted, so we can't do listener.socket.close()
 				MainWindow::report_error("Failed accepting connection", error.message());
 				return;
 			}
-			listener->socket.shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
-			listener->socket.set_option(boost::asio::socket_base::keep_alive{true});
-			sockets->push_back(std::make_unique<boost::asio::ip::tcp::socket>(std::move(listener->socket)));
-			listener->acceptor.async_accept(listener->socket, listener->endpoint, Acceptor{sockets, listener});
+			listener.socket.shutdown(boost::asio::ip::tcp::socket::shutdown_receive);
+			listener.socket.set_option(boost::asio::socket_base::keep_alive{true});
+			sockets.push_back(std::make_unique<boost::asio::ip::tcp::socket>(std::move(listener.socket)));
+			listener.acceptor.async_accept(listener.socket, listener.endpoint, Acceptor{sockets, listener});
 		}
-		std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> *sockets;
-		Listener *listener;
+		std::vector<std::unique_ptr<boost::asio::ip::tcp::socket>> &sockets;
+		Listener &listener;
 	};
-	acceptor.async_accept(socket, this->endpoint, Acceptor{&p_sockets, this});
+	acceptor.async_accept(socket, this->endpoint, Acceptor{p_sockets, *this});
 }
 
 Notification_server::Notifier::Notifier(const std::vector<boost::asio::ip::tcp::endpoint> &addresses)

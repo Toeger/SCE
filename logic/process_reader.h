@@ -44,11 +44,9 @@ class Process_reader {
 	private:
 	std::thread process_handler;
 	Pipe standard_input;
-	struct Shared_data {
-		std::atomic<State> state{State::running};
-	} shared;
+	std::atomic<State> state{State::running};
 
-	static void run_process(Tool tool, QStringList arguments, std::promise<Pipe> standard_in_promise, Process_reader::Shared_data &shared,
+	static void run_process(Tool tool, QStringList arguments, std::promise<Pipe> standard_in_promise, std::atomic<State> &state,
 							std::function<void(std::string_view)> output_callback, std::function<void(std::string_view)> error_callback,
 							std::function<void(Process_reader::State)> completion_callback);
 };

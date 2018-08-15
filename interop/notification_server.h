@@ -16,7 +16,6 @@ struct Notification_server {
 	//create notification server and run it in a thread
 	Notification_server(const std::vector<boost::asio::ip::tcp::endpoint> &addresses = {{boost::asio::ip::address_v4::loopback(), 53677},
 																						{boost::asio::ip::address_v6::loopback(), 53677}});
-	~Notification_server();
 	Notification_server(const Notification_server &) = delete;
 	void send_notification(std::string data);
 	template <class Pb_message, class = std::enable_if_t<std::is_base_of_v<google::protobuf::Message, Pb_message>>>
