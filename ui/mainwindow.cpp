@@ -12,6 +12,7 @@
 #include <QFont>
 #include <QFontDialog>
 #include <QFontMetrics>
+#include <QTabBar>
 #include <cassert>
 #include <iostream>
 #include <sce.pb.h>
