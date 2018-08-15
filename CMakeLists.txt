@@ -40,7 +40,7 @@ add_custom_command(
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--grpc_out=." "--plugin=protoc-gen-grpc=${GRPC_PLUGIN_PATH}/grpc_cpp_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	COMMAND ${Protobuf_PROTOC_EXECUTABLE} "--python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--grpc_python_out=${CMAKE_CURRENT_SOURCE_DIR}/testdata/interop_scripts" "--plugin=protoc-gen-grpc_python=${GRPC_PLUGIN_PATH}/grpc_python_plugin" -I${CMAKE_CURRENT_SOURCE_DIR}/interop ${CMAKE_CURRENT_SOURCE_DIR}/interop/sce.proto
 	DEPENDS interop/sce.proto
-	OUTPUT sce.grpc.pb.cc sce.grpc.pb.h
+	OUTPUT sce.grpc.pb.h sce.grpc.pb.cc
 	COMMENT "Generating RPC code for sce.proto"
 )
 
@@ -182,6 +182,9 @@ set_source_files_properties(
 	sce.pb.cc
 	PROPERTIES COMPILE_FLAGS -w
 )
+
+#explicitly exclude generated protobuf files from being processed by moc and uic to avoid cmake warning
+set_property(SOURCE sce.pb.h sce.pb.cc sce.grpc.pb.h sce.grpc.pb.cc PROPERTY SKIP_AUTOGEN ON)
 
 # add executable
 add_executable(${PROJECT_NAME} ${SCE_SRC})
