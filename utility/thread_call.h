@@ -59,7 +59,7 @@ namespace Utility {
 		auto start = std::chrono::high_resolution_clock::now();
 		while (future.wait_for(std::chrono::milliseconds{16}) == std::future_status::timeout) {
 			if (std::chrono::high_resolution_clock::now() - start > timeout) {
-				throw std::runtime_error{"future timeout"};
+				throw std::runtime_error{"timeout"};
 			}
 			QApplication::processEvents();
 		}
@@ -71,7 +71,7 @@ namespace Utility {
 			return get_future_value_from_gui_thread(std::move(future), timeout);
 		}
 		if (future.wait_for(timeout) == std::future_status::timeout) {
-			throw std::runtime_error{"future timeout"};
+			throw std::runtime_error{"timeout"};
 		}
 		return future.get();
 	}

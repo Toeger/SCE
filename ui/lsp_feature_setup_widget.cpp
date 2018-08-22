@@ -1,10 +1,12 @@
 #include "lsp_feature_setup_widget.h"
 #include "checkbox_widget.h"
 #include "interop/language_server_protocol.h"
+#include "logic/lsp_feature.h"
 #include "logic/settings.h"
 #include "ui_lsp_feature_setup_widget.h"
 #include "utility/thread_call.h"
 
+#include <QPushButton>
 #include <QSpacerItem>
 #include <variant>
 
@@ -38,6 +40,7 @@ struct LSP_feature_table {
 			layout->setMargin(0);
 			{
 				auto all_button = std::make_unique<QPushButton>(QObject::tr("All"));
+				all_button->setFlat(true);
 				QObject::connect(all_button.get(), &QPushButton::clicked, [column, table = this->table] {
 					for (int line = 1, linecount = table->rowCount(); line < linecount; line++) {
 						auto checkbox = dynamic_cast<Checkbox_widget *>(table->cellWidget(line, column));
@@ -51,6 +54,7 @@ struct LSP_feature_table {
 			layout->addSpacerItem(new QSpacerItem{0, 0, QSizePolicy::Expanding});
 			{
 				auto none_button = std::make_unique<QPushButton>(QObject::tr("None"));
+				none_button->setFlat(true);
 				QObject::connect(none_button.get(), &QPushButton::clicked, [column, table = this->table] {
 					for (int line = 1, linecount = table->rowCount(); line < linecount; line++) {
 						auto checkbox = dynamic_cast<Checkbox_widget *>(table->cellWidget(line, column));
@@ -64,6 +68,7 @@ struct LSP_feature_table {
 			widget->setLayout(layout.release());
 			table->setCellWidget(0, column, widget.release());
 		}
+		table->resizeColumnsToContents();
 	}
 	void set(LSP_feature_info &&info) {
 		Utility::sync_gui_thread_execute([this, info = std::move(info)]() mutable {
@@ -79,7 +84,12 @@ struct LSP_feature_table {
 				if (inserted) {
 					it_row = row;
 					table->setRowCount(row + 1);
-					table->setVerticalHeaderItem(row++, new QTableWidgetItem{it_feature});
+					auto feature_name_widget = std::make_unique<QTableWidgetItem>(it_feature);
+					if (LSP_feature::lookup(it_feature.toStdString()) == nullptr) {
+						feature_name_widget->setTextColor(Qt::red);
+						feature_name_widget->setToolTip(QObject::tr("Feature %1 is not understood by SCE").arg(it_feature));
+					}
+					table->setVerticalHeaderItem(row++, feature_name_widget.release());
 				}
 				table->setCellWidget(it->second, info.tool_index, new Checkbox_widget);
 			}
@@ -107,7 +117,7 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		try {
 			capabilities = LSP::Client{tool}.capabilities;
 		} catch (const std::runtime_error &e) {
-			add_features({e.what(), tool_index++});
+			add_features({QObject::tr("Failed getting capabilities for %1: %2").arg(tool.get_name()).arg(e.what()), tool_index++});
 			continue;
 		}
 		features.resize(capabilities->size());
@@ -122,7 +132,6 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 void LSP_feature_setup_widget::update_lsp_features() {
 	tools = Settings::get<Settings::Key::tools>();
 	tools.erase(std::remove_if(std::begin(tools), std::end(tools), [](const Tool &tool) { return tool.type != Tool::Tool_type::LSP_server; }), std::end(tools));
-	ui->lsp_tools_listWidget->clear();
 	if (tools.empty()) {
 		return;
 	}
@@ -131,7 +140,6 @@ void LSP_feature_setup_widget::update_lsp_features() {
 	ui->lsp_features_tableWidget->setColumnCount(tools.size() + 1);
 	QStringList header_texts;
 	for (const auto &tool : tools) {
-		ui->lsp_tools_listWidget->addItem(tool.get_name());
 		header_texts << tool.get_name();
 	}
 	header_texts << tr("Off");

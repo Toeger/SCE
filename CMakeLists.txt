@@ -90,6 +90,7 @@ set(SCE_SRC
 	interop/language_server_protocol.cpp
 	interop/notification_server.cpp
 	interop/rpc_server.cpp
+	logic/lsp_feature.cpp
 	logic/process_reader.cpp
 	logic/settings.cpp
 	logic/syntax_highligher.cpp
