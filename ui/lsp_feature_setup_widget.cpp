@@ -19,8 +19,8 @@ LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
 }
 
 LSP_feature_setup_widget::~LSP_feature_setup_widget() {
-	if (feature_loader.joinable()) {
-		feature_loader.join();
+	if (feature_loader.valid()) {
+		Utility::get_future_value(std::move(feature_loader));
 	}
 }
 
@@ -146,9 +146,9 @@ void LSP_feature_setup_widget::update_lsp_features() {
 	ui->lsp_features_tableWidget->setHorizontalHeaderLabels(header_texts);
 	ui->progressBar->setValue(0);
 	ui->progressBar->setVisible(true);
-	feature_loader = std::thread{
-		&set_lsp_features, std::ref(tools),
+	feature_loader = std::async(
+		std::launch::async, &set_lsp_features, std::ref(tools),
 		[this](int progress_percentage) { Utility::sync_gui_thread_execute([this, progress_percentage] { ui->progressBar->setValue(progress_percentage); }); },
 		[feature_table = LSP_feature_table{ui->lsp_features_tableWidget}](LSP_feature_info &&info) mutable { feature_table.set(std::move(info)); },
-		[this] { Utility::sync_gui_thread_execute([this] { ui->progressBar->setVisible(false); }); }};
+		[this] { Utility::sync_gui_thread_execute([this] { ui->progressBar->setVisible(false); }); });
 }
