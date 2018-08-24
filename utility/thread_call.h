@@ -53,8 +53,15 @@ namespace Utility {
 		return future.get();
 	}
 	template <class T>
-	auto get_future_value_from_gui_thread(std::future<T> &&future,
-										  const std::chrono::milliseconds timeout = std::numeric_limits<std::chrono::milliseconds>::max()) {
+	auto get_future_value_from_gui_thread(std::future<T> &&future) {
+		assert(MainWindow::currently_in_gui_thread());
+		while (future.wait_for(std::chrono::milliseconds{16}) == std::future_status::timeout) {
+			QApplication::processEvents();
+		}
+		return future.get();
+	}
+	template <class T>
+	auto get_future_value_from_gui_thread(std::future<T> &&future, const std::chrono::milliseconds timeout) {
 		assert(MainWindow::currently_in_gui_thread());
 		auto start = std::chrono::high_resolution_clock::now();
 		while (future.wait_for(std::chrono::milliseconds{16}) == std::future_status::timeout) {
@@ -66,7 +73,14 @@ namespace Utility {
 		return future.get();
 	}
 	template <class T>
-	auto get_future_value(std::future<T> &&future, const std::chrono::milliseconds timeout = std::numeric_limits<std::chrono::milliseconds>::max()) {
+	auto get_future_value(std::future<T> &&future) {
+		if (MainWindow::currently_in_gui_thread()) {
+			return get_future_value_from_gui_thread(std::move(future));
+		}
+		return future.get();
+	}
+	template <class T>
+	auto get_future_value(std::future<T> &&future, const std::chrono::milliseconds timeout) {
 		if (MainWindow::currently_in_gui_thread()) {
 			return get_future_value_from_gui_thread(std::move(future), timeout);
 		}
