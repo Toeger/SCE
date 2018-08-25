@@ -272,23 +272,22 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 	std::promise<Pipe> standard_input_promise;
 	auto standard_input_future = standard_input_promise.get_future();
 	auto arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
-	process_handler =
-		std::thread{&Process_reader::run_process, std::move(tool),           std::move(arguments),          std::move(standard_input_promise), std::ref(state),
-					std::move(output_callback),   std::move(error_callback), std::move(completion_callback)};
+	process_handler = std::async(&Process_reader::run_process, std::move(tool), std::move(arguments), std::move(standard_input_promise), std::ref(state),
+								 std::move(output_callback), std::move(error_callback), std::move(completion_callback));
 	try {
 		standard_input = standard_input_future.get();
 
 		std::string write_data = resolve_placeholders(tool.input).toStdString();
 		send_input(write_data);
 	} catch (...) {
-		process_handler.join();
+		Utility::get_future_value(std::move(process_handler));
 		throw;
 	}
 }
 
 Process_reader::~Process_reader() {
 	close_input();
-	if (process_handler.joinable()) {
+	if (process_handler.valid()) {
 		join();
 	}
 }
@@ -303,13 +302,13 @@ bool Process_reader::run(QString executable, QString args, std::ostream &output,
 }
 
 bool Process_reader::join() {
-	assert(process_handler.joinable());
+	assert(process_handler.valid());
 	while (state == State::running) {
 		std::this_thread::sleep_for(std::chrono::milliseconds{100});
 		QApplication::processEvents();
 	}
 	standard_input.close_write_channel();
-	process_handler.join();
+	Utility::get_future_value(std::move(process_handler));
 	return state == Process_reader::State::finished;
 }
 

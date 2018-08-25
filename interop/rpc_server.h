@@ -1,10 +1,10 @@
 #ifndef RPC_SERVER_H
 #define RPC_SERVER_H
 
+#include <future>
 #include <grpc++/grpc++.h>
 #include <sce.grpc.pb.h>
 #include <sce.pb.h>
-#include <thread>
 
 struct RPC_server {
 	static constexpr auto test_response = "testresponse";
@@ -31,7 +31,7 @@ struct RPC_server {
 
 	RPC_server_impl rpc_server;
 	decltype(grpc::ServerBuilder{}.BuildAndStart()) server;
-	std::thread server_thread;
+	std::future<void> server_thread;
 };
 
 #endif // RPC_SERVER_H

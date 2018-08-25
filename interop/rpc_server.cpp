@@ -15,16 +15,16 @@ RPC_server::RPC_server()
 				 .AddListeningPort(default_rpc_address, grpc::InsecureServerCredentials())
 				 .RegisterService(&rpc_server)
 				 .BuildAndStart()}
-	, server_thread{[this] { server->Wait(); }} {}
+	, server_thread{std::async(std::launch::async, [this] { server->Wait(); })} {}
 
 RPC_server::~RPC_server() {
 	close();
 }
 
 void RPC_server::close() {
-	if (server_thread.joinable()) {
+	if (server_thread.valid()) {
 		server->Shutdown();
-		server_thread.join();
+		Utility::get_future_value(std::move(server_thread));
 	}
 }
 

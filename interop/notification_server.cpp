@@ -1,5 +1,6 @@
 #include "notification_server.h"
 #include "ui/mainwindow.h"
+#include "utility/thread_call.h"
 
 #include <algorithm>
 #include <boost/asio/buffer.hpp>
@@ -111,13 +112,13 @@ Notification_server::Notifier::Notifier(const std::vector<boost::asio::ip::tcp::
 			MainWindow::report_error(message.str(), e.what());
 		}
 	}
-	server = std::thread{[this] {
+	server = std::async(std::launch::async, [this] {
 		try {
 			io_service.run();
 		} catch (const boost::system::system_error &e) {
 			MainWindow::report_error("Failed running notification server", e.what());
 		}
-	}};
+	});
 }
 
 Notification_server::Notifier::~Notifier() {
@@ -129,5 +130,5 @@ Notification_server::Notifier::~Notifier() {
 		lsockets.clear();
 	});
 	io_service.stop();
-	server.join();
+	Utility::get_future_value(std::move(server));
 }

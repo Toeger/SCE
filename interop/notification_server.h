@@ -8,7 +8,6 @@
 #include <chrono>
 #include <future>
 #include <memory>
-#include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -103,7 +102,7 @@ struct Notification_server {
 		boost::asio::io_service::work work;
 		Sockets_t sockets;
 		Listeners_t listeners;
-		std::thread server;
+		std::future<void> server;
 	} notifier;
 };
 

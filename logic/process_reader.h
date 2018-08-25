@@ -9,7 +9,6 @@
 #include <functional>
 #include <future>
 #include <string_view>
-#include <thread>
 
 class QPlainTextEdit;
 class QString;
@@ -42,7 +41,7 @@ class Process_reader {
 	void close_input();
 
 	private:
-	std::thread process_handler;
+	std::future<void> process_handler;
 	Pipe standard_input;
 	std::atomic<State> state{State::running};
 
