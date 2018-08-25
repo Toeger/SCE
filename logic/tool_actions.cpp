@@ -69,8 +69,7 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 static void run_action(const Tool &tool) {
 	std::string output;
 	std::string error;
-	Process_reader p{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }};
-	p.join();
+	Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join();
 	show_output(output, tool.output, tool.get_name(), false);
 	show_output(error, tool.error, tool.get_name(), true);
 }
