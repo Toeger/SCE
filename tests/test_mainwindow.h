@@ -4,7 +4,7 @@
 #include "ui/mainwindow.h"
 #include "ui_mainwindow.h"
 
-struct MainWindow_tester : MainWindow {
+struct MainWindow_tester : public MainWindow {
 	using MainWindow::add_file_tab;
 	using MainWindow::on_file_tabs_tabCloseRequested;
 	using MainWindow::ui;

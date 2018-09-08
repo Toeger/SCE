@@ -16,11 +16,14 @@ Edit_window::Edit_window() {
 	highlighter->load_rules(TEST_DATA_PATH "c++-syntax.json");
 	syntax_highlighter = std::move(highlighter);
 	Tool_actions::add_widget(this);
-	connect(this, &QPlainTextEdit::textChanged, [this] { state++; });
+	connections.push_back(connect(this, &QPlainTextEdit::textChanged, [this] { state++; }));
 }
 
 Edit_window::~Edit_window() {
 	Tool_actions::remove_widget(this);
+	for (auto &connection : connections) {
+		disconnect(connection);
+	}
 }
 
 void Edit_window::add_note(Edit_window::Note note) {

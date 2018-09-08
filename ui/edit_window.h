@@ -38,6 +38,7 @@ class Edit_window final : public QPlainTextEdit, private Thread_check {
 	void wheelEvent(QWheelEvent *we) override;
 	bool event(QEvent *event) override;
 
+	std::vector<QMetaObject::Connection> connections;
 	int zoom_remainder{};
 	std::vector<std::unique_ptr<QAction>> actions;
 	std::unique_ptr<QSyntaxHighlighter> syntax_highlighter;

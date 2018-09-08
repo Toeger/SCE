@@ -54,8 +54,10 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 MainWindow::~MainWindow() {
+	for (auto &connection : connections) {
+		disconnect(connection);
+	}
 	save_last_files();
-	main_window = nullptr;
 }
 
 Edit_window *MainWindow::get_current_edit_window() {
@@ -132,17 +134,14 @@ void MainWindow::edit_buffer_changed(Edit_window *edit_window) {
 	if (timer_it == std::end(timers)) {
 		timer_it = timers.emplace(std::piecewise_construct, std::forward_as_tuple(std::move(id)), std::forward_as_tuple()).first;
 		timer_it->second.setSingleShot(true);
-		connect(&timer_it->second, &QTimer::timeout, [edit_window, &notification_server = notification_server] {
-			if (main_window == nullptr) { //TODO: Make it so signals are disconnected before ~MainWindow()
-				return;
-			}
+		connections.push_back(connect(&timer_it->second, &QTimer::timeout, [edit_window, &notification_server = notification_server] {
 			edit_window->clear_notes();
 			sce::proto::EditNotification edit_notification;
 			sce::proto::FileState &file_state = *edit_notification.mutable_filestate();
 			file_state.set_id(edit_window->get_id().toStdString());
 			file_state.set_state(edit_window->get_state());
 			notification_server.send_notification(edit_notification);
-		});
+		}));
 	}
 	timer_it->second.start(timer_delay_ms);
 }
@@ -184,12 +183,8 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file_edit->setTabStopWidth(QFontMetrics{font}.width("    "));
 	file_edit->setLineWrapMode(Edit_window::LineWrapMode::NoWrap);
 	file_edit->setWindowTitle(filename);
-	connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get()] {
-		if (main_window == nullptr) { //TODO: Make it so signals are disconnected before ~MainWindow()
-			return;
-		}
-		main_window->edit_buffer_changed(edit_window);
-	});
+	connections.push_back(
+		connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get()] { main_window->edit_buffer_changed(edit_window); }));
 	auto index = ui->file_tabs->addTab(file_edit.release(), filename);
 	ui->file_tabs->setTabToolTip(index, filename);
 }

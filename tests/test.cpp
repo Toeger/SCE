@@ -5,6 +5,7 @@
 #include "ui/mainwindow.h"
 #include "utility/color.h"
 #include "utility/raii.h"
+#include "utility/thread_call.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -12,6 +13,7 @@
 #include <QtMessageHandler>
 #include <cassert>
 #include <csignal>
+#include <functional>
 #include <sce.pb.h>
 #include <string_view>
 
@@ -48,11 +50,10 @@ int main(int argc, char *argv[]) {
 	mw.close_notification_server();
 	mw.close_rpc_server();
 
-	std::thread tester{[&] {
+	auto tester = std::async(std::launch::async, [&] {
 		Catch::Session().run(argc, argv);
-		a.exit(42);
-	}};
-	while (a.exec() != 42) {
-	}
-	tester.join();
+		Utility::sync_gui_thread_execute([&mw] { mw.close(); });
+	});
+	a.exec();
+	Utility::get_future_value(std::move(tester));
 }

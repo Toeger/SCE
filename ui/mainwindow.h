@@ -51,10 +51,11 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void add_file_tab(const QString &filename);
 
 	int timer_delay_ms = 1000;
+	std::vector<QMetaObject::Connection> connections;
 	std::map<QString, QTimer> timers;
+	std::unique_ptr<Ui::MainWindow> ui;
 	std::unique_ptr<Tool_editor_widget> tool_editor_widget;
 	std::unique_ptr<LSP_feature_setup_widget> lsp_feature_setup_widget;
-	std::unique_ptr<Ui::MainWindow> ui;
 	Notification_server notification_server;
 	RPC_server rpc_server;
 
