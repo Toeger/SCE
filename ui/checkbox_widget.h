@@ -13,6 +13,10 @@ class Checkbox_widget : public QWidget {
 	Qt::CheckState get_checked_state() const;
 	void set_checked_state(Qt::CheckState state);
 
+	signals:
+	void stateChanged(Qt::CheckState new_state);
+	void clicked();
+
 	private:
 	void mousePressEvent(QMouseEvent *event) override;
 	QCheckBox *checkbox;

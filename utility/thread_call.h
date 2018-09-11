@@ -89,6 +89,21 @@ namespace Utility {
 		}
 		return future.get();
 	}
+
+	template <class T>
+	struct Thread_caller {
+		Thread_caller(T *qt_object)
+			: t{qt_object} {
+			static_assert(std::is_base_of_v<QObject, T>, "Threadcaller template parameter must be derived from QObject");
+		}
+		template <class Function>
+		void async_gui_thread_execute(Function &&function) {
+			async_owner_thread_execute(t, [f = std::forward<Function>(function), t = this->t]() mutable { f(t); });
+		}
+
+		private:
+		T *t;
+	};
 } // namespace Utility
 
 #endif // THREAD_CALL_H

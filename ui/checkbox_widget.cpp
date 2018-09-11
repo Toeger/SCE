@@ -12,6 +12,8 @@ Checkbox_widget::Checkbox_widget(QWidget *parent)
 	checkbox = checkbox_up.get();
 	layout->addWidget(checkbox_up.release(), 0, Qt::AlignCenter);
 	this->setLayout(layout.release());
+	connect(checkbox, &QCheckBox::stateChanged, [this](int new_state) { stateChanged(static_cast<Qt::CheckState>(new_state)); });
+	connect(checkbox, &QCheckBox::clicked, this, &Checkbox_widget::clicked);
 }
 
 Qt::CheckState Checkbox_widget::get_checked_state() const {
@@ -24,6 +26,6 @@ void Checkbox_widget::set_checked_state(Qt::CheckState state) {
 
 void Checkbox_widget::mousePressEvent(QMouseEvent *event) {
 	if (event->button() == Qt::LeftButton) {
-		checkbox->setCheckState(checkbox->checkState() == Qt::Checked ? Qt::Unchecked : Qt::Checked);
+		checkbox->click();
 	}
 }

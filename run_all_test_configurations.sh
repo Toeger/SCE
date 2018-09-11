@@ -14,11 +14,11 @@ echo "$BUILDS" | while IFS= read -r BUILD; do
 		export $COMPILER
 		export $BUILD
 		mkdir -p testbuild && cd testbuild
-		cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G Ninja .. | grep -v -- "--" || true
+		cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -G Ninja .. | grep -v -- "^--" || true
 		time ninja SCE_TESTS SCE
-		printf "\n===gdb===\n"
+		printf "\n${BLUE}with gdb$NOCOLOR\n"
 		time ../gdb.sh ./SCE_TESTS
-		printf "\n===native===\n"
+		printf "\n${BLUE}without gdb$NOCOLOR\n"
 		time ./SCE_TESTS
 		cd .. && rm -R testbuild
 	done
