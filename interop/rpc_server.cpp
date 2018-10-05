@@ -1,7 +1,7 @@
 #include "rpc_server.h"
+#include "threading/thread_call.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
-#include "utility/thread_call.h"
 
 #include <tuple>
 

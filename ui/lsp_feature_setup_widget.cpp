@@ -3,8 +3,8 @@
 #include "interop/language_server_protocol.h"
 #include "logic/lsp_feature.h"
 #include "logic/settings.h"
+#include "threading/thread_call.h"
 #include "ui_lsp_feature_setup_widget.h"
-#include "utility/thread_call.h"
 
 #include <QCheckBox>
 #include <QPushButton>

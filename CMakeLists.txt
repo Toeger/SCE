@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 project(SCE)
 set(TEST_PROJECT_NAME ${PROJECT_NAME}_TESTS)
 
+enable_language(CXX)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -99,6 +100,9 @@ set(SCE_SRC
 	main.cpp
 	sce.grpc.pb.cc
 	sce.grpc.pb.h
+	threading/thread_call.cpp
+	threading/thread_check.cpp
+	threading/thread_safe.cpp
 	ui/checkbox_widget.cpp
 	ui/edit_window.cpp
 	ui/helptext_label_widget.cpp
@@ -110,9 +114,6 @@ set(SCE_SRC
 	utility/pipe.cpp
 	utility/protobuffer_encoder.cpp
 	utility/raii.cpp
-	utility/thread_call.cpp
-	utility/thread_check.cpp
-	utility/thread_safe.cpp
 	utility/unique_handle.cpp
 	utility/utility.cpp
 )

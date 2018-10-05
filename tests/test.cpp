@@ -2,10 +2,10 @@
 
 #include "test.h"
 #include "test_mainwindow.h"
+#include "threading/thread_call.h"
 #include "ui/mainwindow.h"
 #include "utility/color.h"
 #include "utility/raii.h"
-#include "utility/thread_call.h"
 
 #include <QApplication>
 #include <QDebug>

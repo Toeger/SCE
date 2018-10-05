@@ -1,6 +1,6 @@
 #include "language_server_protocol.h"
+#include "threading/thread_call.h"
 #include "utility/color.h"
-#include "utility/thread_call.h"
 #include "utility/utility.h"
 
 #include <iostream>

@@ -1,7 +1,7 @@
 #include "test_mainwindow.h"
 #include "logic/settings.h"
 #include "test.h"
-#include "utility/thread_call.h"
+#include "threading/thread_call.h"
 
 #include <QPlainTextEdit>
 #include <QTemporaryFile>

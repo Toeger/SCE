@@ -2,7 +2,7 @@
 #define EDIT_WINDOW_H
 
 #include "logic/tool.h"
-#include "utility/thread_check.h"
+#include "threading/thread_check.h"
 
 #include <QPlainTextEdit>
 #include <QString>

@@ -1,9 +1,9 @@
 #ifndef PROCESS_READER_H
 #define PROCESS_READER_H
 
+#include "threading/thread_safe.h"
 #include "tool.h"
 #include "utility/pipe.h"
-#include "utility/thread_safe.h"
 
 #include <atomic>
 #include <functional>

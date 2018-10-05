@@ -3,7 +3,7 @@
 
 #include "interop/notification_server.h"
 #include "interop/rpc_server.h"
-#include "utility/thread_check.h"
+#include "threading/thread_check.h"
 
 #include <QMainWindow>
 #include <QTimer>

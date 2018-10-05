@@ -3,7 +3,7 @@
 
 #include "helptext_label_widget.h"
 #include "logic/tool.h"
-#include "utility/thread_check.h"
+#include "threading/thread_check.h"
 
 #include <QWidget>
 #include <memory>

@@ -1,9 +1,9 @@
 #include "process_reader.h"
+#include "threading/thread_call.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
 #include "utility/error.h"
 #include "utility/pipe.h"
-#include "utility/thread_call.h"
 #include "utility/unique_handle.h"
 
 #include <QApplication>

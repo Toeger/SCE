@@ -2,7 +2,7 @@
 #define LSP_FEATURE_SETUP_WIDGET_H
 
 #include "logic/tool.h"
-#include "utility/thread_call.h"
+#include "threading/thread_call.h"
 
 #include <QWidget>
 #include <future>
