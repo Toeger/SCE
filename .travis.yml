@@ -27,8 +27,8 @@ cache:
     ccache: true
 
 before_install:
-    # tell apt to allow parallel downloads
-    - sudo sh -c "echo 'Acquire::Queue-Mode "host";' >> /etc/apt/apt.conf"
+    # tell apt to allow parallel downloads and retry on a failed network connection
+    - sudo sh -c "printf 'Acquire::Queue-Mode "host";\\nAcquire::Retries 10;\\n' >> /etc/apt/apt.conf"
     # gcc
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
     # clang
