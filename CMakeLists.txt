@@ -79,6 +79,14 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
 		set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
 	endif()
+	#disable warnings for generated protobuf and moc files
+	set_source_files_properties(
+		${PROJECT_NAME}_autogen/mocs_compilation.cpp
+		${TEST_PROJECT_NAME}_autogen/mocs_compilation.cpp
+		sce.grpc.pb.cc
+		sce.pb.cc
+		PROPERTIES COMPILE_FLAGS -w
+	)
 endif()
 
 #defines
@@ -175,15 +183,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -isystem ${CMAKE_CURRENT_SOURCE_DIR} -is
 set(CMAKE_INCLUDE_CURRENT_DIR ON) #redundant, but required for Qt Creator to find generated files
 
 include_directories(SYSTEM external)
-
-#disable warnings for generated protobuf and moc files
-set_source_files_properties(
-	${PROJECT_NAME}_autogen/mocs_compilation.cpp
-	${TEST_PROJECT_NAME}_autogen/mocs_compilation.cpp
-	sce.grpc.pb.cc
-	sce.pb.cc
-	PROPERTIES COMPILE_FLAGS -w
-)
 
 #explicitly exclude generated protobuf files from being processed by moc and uic to avoid cmake warning
 set_property(SOURCE sce.pb.h sce.pb.cc sce.grpc.pb.h sce.grpc.pb.cc PROPERTY SKIP_AUTOGEN ON)
