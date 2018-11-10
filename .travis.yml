@@ -39,6 +39,8 @@ before_install:
     # ld
     - sudo add-apt-repository -y ppa:jonathonf/binutils
     - PACKAGES=${PACKAGES}"binutils "
+    # clangd
+    - sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-6.0 90
     # python
     - sudo add-apt-repository -y ppa:jonathonf/python-2.7
     - PACKAGES=${PACKAGES}"python2.7 "

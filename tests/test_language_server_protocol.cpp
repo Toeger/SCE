@@ -8,7 +8,7 @@
 
 TEST_CASE("Testing Language Server Protocol", "[lsp]") {
 	Tool tool;
-	tool.path = "clangd-6.0";
+	tool.path = "clangd";
 	WHEN("Creating and destroying an LSP server") {
 		LSP::Client client{tool};
 	}
