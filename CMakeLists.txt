@@ -110,6 +110,7 @@ set(SCE_SRC
 	sce.grpc.pb.h
 	threading/thread_call.cpp
 	threading/thread_check.cpp
+	threading/thread_pointer.cpp
 	threading/thread_safe.cpp
 	ui/checkbox_widget.cpp
 	ui/edit_window.cpp
@@ -136,6 +137,7 @@ set(SCE_TEST_SRC
 	tests/test_process_reader.cpp
 	tests/test_rpc_server.cpp
 	tests/test_settings.cpp
+	tests/test_thread_pointer.cpp
 	tests/test_tool.cpp
 	tests/test_tool_editor_widget.cpp
 )
