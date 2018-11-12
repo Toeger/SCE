@@ -108,6 +108,7 @@ set(SCE_SRC
 	main.cpp
 	sce.grpc.pb.cc
 	sce.grpc.pb.h
+	threading/gui_pointer.cpp
 	threading/thread_call.cpp
 	threading/thread_check.cpp
 	threading/thread_pointer.cpp

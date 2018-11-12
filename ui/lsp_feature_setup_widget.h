@@ -2,6 +2,7 @@
 #define LSP_FEATURE_SETUP_WIDGET_H
 
 #include "logic/tool.h"
+#include "threading/gui_pointer.h"
 #include "threading/thread_call.h"
 
 #include <QWidget>
@@ -23,6 +24,8 @@ class LSP_feature_setup_widget : public QWidget {
 
 	private slots:
 	void feature_checkbox_clicked(int row, int column);
+	void on_buttonBox_accepted();
+	void on_buttonBox_rejected();
 
 	private:
 	template <class Function>
@@ -32,7 +35,8 @@ class LSP_feature_setup_widget : public QWidget {
 	std::vector<std::vector<bool>> check_states;
 	std::vector<Tool> tools;
 	std::future<void> feature_loader;
-	std::unique_ptr<Ui::LSP_feature_setup_widget> ui;
+	std::unique_ptr<Ui::LSP_feature_setup_widget> __;
+	Gui_pointer<Ui::LSP_feature_setup_widget> ui;
 	Ui::LSP_feature_setup_widget *_; //Qt Designer only works correctly if it finds this string
 
 	friend struct LSP_feature_table;

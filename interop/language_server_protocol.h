@@ -4,16 +4,14 @@
 #include <atomic>
 #include <chrono>
 #include <future>
-#include <iosfwd>
 #include <json.hpp>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 #include "logic/process_reader.h"
-
-struct Tool;
+#include "logic/tool.h"
 
 namespace LSP {
 	struct Request {
@@ -56,11 +54,29 @@ namespace LSP {
 		void notify(const Notification &notification);
 		nlohmann::json capabilities;
 
+		static std::shared_ptr<Client> cached_get(const Tool &tool) {
+			auto it = clients.find(tool.path);
+			if (it == std::end(clients)) {
+				it = clients.emplace(tool.path, std::make_shared<Client>(tool)).first;
+			}
+			return it->second;
+		}
+
+		static std::shared_ptr<Client> lookup(const QString &path) {
+			const auto it = clients.find(path);
+			if (it == std::end(clients)) {
+				return nullptr;
+			}
+			return it->second;
+		}
+
 		private:
 		Process_reader process_reader;
 		std::promise<Response> response_promise;
 		std::atomic<unsigned int> target_id;
+		static inline std::map<QString, std::shared_ptr<Client>> clients;
 	};
+
 } // namespace LSP
 
 #endif

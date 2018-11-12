@@ -67,9 +67,6 @@ struct Thread_pointer {
 };
 
 template <class T>
-using GUI_ptr = Thread_pointer<T>;
-
-template <class T>
 bool operator==(const Thread_pointer<T> &lhs, const Thread_pointer<T> &rhs) {
 	return Thread_pointer<T>::operator_spaceship(lhs, rhs) == 0;
 }
