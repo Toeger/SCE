@@ -16,6 +16,7 @@ namespace Ui {
 class Edit_window;
 class Tool_editor_widget;
 class LSP_feature_setup_widget;
+class Keyboard_shortcuts_widget;
 
 class MainWindow : public QMainWindow, private Thread_check {
 	Q_OBJECT
@@ -42,6 +43,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void on_action_Font_triggered();
 	void on_action_Test_triggered();
 	void on_file_tabs_tabCloseRequested(int index);
+	void on_action_Keyboard_shortcuts_triggered();
 	void closeEvent(QCloseEvent *event) override;
 	void edit_buffer_changed(Edit_window *edit_window);
 
@@ -56,6 +58,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	std::unique_ptr<Ui::MainWindow> ui;
 	std::unique_ptr<Tool_editor_widget> tool_editor_widget;
 	std::unique_ptr<LSP_feature_setup_widget> lsp_feature_setup_widget;
+	std::unique_ptr<Keyboard_shortcuts_widget> keyboard_shortcuts_widget;
 	Notification_server notification_server;
 	RPC_server rpc_server;
 

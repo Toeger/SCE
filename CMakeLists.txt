@@ -116,6 +116,7 @@ set(SCE_SRC
 	ui/checkbox_widget.cpp
 	ui/edit_window.cpp
 	ui/helptext_label_widget.cpp
+	ui/keyboard_shortcuts_widget.cpp
 	ui/lsp_feature_setup_widget.cpp
 	ui/mainwindow.cpp
 	ui/tool_editor_widget.cpp
@@ -146,6 +147,7 @@ list(REMOVE_ITEM SCE_TEST_SRC main.cpp)
 
 # Manuall list all .ui files so that Qt Creator lists them in the projects view
 set(UI_FILES
+	ui/keyboard_shortcuts_widget.ui
 	ui/lsp_feature_setup_widget.ui
 	ui/mainwindow.ui
 	ui/tool_editor_widget.ui

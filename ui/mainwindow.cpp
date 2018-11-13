@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "edit_window.h"
+#include "keyboard_shortcuts_widget.h"
 #include "logic/settings.h"
 #include "logic/tool_actions.h"
 #include "lsp_feature_setup_widget.h"
@@ -124,6 +125,7 @@ void MainWindow::on_file_tabs_tabCloseRequested(int index) {
 void MainWindow::closeEvent(QCloseEvent *event) {
 	tool_editor_widget = nullptr;
 	lsp_feature_setup_widget = nullptr;
+	keyboard_shortcuts_widget = nullptr;
 	event->accept();
 }
 
@@ -226,4 +228,13 @@ void MainWindow::on_action_Test_triggered() {
 	note.color = 0xff0000;
 	note.text = "Test notification";
 	edit->add_note(std::move(note));
+}
+
+void MainWindow::on_action_Keyboard_shortcuts_triggered() {
+	if (keyboard_shortcuts_widget != nullptr && keyboard_shortcuts_widget->isVisible()) {
+		keyboard_shortcuts_widget->activateWindow();
+	} else {
+		keyboard_shortcuts_widget = std::make_unique<Keyboard_shortcuts_widget>();
+		keyboard_shortcuts_widget->show();
+	}
 }
