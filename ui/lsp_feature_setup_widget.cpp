@@ -200,6 +200,7 @@ void LSP_feature_setup_widget::on_buttonBox_accepted() {
 		if (lsp_feature == nullptr) {
 			continue;
 		}
+		lsp_feature->disable();
 		lsp_feature->clients.clear();
 		for (int column = 0; column < ui->lsp_features_tableWidget->columnCount(); column++) {
 			if (clients[column] == nullptr) {
@@ -211,9 +212,7 @@ void LSP_feature_setup_widget::on_buttonBox_accepted() {
 				}
 			}
 		}
-		if (lsp_feature->clients.empty()) {
-			lsp_feature->disable();
-		} else {
+		if (not lsp_feature->clients.empty()) {
 			lsp_feature->enable();
 		}
 	}

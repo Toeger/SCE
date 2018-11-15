@@ -1,0 +1,3 @@
+[submodule "external/TMP"]
+	path = external/TMP
+	url = https://github.com/Toeger/TMP

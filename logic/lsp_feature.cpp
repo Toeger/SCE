@@ -8,12 +8,13 @@
 static void enable_completion_provider() {}
 static void disable_completion_provider() {}
 
-static std::vector<LSP_feature> lsp_features = {{"completionProvider",
-												 QObject::tr("Auto-completes code"),
-												 enable_completion_provider,
-												 disable_completion_provider,
-												 LSP_feature::Multi_client_support::yes,
-												 {}}};
+static std::vector<LSP_feature> lsp_features = {{
+	"completionProvider",
+	QObject::tr("Auto-complete code"),
+	enable_completion_provider,
+	disable_completion_provider,
+	LSP_feature::Multi_client_support::yes,
+}};
 
 LSP_feature *LSP_feature::lookup(std::string_view name) {
 	auto pos = std::find_if(std::begin(lsp_features), std::end(lsp_features), [&name](const LSP_feature &lsp_feature) { return lsp_feature.name == name; });
@@ -21,4 +22,10 @@ LSP_feature *LSP_feature::lookup(std::string_view name) {
 		return nullptr;
 	}
 	return &(*pos);
+}
+
+void LSP_feature::apply_to_each(TMP::Function_ref<void(LSP_feature &)> callback) {
+	for (auto &lsp_feature : lsp_features) {
+		callback(lsp_feature);
+	}
 }

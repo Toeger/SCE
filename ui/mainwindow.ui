@@ -93,7 +93,7 @@
   </action>
   <action name="action_Font">
    <property name="text">
-    <string>&amp;Font</string>
+    <string>&amp;Font ...</string>
    </property>
   </action>
   <action name="action_Tab_Width">
@@ -124,7 +124,7 @@
   </action>
   <action name="action_Keyboard_shortcuts">
    <property name="text">
-    <string>&amp;Key Bindings</string>
+    <string>&amp;Key Bindings ...</string>
    </property>
   </action>
  </widget>
