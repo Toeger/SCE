@@ -54,7 +54,7 @@ namespace LSP {
 		void notify(const Notification &notification);
 		nlohmann::json capabilities;
 
-		static std::shared_ptr<Client> cached_get(const Tool &tool) {
+		static std::shared_ptr<Client> get_client_from_cache(const Tool &tool) {
 			auto it = clients.find(tool.path);
 			if (it == std::end(clients)) {
 				it = clients.emplace(tool.path, std::make_shared<Client>(tool)).first;
@@ -62,7 +62,7 @@ namespace LSP {
 			return it->second;
 		}
 
-		static std::shared_ptr<Client> lookup(const QString &path) {
+		static std::shared_ptr<Client> lookup_client_from_path(const QString &path) {
 			const auto it = clients.find(path);
 			if (it == std::end(clients)) {
 				return nullptr;

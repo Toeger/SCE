@@ -30,14 +30,14 @@ static std::string make_lsp_message_string(std::string_view method, const nlohma
 			case nlohmann::json::value_t::array:  ///< array (ordered collection of values)
 				json["params"] = params;
 				break;
-			case nlohmann::json::value_t::string:          ///< string value
-			case nlohmann::json::value_t::boolean:         ///< boolean value
+			case nlohmann::json::value_t::string:		   ///< string value
+			case nlohmann::json::value_t::boolean:		   ///< boolean value
 			case nlohmann::json::value_t::number_integer:  ///< number value (signed integer)
 			case nlohmann::json::value_t::number_unsigned: ///< number value (unsigned integer)
-			case nlohmann::json::value_t::number_float:    ///< number value (floating-point)
+			case nlohmann::json::value_t::number_float:	///< number value (floating-point)
 				json["params"] = nlohmann::json::array_t{params};
 				break;
-			case nlohmann::json::value_t::null:      ///< null value
+			case nlohmann::json::value_t::null:		 ///< null value
 			case nlohmann::json::value_t::discarded: ///< discarded by the the parser callback function
 				break;
 		}
@@ -51,20 +51,72 @@ static std::string make_lsp_message_string(std::string_view method, const nlohma
 	return data;
 }
 
-static nlohmann::json get_capabilities() {
-	nlohmann::json params;
-	//TODO: add WorkspaceClientCapabilities
-	//TODO: add TextDocumentClientCapabilities
-	//TODO: add experimental capabilities
-	return params;
-}
-
 static nlohmann::json get_init_params() {
-	nlohmann::json params;
-	params["processId"] = getpid();
-	params["rootUri"] = nullptr; //TODO: change this to project directory once we have such a thing
-	params["capabilities"] = get_capabilities();
-	return params;
+	nlohmann::json workspace_client_capabilities = {
+		{"applyEdit", false},
+		{"workspaceEdit", {{"documentChanges", false}, {"resourceOperations", {"create", "rename", "delete"}}, {"failureHandling", {"abort"}}}},
+		{"didChangeConfiguration", {{"dynamicRegistration", false}}},
+		{"didChangeWatchedFiles", {{"dynamicRegistration", false}}},
+		{"symbol", {{"dynamicRegistration", false}}},
+		{"executeCommand", {{"dynamicRegistration", false}}},
+		{"workspaceFolders", false},
+		{"configuration", false},
+	};
+	nlohmann::json text_document_client_capabilities = {
+		{"synchronization", {{"dynamicRegistration", false}, {"willSave", false}, {"willSaveWaitUntil", false}, {"didSave", false}}},
+		{"completion",
+		 {{"dynamicRegistration", false},
+		  {"completionItem",
+		   {{"snippetSupport", false},
+			{"commitCharactersSupport", false},
+			{"documentationFormat", {"plaintext", "markdown"}},
+			{"deprecatedSupport", false},
+			{"preselectSupport", false}}},
+		  {"contextSupport", true}}},
+		{"hover", {{"dynamicRegistration", false}, {"contentFormat", {"plaintext", "markdown"}}}},
+		{"signatureHelp", {{"dynamicRegistration", false}, {"signatureInformation", {{"documentationFormat", {"plaintext", "markdown"}}}}}},
+		{"references", {{"dynamicRegistration", false}}},
+		{"documentHighlight", {{"dynamicRegistration", false}}},
+		{"documentSymbol",
+		 {{"dynamicRegistration", false},
+		  {"symbolKind",
+		   {{"valueSet",
+			 {
+				 "File",   "Module",	"Namespace", "Package",	"Class",	"Method", "Property", "Field",		  "Constructor",
+				 "Enum",   "Interface", "Function",  "Variable",   "Constant", "String", "Number",   "Boolean",		  "Array",
+				 "Object", "Key",		"Null",		 "EnumMember", "Struct",   "Event",  "Operator", "TypeParameter",
+			 }}}},
+		  {"hierarchicalDocumentSymbolSupport", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"rangeFormatting", {{"dynamicRegistration", false}}},
+		{"onTypeFormatting", {{"dynamicRegistration", false}}},
+		{"definition", {{"dynamicRegistration", false}}},
+		{"typeDefinition", {{"dynamicRegistration", false}}},
+		{"implementation", {{"dynamicRegistration", false}}},
+		{"codeAction", {{"dynamicRegistration", false}}},
+		{"codeLens", {{"dynamicRegistration", false}}},
+		{"documentLink", {{"dynamicRegistration", false}}},
+		{"colorProvider", {{"dynamicRegistration", false}}},
+		{"rename", {{"dynamicRegistration", false}, {"prepareSupport", false}}},
+		{"publishDiagnostics", {{"relatedInformation", true}}},
+		{"foldingRange", {{"dynamicRegistration", false}, {"rangeLimit", 100}, {"lineFoldingOnly", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+	};
+	nlohmann::json client_capabilities = {
+		{"workspace", std::move(workspace_client_capabilities)},
+		{"textDocument", std::move(text_document_client_capabilities)},
+		{"experimental", nullptr},
+	};
+	return {
+		{"processId", getpid()},
+		{"rootUri", nullptr}, //TODO: change this to project directory once we have such a thing
+		{"capabilities", std::move(client_capabilities)},
+		{"trace", "off"},
+	};
 }
 
 static bool is_complete_lsp_message(std::string_view data) {

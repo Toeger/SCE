@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QSpacerItem>
+#include <algorithm>
 #include <variant>
 
 LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
@@ -17,12 +18,37 @@ LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
 	, ui{__.get()} {
 	ui->setupUi(this);
 	ui->splitter->setSizes({1, 2});
-	update_lsp_features();
+	update_gui_from_settings_and_LSP_servers();
 }
 
 LSP_feature_setup_widget::~LSP_feature_setup_widget() {
 	if (feature_loader.valid()) {
 		Utility::get_future_value(std::move(feature_loader));
+	}
+}
+
+void LSP_feature_setup_widget::update_lsp_features_from_settings() {
+	auto lsp_tools = Settings::get<Settings::Key::tools>();
+	lsp_tools.erase(std::remove_if(std::begin(lsp_tools), std::end(lsp_tools), [](const Tool &tool) { return tool.type != Tool::Tool_type::LSP_server; }),
+					std::end(lsp_tools));
+	if (lsp_tools.empty()) {
+		return;
+	}
+	std::sort(std::begin(lsp_tools), std::end(lsp_tools), [](const Tool &lhs, const Tool &rhs) { return lhs.get_name() < rhs.get_name(); });
+
+	LSP_feature::apply_to_each([](LSP_feature &feature) { feature.clients.clear(); });
+	const auto &lsp_feature_to_lsp_client_names = Settings::get<Settings::Key::lsp_functions>();
+	for (const auto &[feature_name, client_names] : lsp_feature_to_lsp_client_names) {
+		if (auto feature = LSP_feature::lookup(feature_name)) {
+			for (const auto &client_name : client_names) {
+				const auto lsp_tool_it = std::lower_bound(std::cbegin(lsp_tools), std::cend(lsp_tools), QString::fromStdString(client_name),
+														  [](const Tool &tool, const QString &name) { return tool.get_name() < name; });
+				if (lsp_tool_it == std::cend(lsp_tools)) {
+					continue;
+				}
+				feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it));
+			}
+		}
 	}
 }
 
@@ -105,7 +131,7 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		set_progress_percentage(current_steps++ * 100 / max_steps);
 		std::optional<nlohmann::json> capabilities;
 		try {
-			capabilities = LSP::Client::cached_get(tool)->capabilities;
+			capabilities = LSP::Client::get_client_from_cache(tool)->capabilities;
 		} catch (const std::runtime_error &e) {
 			add_features({QObject::tr("Failed getting capabilities for %1: %2").arg(tool.get_name()).arg(e.what()), tool_index++});
 			continue;
@@ -117,49 +143,6 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		add_features({std::move(features), tool_index++});
 	}
 	done_callback();
-}
-
-void LSP_feature_setup_widget::update_lsp_features() {
-	tools = Settings::get<Settings::Key::tools>();
-	tools.erase(std::remove_if(std::begin(tools), std::end(tools), [](const Tool &tool) { return tool.type != Tool::Tool_type::LSP_server; }), std::end(tools));
-	if (tools.empty()) {
-		return;
-	}
-
-	ui->lsp_features_tableWidget->clear();
-	ui->lsp_features_tableWidget->setColumnCount(tools.size() + 1);
-	QStringList header_texts;
-	for (const auto &tool : tools) {
-		header_texts << tool.get_name();
-	}
-	header_texts << tr("Off");
-	ui->lsp_features_tableWidget->setHorizontalHeaderLabels(header_texts);
-	ui->progressBar->setValue(0);
-	ui->progressBar->setVisible(true);
-	feature_loader =
-		std::async(std::launch::async, &set_lsp_features, std::ref(tools),
-				   [this](int progress_percentage) { //set progress callback
-					   Utility::sync_gui_thread_execute([this, progress_percentage] { ui->progressBar->setValue(progress_percentage); });
-				   },
-				   [feature_table = LSP_feature_table{Gui_pointer(ui->lsp_features_tableWidget), thread_caller},
-					this](LSP_feature_info &&info) mutable { //add feature callback
-					   feature_table.set(std::move(info), thread_caller);
-				   },
-				   [this] { //done callback
-					   Utility::sync_gui_thread_execute([this] {
-						   ui->progressBar->setVisible(false);
-						   check_states.resize(ui->lsp_features_tableWidget->rowCount(), std::vector<bool>(ui->lsp_features_tableWidget->columnCount(), true));
-						   for (int column = 0; column < ui->lsp_features_tableWidget->columnCount(); column++) {
-							   assert(dynamic_cast<QCheckBox *>(ui->lsp_features_tableWidget->cellWidget(0, column)));
-							   static_cast<QCheckBox *>(ui->lsp_features_tableWidget->cellWidget(0, column))->setEnabled(true);
-							   for (int row = 0; row < ui->lsp_features_tableWidget->rowCount(); row++) {
-								   if (auto checkbox = dynamic_cast<Checkbox_widget *>(ui->lsp_features_tableWidget->cellWidget(row, column))) {
-									   checkbox->setEnabled(true);
-								   }
-							   }
-						   }
-					   });
-				   });
 }
 
 void LSP_feature_setup_widget::feature_checkbox_clicked(int row, int column) {
@@ -192,33 +175,93 @@ void LSP_feature_setup_widget::feature_checkbox_clicked(int row, int column) {
 }
 
 void LSP_feature_setup_widget::on_buttonBox_accepted() {
-	std::vector<std::shared_ptr<LSP::Client>> clients;
-	std::transform(std::begin(tools), std::end(tools), std::back_inserter(clients), [](const Tool &tool) { return LSP::Client::lookup(tool.path); });
-
-	for (int row = 0; row < ui->lsp_features_tableWidget->rowCount(); row++) {
-		auto lsp_feature = LSP_feature::lookup(ui->lsp_features_tableWidget->verticalHeaderItem(row)->text().toStdString());
-		if (lsp_feature == nullptr) {
-			continue;
-		}
-		lsp_feature->disable();
-		lsp_feature->clients.clear();
-		for (int column = 0; column < ui->lsp_features_tableWidget->columnCount(); column++) {
-			if (clients[column] == nullptr) {
-				continue;
-			}
-			if (auto checkbox = dynamic_cast<Checkbox_widget *>(ui->lsp_features_tableWidget->cellWidget(row, column))) {
-				if (checkbox->get_checked_state() == Qt::CheckState::Checked) {
-					lsp_feature->clients.push_back(clients[column]);
-				}
-			}
-		}
-		if (not lsp_feature->clients.empty()) {
-			lsp_feature->enable();
-		}
-	}
+	save_lsp_settings_from_gui();
+	update_lsp_features_from_settings();
 	close();
 }
 
 void LSP_feature_setup_widget::on_buttonBox_rejected() {
 	close();
+}
+
+void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
+	tools = Settings::get<Settings::Key::tools>();
+	tools.erase(std::remove_if(std::begin(tools), std::end(tools), [](const Tool &tool) { return tool.type != Tool::Tool_type::LSP_server; }), std::end(tools));
+	if (tools.empty()) {
+		return;
+	}
+
+	ui->lsp_features_tableWidget->clear();
+	ui->lsp_features_tableWidget->setColumnCount(tools.size() + 1);
+	QStringList header_texts;
+	for (const auto &tool : tools) {
+		header_texts << tool.get_name();
+	}
+	header_texts << tr("Off");
+	ui->lsp_features_tableWidget->setHorizontalHeaderLabels(header_texts);
+	ui->progressBar->setValue(0);
+	ui->progressBar->setVisible(true);
+	auto set_progress_callback = [this](int progress_percentage) {
+		Utility::sync_gui_thread_execute([this, progress_percentage] { ui->progressBar->setValue(progress_percentage); });
+	};
+	auto add_features_callback = [feature_table = LSP_feature_table{Gui_pointer(ui->lsp_features_tableWidget), thread_caller},
+								  this](LSP_feature_info &&info) mutable { feature_table.set(std::move(info), thread_caller); };
+	auto done_callback = [this] {
+		Utility::sync_gui_thread_execute([this] {
+			ui->progressBar->setVisible(false);
+			check_states.resize(ui->lsp_features_tableWidget->rowCount(), std::vector<bool>(ui->lsp_features_tableWidget->columnCount(), true));
+			for (int column = 0; column < ui->lsp_features_tableWidget->columnCount(); column++) {
+				assert(dynamic_cast<QCheckBox *>(ui->lsp_features_tableWidget->cellWidget(0, column)));
+				static_cast<QCheckBox *>(ui->lsp_features_tableWidget->cellWidget(0, column))->setEnabled(true);
+				for (int row = 0; row < ui->lsp_features_tableWidget->rowCount(); row++) {
+					if (auto checkbox = dynamic_cast<Checkbox_widget *>(ui->lsp_features_tableWidget->cellWidget(row, column))) {
+						checkbox->setEnabled(true);
+					}
+				}
+			}
+			load_lsp_settings_to_gui();
+		});
+	};
+	feature_loader = std::async(std::launch::async, &set_lsp_features, std::ref(tools), std::move(set_progress_callback), std::move(add_features_callback),
+								std::move(done_callback));
+}
+
+void LSP_feature_setup_widget::load_lsp_settings_to_gui() {
+	const auto &lsp_feature_to_lsp_client_names = Settings::get<Settings::Key::lsp_functions>();
+	std::vector<std::string> lsp_feature_names(ui->lsp_features_tableWidget->rowCount());
+	for (int row = 0; row < ui->lsp_features_tableWidget->rowCount(); row++) {
+		lsp_feature_names[row] = ui->lsp_features_tableWidget->verticalHeaderItem(row)->text().toStdString();
+	}
+	std::vector<std::string> lsp_tool_names(tools.size());
+	std::transform(std::cbegin(tools), std::cend(tools), std::begin(lsp_tool_names), [](const Tool &tool) { return tool.get_name().toStdString(); });
+
+	for (const auto &[feature_name, lsp_client_names] : lsp_feature_to_lsp_client_names) {
+		const auto row = std::find(std::cbegin(lsp_feature_names), std::cend(lsp_feature_names), feature_name) - std::cbegin(lsp_feature_names);
+		if (row == lsp_feature_names.size()) { //unknown feature name in settings
+			continue;
+		}
+		for (auto &lsp_client_name : lsp_client_names) {
+			const auto column = std::find(std::cbegin(lsp_tool_names), std::cend(lsp_tool_names), lsp_client_name) - std::cbegin(lsp_tool_names);
+			if (column == std::size(lsp_tool_names)) { //unknown tool name
+				continue;
+			}
+			if (auto checkbox = dynamic_cast<Checkbox_widget *>(ui->lsp_features_tableWidget->cellWidget(row, column))) {
+				checkbox->set_checked_state(Qt::CheckState::Checked);
+			} else {
+			}
+		}
+	}
+}
+
+void LSP_feature_setup_widget::save_lsp_settings_from_gui() {
+	std::map<std::string, std::vector<std::string>> feature_table;
+	for (int row = 1; row < ui->lsp_features_tableWidget->rowCount(); row++) {
+		for (int column = 0; column < ui->lsp_features_tableWidget->columnCount() - 1; column++) { //-1 because last column is not a tool
+			if (auto checkbox = dynamic_cast<Checkbox_widget *>(ui->lsp_features_tableWidget->cellWidget(row, column));
+				checkbox && checkbox->get_checked_state() == Qt::CheckState::Checked) {
+				feature_table[ui->lsp_features_tableWidget->verticalHeaderItem(row)->text().toStdString()].push_back(tools[column].get_name().toStdString());
+			}
+		}
+	}
+	Settings::set<Settings::Key::lsp_functions>(std::move(feature_table));
 }

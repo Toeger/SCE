@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "edit_window.h"
 #include "keyboard_shortcuts_widget.h"
+#include "logic/lsp_feature.h"
 #include "logic/settings.h"
 #include "logic/tool_actions.h"
 #include "lsp_feature_setup_widget.h"
@@ -52,6 +53,8 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->setupUi(this);
 	load_last_files();
 	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
+	LSP_feature::setup_all();
+	LSP_feature_setup_widget::update_lsp_features_from_settings();
 }
 
 MainWindow::~MainWindow() {
@@ -111,6 +114,16 @@ void MainWindow::close_notification_server() {
 void MainWindow::close_rpc_server() {
 	thread_check();
 	rpc_server.close();
+}
+
+void MainWindow::set_status(QString text) {
+	/* Reading speed:
+	 * ~200 words per minute
+	 * ~1600 characters per minute
+	 * ~26.6 characters per second
+	 * To give people enough time to figure out a message carefully, we assume 10 characters per second
+	 */
+	ui->statusBar->showMessage(text, std::max(3000, 1000 + text.size() * 100));
 }
 
 void MainWindow::on_actionOpen_File_triggered() {
@@ -187,6 +200,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file_edit->setWindowTitle(filename);
 	connections.push_back(
 		connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get()] { main_window->edit_buffer_changed(edit_window); }));
+	LSP_feature::add_all(*file_edit);
 	auto index = ui->file_tabs->addTab(file_edit.release(), filename);
 	ui->file_tabs->setTabToolTip(index, filename);
 }

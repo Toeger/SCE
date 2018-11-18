@@ -35,6 +35,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	public slots:
 	void close_notification_server();
 	void close_rpc_server();
+	void set_status(QString text);
 
 	private slots:
 	void on_actionOpen_File_triggered();

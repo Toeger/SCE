@@ -24,10 +24,24 @@ Keyboard_shortcuts_widget::Keyboard_shortcuts_widget(QWidget *parent)
 		const auto row = ui->keyboard_shortcuts_tableWidget->rowCount();
 		ui->keyboard_shortcuts_tableWidget->insertRow(row);
 		ui->keyboard_shortcuts_tableWidget->setItem(row, 0, new QTableWidgetItem{feature.description});
-		ui->keyboard_shortcuts_tableWidget->setCellWidget(row, 1, new QKeySequenceEdit{feature.activation1});
-		ui->keyboard_shortcuts_tableWidget->setCellWidget(row, 2, new QKeySequenceEdit{feature.activation2});
+		auto key_sequence = std::make_unique<QKeySequenceEdit>(feature.activation1);
+		connect(key_sequence.get(), &QKeySequenceEdit::keySequenceChanged, [&activation = feature.activation1](const QKeySequence &ks) { activation = ks; });
+		ui->keyboard_shortcuts_tableWidget->setCellWidget(row, 1, key_sequence.release());
+		key_sequence = std::make_unique<QKeySequenceEdit>(feature.activation2);
+		connect(key_sequence.get(), &QKeySequenceEdit::keySequenceChanged, [&activation = feature.activation2](const QKeySequence &ks) { activation = ks; });
+		ui->keyboard_shortcuts_tableWidget->setCellWidget(row, 2, key_sequence.release());
 	});
 	ui->keyboard_shortcuts_tableWidget->resizeColumnsToContents();
 }
 
 Keyboard_shortcuts_widget::~Keyboard_shortcuts_widget() {}
+
+void Keyboard_shortcuts_widget::on_buttonBox_accepted() {
+	//TODO: Apply changes
+	close();
+}
+
+void Keyboard_shortcuts_widget::on_buttonBox_rejected() {
+	//TODO: Undo changes
+	close();
+}

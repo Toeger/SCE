@@ -17,6 +17,12 @@ class Keyboard_shortcuts_widget : public QWidget {
 	explicit Keyboard_shortcuts_widget(QWidget *parent = nullptr);
 	~Keyboard_shortcuts_widget();
 
+	private slots:
+
+	void on_buttonBox_accepted();
+
+	void on_buttonBox_rejected();
+
 	private:
 	std::unique_ptr<Ui::Keyboard_shortcuts_widget> __;
 	Gui_pointer<Ui::Keyboard_shortcuts_widget> ui;
