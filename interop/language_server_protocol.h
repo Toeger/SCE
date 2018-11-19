@@ -70,6 +70,10 @@ namespace LSP {
 			return it->second;
 		}
 
+		static std::map<QString, std::shared_ptr<Client>> &get_clients() {
+			return clients;
+		}
+
 		private:
 		Process_reader process_reader;
 		std::promise<Response> response_promise;

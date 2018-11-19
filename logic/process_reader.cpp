@@ -120,7 +120,7 @@ static QString resolve_placeholders(QString string) {
 		QString placeholder;
 		QString value;
 	} const placeholder_values[] = {
-		{"$FilePath", current_path},       //
+		{"$FilePath", current_path},	   //
 		{"$Selection", current_selection}, //
 	};
 	for (const auto &placeholder_value : placeholder_values) {
@@ -272,8 +272,8 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 	std::promise<Pipe> standard_input_promise;
 	auto standard_input_future = standard_input_promise.get_future();
 	auto arguments = detail::create_arguments_list(resolve_placeholders(tool.arguments));
-	process_handler = std::async(&Process_reader::run_process, std::move(tool), std::move(arguments), std::move(standard_input_promise), std::ref(state),
-								 std::move(output_callback), std::move(error_callback), std::move(completion_callback));
+	process_handler = std::async(std::launch::async, &Process_reader::run_process, std::move(tool), std::move(arguments), std::move(standard_input_promise),
+								 std::ref(state), std::move(output_callback), std::move(error_callback), std::move(completion_callback));
 	try {
 		standard_input = standard_input_future.get();
 
@@ -346,7 +346,7 @@ static void process_control_sequence_text(std::string_view text, Control_sequenc
 			if (text.size() < 2) {
 				break;
 			}
-			if (text[1] == '[') {        //got a multi character escape sequence
+			if (text[1] == '[') {		 //got a multi character escape sequence
 				control_sequence_size++; //skipping '['
 				constexpr auto smallest_control_sequence_finisher = '\100';
 				while (control_sequence_size < text.size() && text[control_sequence_size] < smallest_control_sequence_finisher) {
@@ -355,7 +355,7 @@ static void process_control_sequence_text(std::string_view text, Control_sequenc
 				control_sequence_size++; //control_sequence_finisher is part of the escape sequence
 				control_sequence_callback(text.substr(2, control_sequence_size - 3));
 				text.remove_prefix(control_sequence_size);
-			} else {           //got a single character escape sequence?
+			} else {		   //got a single character escape sequence?
 				assert(false); //TODO
 			}
 		}

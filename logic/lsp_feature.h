@@ -26,6 +26,7 @@ struct LSP_feature {
 	static LSP_feature *lookup(std::string_view name);
 	static void apply_to_each(TMP::Function_ref<void(LSP_feature &)> callback);
 	static void setup_all();
+	static void close_all();
 	static void add_all(QWidget &w);
 
 	private:

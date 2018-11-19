@@ -51,10 +51,10 @@ MainWindow::MainWindow(QWidget *parent)
 	, ui{std::make_unique<Ui::MainWindow>()} {
 	main_window = this;
 	ui->setupUi(this);
-	load_last_files();
 	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
 	LSP_feature::setup_all();
 	LSP_feature_setup_widget::update_lsp_features_from_settings();
+	load_last_files();
 }
 
 MainWindow::~MainWindow() {
@@ -62,6 +62,7 @@ MainWindow::~MainWindow() {
 		disconnect(connection);
 	}
 	save_last_files();
+	LSP_feature::close_all();
 }
 
 Edit_window *MainWindow::get_current_edit_window() {
@@ -189,6 +190,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file.open(QFile::ReadOnly);
 	if (file.isOpen()) {
 		file_edit->setPlainText(file.readAll());
+		emit file_opened(file_edit.get(), filename.toStdString());
 	} else {
 		file_edit->setPlaceholderText(tr("Failed reading file %1").arg(filename));
 	}

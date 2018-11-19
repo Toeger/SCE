@@ -37,6 +37,10 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void close_rpc_server();
 	void set_status(QString text);
 
+	signals:
+	void file_opened(Edit_window *edit_window, std::string path);
+	//Note: There is no file_closed signal. Use &Edit_window::destroyed instead.
+
 	private slots:
 	void on_actionOpen_File_triggered();
 	void on_action_Edit_triggered();
