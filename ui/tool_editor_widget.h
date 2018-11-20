@@ -1,6 +1,7 @@
 #ifndef TOOL_EDITOR_WIDGET_H
 #define TOOL_EDITOR_WIDGET_H
 
+#include "external/verdigris/wobjectdefs.h"
 #include "helptext_label_widget.h"
 #include "logic/tool.h"
 #include "threading/thread_check.h"
@@ -17,7 +18,7 @@ struct QComboBox;
 
 //This window is to specify how to use external tools such as compilers.
 class Tool_editor_widget : public QWidget, private Thread_check {
-	Q_OBJECT
+	W_OBJECT(Tool_editor_widget)
 
 	public:
 	explicit Tool_editor_widget(QWidget *parent = nullptr);

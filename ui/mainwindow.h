@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "external/verdigris/wobjectdefs.h"
 #include "interop/notification_server.h"
 #include "interop/rpc_server.h"
 #include "threading/thread_check.h"
@@ -18,8 +19,11 @@ class Tool_editor_widget;
 class LSP_feature_setup_widget;
 class Keyboard_shortcuts_widget;
 
+W_REGISTER_ARGTYPE(Edit_window *)
+W_REGISTER_ARGTYPE(std::string)
+
 class MainWindow : public QMainWindow, private Thread_check {
-	Q_OBJECT
+	W_OBJECT(MainWindow)
 
 	public:
 	explicit MainWindow(QWidget *parent = nullptr);
@@ -38,7 +42,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void set_status(QString text);
 
 	signals:
-	void file_opened(Edit_window *edit_window, std::string path);
+	void file_opened(Edit_window *edit_window, std::string path) W_SIGNAL(file_opened, edit_window, path);
 	//Note: There is no file_closed signal. Use &Edit_window::destroyed instead.
 
 	private slots:

@@ -1,9 +1,12 @@
 #include "checkbox_widget.h"
+#include "external/verdigris/wobjectimpl.h"
 
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <memory>
+
+W_OBJECT_IMPL(Checkbox_widget)
 
 Checkbox_widget::Checkbox_widget(QWidget *parent)
 	: QWidget(parent) {

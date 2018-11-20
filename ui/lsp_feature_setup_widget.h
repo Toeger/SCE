@@ -1,6 +1,7 @@
 #ifndef LSP_FEATURE_SETUP_WIDGET_H
 #define LSP_FEATURE_SETUP_WIDGET_H
 
+#include "external/verdigris/wobjectdefs.h"
 #include "logic/tool.h"
 #include "threading/gui_pointer.h"
 #include "threading/thread_call.h"
@@ -14,7 +15,7 @@ namespace Ui {
 }
 
 class LSP_feature_setup_widget : public QWidget {
-	Q_OBJECT
+	W_OBJECT(LSP_feature_setup_widget)
 
 	public:
 	explicit LSP_feature_setup_widget(QWidget *parent = nullptr);
@@ -40,7 +41,7 @@ class LSP_feature_setup_widget : public QWidget {
 	std::future<void> feature_loader;
 	std::unique_ptr<Ui::LSP_feature_setup_widget> __;
 	Gui_pointer<Ui::LSP_feature_setup_widget> ui;
-	Ui::LSP_feature_setup_widget *_; //Qt Designer only works correctly if it finds this string
+	[[maybe_unused]] Ui::LSP_feature_setup_widget *_; //Qt Designer only works correctly if it finds this string
 
 	friend struct LSP_feature_table;
 };

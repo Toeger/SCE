@@ -1,5 +1,6 @@
 #include "lsp_feature_setup_widget.h"
 #include "checkbox_widget.h"
+#include "external/verdigris/wobjectimpl.h"
 #include "interop/language_server_protocol.h"
 #include "logic/lsp_feature.h"
 #include "logic/settings.h"
@@ -11,6 +12,8 @@
 #include <QSpacerItem>
 #include <algorithm>
 #include <variant>
+
+W_OBJECT_IMPL(LSP_feature_setup_widget)
 
 LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
 	: QWidget(parent)

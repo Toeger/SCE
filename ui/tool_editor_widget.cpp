@@ -1,4 +1,5 @@
 #include "tool_editor_widget.h"
+#include "external/verdigris/wobjectimpl.h"
 #include "logic/settings.h"
 #include "logic/tool_actions.h"
 #include "mainwindow.h"
@@ -12,16 +13,18 @@
 #include <QStringList>
 #include <tuple>
 
+W_OBJECT_IMPL(Tool_editor_widget)
+
 //this lists the association between ui elements and Tool members
 static auto get_ui_inputs_tool_attributes(Ui::Tool_editor_widget *ui) {
-	return std::make_tuple(ui->type_comboBox, &Tool::type,                                      //
-						   ui->path_lineEdit, &Tool::path,                                      //
-						   ui->arguments_lineEdit, &Tool::arguments,                            //
-						   ui->input_lineEdit, &Tool::input,                                    //
-						   ui->output_comboBox, &Tool::output,                                  //
-						   ui->error_comboBox, &Tool::error,                                    //
-						   ui->working_dir_lineEdit, &Tool::working_directory,                  //
-						   ui->activation_comboBox, &Tool::activation,                          //
+	return std::make_tuple(ui->type_comboBox, &Tool::type,										//
+						   ui->path_lineEdit, &Tool::path,										//
+						   ui->arguments_lineEdit, &Tool::arguments,							//
+						   ui->input_lineEdit, &Tool::input,									//
+						   ui->output_comboBox, &Tool::output,									//
+						   ui->error_comboBox, &Tool::error,									//
+						   ui->working_dir_lineEdit, &Tool::working_directory,					//
+						   ui->activation_comboBox, &Tool::activation,							//
 						   ui->activation_keySequenceEdit, &Tool::activation_keyboard_shortcut, //
 						   ui->timeout_doubleSpinBox, &Tool::timeout);
 }

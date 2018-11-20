@@ -1,6 +1,7 @@
 #ifndef EDIT_WINDOW_H
 #define EDIT_WINDOW_H
 
+#include "external/verdigris/wobjectdefs.h"
 #include "logic/tool.h"
 #include "threading/thread_check.h"
 
@@ -16,7 +17,8 @@ class QWheelEvent;
 
 //Widget for code editing
 class Edit_window final : public QPlainTextEdit, private Thread_check {
-	Q_OBJECT
+	W_OBJECT(Edit_window)
+
 	public:
 	Edit_window();
 	~Edit_window() override;

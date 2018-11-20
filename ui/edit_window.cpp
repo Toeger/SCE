@@ -1,4 +1,5 @@
 #include "edit_window.h"
+#include "external/verdigris/wobjectimpl.h"
 #include "logic/settings.h"
 #include "logic/syntax_highligher.h"
 #include "logic/tool.h"
@@ -10,6 +11,8 @@
 #include <QToolTip>
 #include <QWheelEvent>
 #include <memory>
+
+W_OBJECT_IMPL(Edit_window)
 
 Edit_window::Edit_window() {
 	auto highlighter = std::make_unique<Syntax_highligher>(document());
@@ -40,7 +43,7 @@ void Edit_window::add_note(Edit_window::Note note) {
 	tcf.setUnderlineColor(note.color);
 	{
 		QSignalBlocker blocker(this); //Setting the format counts as editing the buffer which causes more messages.
-		tc.setCharFormat(tcf);        //To avoid an infinite update loop we don't want this to cause a textChanged signal.
+		tc.setCharFormat(tcf);		  //To avoid an infinite update loop we don't want this to cause a textChanged signal.
 	}
 	notes.push_back(std::move(note));
 }

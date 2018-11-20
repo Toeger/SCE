@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "edit_window.h"
+#include "external/verdigris/wobjectimpl.h"
 #include "keyboard_shortcuts_widget.h"
 #include "logic/lsp_feature.h"
 #include "logic/settings.h"
@@ -19,6 +20,8 @@
 #include <iostream>
 #include <sce.pb.h>
 #include <utility>
+
+W_OBJECT_IMPL(MainWindow)
 
 static MainWindow *main_window;
 

@@ -1,9 +1,12 @@
 #include "keyboard_shortcuts_widget.h"
+#include "external/verdigris/wobjectimpl.h"
 #include "logic/lsp_feature.h"
 #include "logic/settings.h"
 #include "ui_keyboard_shortcuts_widget.h"
 
 #include <QKeySequenceEdit>
+
+W_OBJECT_IMPL(Keyboard_shortcuts_widget)
 
 Keyboard_shortcuts_widget::Keyboard_shortcuts_widget(QWidget *parent)
 	: QWidget{parent}
