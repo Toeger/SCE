@@ -11,7 +11,7 @@ before_install:
     # tell apt to allow parallel downloads and retry on a failed network connection
     - sudo sh -c "printf 'Acquire::Queue-Mode "host";\\nAcquire::Retries 10;\\n' >> /etc/apt/apt.conf"
     # gcc
-    - PACKAGES=${PACKAGES}"g++-8 "
+    - PACKAGES=${PACKAGES}"gcc-8 g++-8 "
     # gdb
     - PACKAGES=${PACKAGES}"gdb "
     # ninja
@@ -36,16 +36,16 @@ install:
     - sudo apt-get install ${PACKAGES}
     # gcc
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
+    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
     # clang
-    #- export PATH=$(echo $PATH | sed 's/:\/usr\/local\/clang-5.0.0\/bin//g')
     - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 90
-    - which clang++
-    - file $(which clang++)
+    - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6.0 90
     # clangd
     - sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-6.0 90
     # ccache
     - which clang++
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
+    - sudo ln -s $(which ccache) /usr/lib/ccache/clang
     - which clang++
     - which g++
     # protobuf
@@ -72,7 +72,9 @@ before_script:
     - export LSAN_OPTIONS=suppressions=../lsan.supp #ignore Qt's memory leaks
     # print versions
     - g++ --version
+    - gcc --version
     - clang++ --version
+    - clang --version
     - protoc --version
     - cmake --version
     - ninja --version
