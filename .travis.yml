@@ -1,8 +1,8 @@
 language: cpp
 dist: xenial
 
-cache:
-    ccache: true
+#cache:
+#    ccache: true
 
 before_install:
     # set sources
