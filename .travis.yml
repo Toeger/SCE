@@ -24,7 +24,7 @@ before_install:
     - PACKAGES=${PACKAGES}"python2.7 "
     - PACKAGES=${PACKAGES}"python3.5 "
     # Qt
-    - PACKAGES=${PACKAGES}"qt511-meta-full "
+    - PACKAGES=${PACKAGES}"qt511-meta "
     # protobuf
     - git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc
     # Update sources
