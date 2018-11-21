@@ -69,7 +69,7 @@ before_script:
     #- source /opt/qt510/bin/qt510-env.sh
     - export QT_FATAL_WARNINGS=1
     # Sanitizer settings
-    - export ASAN_SYMBOLIZER_PATH=/usr/local/clang-5.0.0/bin/llvm-symbolizer
+    - export ASAN_SYMBOLIZER_PATH=/usr/local/clang-7.0.0/bin/llvm-symbolizer
     - file ${ASAN_SYMBOLIZER_PATH}
     - export UBSAN_OPTIONS=print_stacktrace=1
     - export LSAN_OPTIONS=suppressions=../lsan.supp #ignore Qt's memory leaks
