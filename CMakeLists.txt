@@ -12,7 +12,7 @@ set(CMAKE_AUTOUIC ON)
 set_property(SOURCE tests/test_mainwindow.cpp PROPERTY SKIP_AUTOUIC ON)
 
 # Find the QtWidgets library
-find_package(Qt5Widgets CONFIG REQUIRED)
+find_package(Qt5Widgets 5.7 CONFIG REQUIRED)
 
 # Boost
 find_package(Boost 1.54 COMPONENTS system REQUIRED)

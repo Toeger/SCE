@@ -18,7 +18,7 @@ struct LSP_feature {
 	std::vector<std::shared_ptr<LSP::Client>> clients{};
 	QKeySequence activation1{};
 	QKeySequence activation2{};
-	QAction action;
+	QAction action{};
 
 	LSP_feature(std::string_view name, QString description, Multi_client_support multi_client_support, void (*const pdo_setup)(LSP_feature &),
 				std::vector<std::shared_ptr<LSP::Client>> clients = {});
