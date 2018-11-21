@@ -11,7 +11,7 @@ before_install:
     # tell apt to allow parallel downloads and retry on a failed network connection
     - sudo sh -c "printf 'Acquire::Queue-Mode "host";\\nAcquire::Retries 10;\\n' >> /etc/apt/apt.conf"
     # gcc
-    - PACKAGES=${PACKAGES}"gcc-8 g++-8 "
+    - PACKAGES=${PACKAGES}"gcc-8 g++-8 libc6-dev "
     # gdb
     - PACKAGES=${PACKAGES}"gdb "
     # ninja
