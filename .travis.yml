@@ -6,13 +6,13 @@ cache:
 
 before_install:
     # set sources
-    sudo apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
+    - sudo apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
     # tell apt to allow parallel downloads and retry on a failed network connection
     - sudo sh -c "printf 'Acquire::Queue-Mode "host";\\nAcquire::Retries 10;\\n' >> /etc/apt/apt.conf"
     # gcc
     - PACKAGES=${PACKAGES}"g++-8 "
     # gdb
-     PACKAGES=${PACKAGES}"gdb "
+    - PACKAGES=${PACKAGES}"gdb "
     # ninja
     - PACKAGES=${PACKAGES}"ninja-build "
     # boost
