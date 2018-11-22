@@ -52,7 +52,7 @@ install:
     - which g++
     # protobuf
     - cd grpc && mkdir build && cd build
-    - cmake .. -G Ninja || printf "Output log###\n" && cat CMakeFiles/CMakeOutput.log && printf "Error log###\n" && cat CMakeFiles/CMakeError.log && false
+    - cmake .. -G Ninja || {printf "Output log:\n-----------\n" && cat CMakeFiles/CMakeOutput.log && printf "Error log\n---------\n" && cat CMakeFiles/CMakeError.log && false}
     - sudo ninja install
     - sudo cp grpc_* /usr/local/bin
     - sudo cp *.a /usr/local/lib
@@ -89,7 +89,7 @@ before_script:
     - echo $PATH
     # set up python environment
     - mkdir build && cd build
-    - cmake -G Ninja ..
+    - cmake -G Ninja .. || {printf "Output log:\n-----------\n" && cat CMakeFiles/CMakeOutput.log && printf "Error log\n---------\n" && cat CMakeFiles/CMakeError.log && false}
     - ninja python_environment
     - cd .. && rm -R build
 
@@ -100,4 +100,4 @@ script:
 
 after_script:
     # ccache stats
-    - ccache -s
+    #   - ccache -s
