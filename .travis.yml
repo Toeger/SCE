@@ -48,6 +48,13 @@ install:
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang
     - which clang++
     - which g++
+    # debug
+    - sudo apt install locate
+    - sudo updatedb
+    - locate pthread.h
+    - sudo apt-get install apt-file
+    - apt-file update
+    - apt-file find pthread.h
     # protobuf
     - cd grpc && mkdir build && cd build
     - cmake .. -G Ninja
