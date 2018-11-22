@@ -5,6 +5,11 @@ dist: xenial
 #    ccache: true
 
 before_install:
+    # test precedences
+    - echo $0
+    - echo 1 || echo 2 && echo 3
+    - echo 1 || {echo 2 && echo 3}
+    - false
     # set sources
     - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
     - sudo add-apt-repository -y ppa:beineri/opt-qt-5.11.2-xenial
