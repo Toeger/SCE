@@ -11,7 +11,7 @@ before_install:
     # tell apt to allow parallel downloads and retry on a failed network connection
     - sudo sh -c "printf 'Acquire::Queue-Mode "host";\\nAcquire::Retries 10;\\n' >> /etc/apt/apt.conf"
     # gcc
-    - PACKAGES=${PACKAGES}"gcc-8 g++-8 libc6-dev "
+    - PACKAGES=${PACKAGES}"gcc-8 g++-8 "
     # gdb
     - PACKAGES=${PACKAGES}"gdb "
     # ninja
@@ -27,6 +27,8 @@ before_install:
     - PACKAGES=${PACKAGES}"qt511-meta-minimal mesa-common-dev "
     # protobuf
     - git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc
+    # cmake
+    - PACKAGES=${PACKAGES}"cmake "
     # Update sources
     - sudo apt-get update
 
@@ -48,16 +50,9 @@ install:
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang
     - which clang++
     - which g++
-    # debug
-    - sudo apt install locate
-    - sudo updatedb
-    - locate pthread.h
-    - sudo apt-get install apt-file
-    - apt-file update
-    - apt-file find pthread.h
     # protobuf
     - cd grpc && mkdir build && cd build
-    - cmake .. -G Ninja
+    - cmake .. -G Ninja || printf "Output log###\n" && cat CMakeFiles/CMakeOutput.log && printf "Error log###\n" && cat CMakeFiles/CMakeError.log && false
     - sudo ninja install
     - sudo cp grpc_* /usr/local/bin
     - sudo cp *.a /usr/local/lib
