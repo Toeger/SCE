@@ -49,7 +49,11 @@ void LSP_feature_setup_widget::update_lsp_features_from_settings() {
 				if (lsp_tool_it == std::cend(lsp_tools)) {
 					continue;
 				}
-				feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it));
+				try {
+					feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it));
+				} catch (std::exception &e) {
+					MainWindow::get_main_window().set_status(QString{"Failed loading lsp tool %1: Error: %2"}.arg(lsp_tool_it->get_name()).arg(e.what()));
+				}
 			}
 		}
 	}
