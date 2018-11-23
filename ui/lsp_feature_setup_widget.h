@@ -25,8 +25,11 @@ class LSP_feature_setup_widget : public QWidget {
 
 	private slots:
 	void feature_checkbox_clicked(int row, int column);
+	W_SLOT(feature_checkbox_clicked)
 	void on_buttonBox_accepted();
+	W_SLOT(on_buttonBox_accepted)
 	void on_buttonBox_rejected();
+	W_SLOT(on_buttonBox_rejected)
 
 	private:
 	void update_gui_from_settings_and_LSP_servers();

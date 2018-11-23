@@ -26,8 +26,11 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 
 	public slots:
 	void update_tools_list();
+	W_SLOT(update_tools_list)
 	void update_current_tool();
+	W_SLOT(update_current_tool)
 	void update_current_tool_name();
+	W_SLOT(update_current_tool_name)
 
 	private:
 	void closeEvent(QCloseEvent *event) override;
@@ -41,13 +44,21 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 
 	private slots:
 	void on_add_pushButton_clicked();
+	W_SLOT(on_add_pushButton_clicked)
 	void on_tools_listWidget_currentRowChanged(int currentRow);
+	W_SLOT(on_tools_listWidget_currentRowChanged)
 	void on_remove_pushButton_clicked();
+	W_SLOT(on_remove_pushButton_clicked)
 	void on_path_browse_pushButton_clicked();
+	W_SLOT(on_path_browse_pushButton_clicked)
 	void on_buttonBox_accepted();
+	W_SLOT(on_buttonBox_accepted)
 	void on_buttonBox_rejected();
+	W_SLOT(on_buttonBox_rejected)
 	void on_activation_comboBox_currentIndexChanged(int index);
+	W_SLOT(on_activation_comboBox_currentIndexChanged)
 	void on_type_comboBox_currentIndexChanged(int index);
+	W_SLOT(on_type_comboBox_currentIndexChanged)
 
 	private:
 	Ui::Tool_editor_widget *_; //Qt Designer only works correctly if it finds this string

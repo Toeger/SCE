@@ -20,7 +20,9 @@ class Keyboard_shortcuts_widget : public QWidget {
 
 	private slots:
 	void on_buttonBox_accepted();
+	W_SLOT(on_buttonBox_accepted)
 	void on_buttonBox_rejected();
+	W_SLOT(on_buttonBox_rejected)
 
 	private:
 	std::unique_ptr<Ui::Keyboard_shortcuts_widget> __;

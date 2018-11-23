@@ -47,12 +47,19 @@ class MainWindow : public QMainWindow, private Thread_check {
 
 	private slots:
 	void on_actionOpen_File_triggered();
+	W_SLOT(on_actionOpen_File_triggered)
 	void on_action_Edit_triggered();
+	W_SLOT(on_action_Edit_triggered)
 	void on_actionLSP_Setup_triggered();
+	W_SLOT(on_actionLSP_Setup_triggered)
 	void on_action_Font_triggered();
+	W_SLOT(on_action_Font_triggered)
 	void on_action_Test_triggered();
+	W_SLOT(on_action_Test_triggered)
 	void on_file_tabs_tabCloseRequested(int index);
+	W_SLOT(on_file_tabs_tabCloseRequested)
 	void on_action_Keyboard_shortcuts_triggered();
+	W_SLOT(on_action_Keyboard_shortcuts_triggered)
 	void closeEvent(QCloseEvent *event) override;
 	void edit_buffer_changed(Edit_window *edit_window);
 
