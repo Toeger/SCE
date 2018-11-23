@@ -110,17 +110,28 @@ static void set_up_completion_provider(LSP_feature &f) {
 				} else {
 					//got multiple suggestions, make a combobox to choose
 					QMenu menu;
-					for (auto &suggestion : suggestions) {
-						QObject::connect(menu.addAction(suggestion.c_str()), &QAction::triggered,
-										 [&apply_suggestion, &suggestion] { apply_suggestion(suggestion); });
+					bool suggestion_list_incomplete = false;
+					if (suggestions.size() > 5) {
+						suggestion_list_incomplete = true;
+						suggestions.resize(5);
 					}
 					if (result.count("isIncomplete")) {
 						auto &is_incomplete = result["isIncomplete"];
 						if (is_incomplete.is_boolean()) {
 							if (static_cast<bool>(is_incomplete)) {
-								menu.addSection("...");
+								suggestion_list_incomplete = true;
 							}
 						}
+					}
+					if (suggestions.size() > 5) {
+						suggestions.resize(5);
+					}
+					for (auto &suggestion : suggestions) {
+						QObject::connect(menu.addAction(suggestion.c_str()), &QAction::triggered,
+										 [&apply_suggestion, &suggestion] { apply_suggestion(suggestion); });
+					}
+					if (suggestion_list_incomplete) {
+						menu.addAction("...");
 					}
 					menu.exec(MainWindow::get_current_edit_window()->mapToGlobal(MainWindow::get_current_edit_window()->cursorRect().bottomLeft()));
 				}
