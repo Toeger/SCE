@@ -8,6 +8,7 @@
 #include "ui_lsp_feature_setup_widget.h"
 
 #include <QCheckBox>
+#include <QKeyEvent>
 #include <QPushButton>
 #include <QSpacerItem>
 #include <algorithm>
@@ -189,6 +190,15 @@ void LSP_feature_setup_widget::on_buttonBox_accepted() {
 
 void LSP_feature_setup_widget::on_buttonBox_rejected() {
 	close();
+}
+
+void LSP_feature_setup_widget::keyPressEvent(QKeyEvent *event) {
+	if (event->key() == Qt::Key::Key_Escape) {
+		event->accept();
+		close();
+		return;
+	}
+	QWidget::keyPressEvent(event);
 }
 
 void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {

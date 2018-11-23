@@ -34,6 +34,7 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 
 	private:
 	void closeEvent(QCloseEvent *event) override;
+	void keyPressEvent(QKeyEvent *event) override;
 	void load_tools_from_settings();
 	void save_tools_to_settings() const;
 	bool need_to_save();

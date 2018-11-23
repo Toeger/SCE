@@ -32,6 +32,7 @@ class LSP_feature_setup_widget : public QWidget {
 	W_SLOT(on_buttonBox_rejected)
 
 	private:
+	void keyPressEvent(QKeyEvent *event) override;
 	void update_gui_from_settings_and_LSP_servers();
 	void load_lsp_settings_to_gui();
 	void save_lsp_settings_from_gui();

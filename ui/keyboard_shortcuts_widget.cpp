@@ -4,6 +4,7 @@
 #include "logic/settings.h"
 #include "ui_keyboard_shortcuts_widget.h"
 
+#include <QKeyEvent>
 #include <QKeySequenceEdit>
 
 W_OBJECT_IMPL(Keyboard_shortcuts_widget)
@@ -47,4 +48,13 @@ void Keyboard_shortcuts_widget::on_buttonBox_accepted() {
 void Keyboard_shortcuts_widget::on_buttonBox_rejected() {
 	//TODO: Undo changes
 	close();
+}
+
+void Keyboard_shortcuts_widget::keyPressEvent(QKeyEvent *event) {
+	if (event->key() == Qt::Key::Key_Escape) {
+		event->accept();
+		close();
+		return;
+	}
+	QWidget::keyPressEvent(event);
 }

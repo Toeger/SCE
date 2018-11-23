@@ -151,13 +151,13 @@ void Tool_editor_widget::closeEvent(QCloseEvent *event) {
 	update_current_tool();
 	if (need_to_save()) {
 		const auto decision = QMessageBox::question(this, tr("Save changes?"), tr("Settings for some tools have been changed. Should they be saved?"),
-													QMessageBox::SaveAll | QMessageBox::Ignore | QMessageBox::Cancel);
+													QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 		switch (decision) {
-			case QMessageBox::SaveAll:
+			case QMessageBox::Save:
 				event->accept();
 				on_buttonBox_accepted();
 				return;
-			case QMessageBox::Ignore:
+			case QMessageBox::Discard:
 				event->accept();
 				on_buttonBox_rejected();
 				return;
@@ -168,6 +168,15 @@ void Tool_editor_widget::closeEvent(QCloseEvent *event) {
 				return;
 		}
 	}
+}
+
+void Tool_editor_widget::keyPressEvent(QKeyEvent *event) {
+	if (event->key() == Qt::Key::Key_Escape) {
+		event->accept();
+		close();
+		return;
+	}
+	QWidget::keyPressEvent(event);
 }
 
 void Tool_editor_widget::load_tools_from_settings() {

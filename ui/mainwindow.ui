@@ -89,7 +89,7 @@
   </action>
   <action name="actionOpen_File">
    <property name="text">
-    <string>Open &amp;File</string>
+    <string>Open &amp;File ...</string>
    </property>
   </action>
   <action name="action_Font">

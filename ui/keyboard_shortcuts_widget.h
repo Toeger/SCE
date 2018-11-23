@@ -16,7 +16,7 @@ class Keyboard_shortcuts_widget : public QWidget {
 
 	public:
 	explicit Keyboard_shortcuts_widget(QWidget *parent = nullptr);
-	~Keyboard_shortcuts_widget();
+	~Keyboard_shortcuts_widget() override;
 
 	private slots:
 	void on_buttonBox_accepted();
@@ -25,6 +25,8 @@ class Keyboard_shortcuts_widget : public QWidget {
 	W_SLOT(on_buttonBox_rejected)
 
 	private:
+	void keyPressEvent(QKeyEvent *event) override;
+
 	std::unique_ptr<Ui::Keyboard_shortcuts_widget> __;
 	Gui_pointer<Ui::Keyboard_shortcuts_widget> ui;
 	[[maybe_unused]] Ui::Keyboard_shortcuts_widget *_;
