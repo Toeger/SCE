@@ -61,6 +61,7 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 	W_SLOT(on_type_comboBox_currentIndexChanged)
 
 	private:
+	int current_tool_list_row{};
 	Ui::Tool_editor_widget *_; //Qt Designer only works correctly if it finds this string
 
 	friend struct Tool_editor_widget_tester;

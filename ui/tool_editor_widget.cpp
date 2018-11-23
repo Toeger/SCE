@@ -261,7 +261,9 @@ void Tool_editor_widget::on_tools_listWidget_currentRowChanged(int currentRow) {
 	const auto current_tool = tools[currentRow]; //This copy is important because setting GUI elements will trigger reading the current tool properties from the
 												 //incomplete GUI, which would corrupt our properties. Making a copy keeps the current_tool unchanged from
 												 //whatever the GUI does.
+	ui_to_tool(ui.get(), tools[current_tool_list_row]);
 	tool_to_ui(ui.get(), current_tool);
+	current_tool_list_row = currentRow;
 }
 
 void Tool_editor_widget::on_remove_pushButton_clicked() {
