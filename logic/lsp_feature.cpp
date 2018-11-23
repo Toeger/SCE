@@ -5,18 +5,10 @@
 
 #include <QMenu>
 #include <QMessageBox>
+#include <QTextBlock>
 #include <algorithm>
 #include <array>
 #include <initializer_list>
-
-template <class T>
-T *ptr(std::optional<T> &opt) {
-	return opt.has_value() ? &opt.value() : nullptr;
-}
-template <class T>
-const T *ptr(const std::optional<T> &opt) {
-	return opt.has_value() ? &opt.value() : nullptr;
-}
 
 static std::vector<QMetaObject::Connection> connections;
 
@@ -57,8 +49,8 @@ static void set_up_completion_provider(LSP_feature &f) {
 		 */
 		auto &edit_window = *MainWindow::get_current_edit_window();
 		const auto &text_cursor = edit_window.textCursor();
-		int line = text_cursor.blockNumber();
-		int character = text_cursor.positionInBlock();
+		const int line = text_cursor.blockNumber();
+		const int character = text_cursor.positionInBlock();
 		nlohmann::json params = {{"context", {{"triggerKind", {{"CompletionTriggerKind", "Invoked"}}} /*triggerCharacter = none*/}},
 								 {"textDocument", {{"uri", "file://" + MainWindow::get_current_path().toStdString()}}},
 								 {"position", {{"line", line}, {"character", character}}}};
@@ -76,12 +68,64 @@ static void set_up_completion_provider(LSP_feature &f) {
 			MainWindow::get_main_window().set_status(QObject::tr("LSP error: message: ") + response.error->message.c_str());
 		}
 		if (response.result) {
-			QMessageBox::information(nullptr, "Response", response.result->dump(4).c_str());
+			auto &result = response.result.value();
+			if (result.count("items")) {
+				auto &items = result["items"];
+				if (not items.is_array()) {
+					MainWindow::get_main_window().set_status("Invalid response from LSP server");
+					return;
+				}
+				std::vector<std::string> suggestions;
+				for (auto &item : items) {
+					if (item.count("insertText")) {
+						auto &insert_text = item["insertText"];
+						if (not insert_text.is_string()) {
+							MainWindow::get_main_window().set_status("Invalid response from LSP server");
+							return;
+						}
+						suggestions.push_back(std::move(insert_text));
+					}
+				}
+				if (suggestions.empty()) {
+					MainWindow::get_main_window().set_status("No suggestions");
+					return;
+				}
+				auto apply_suggestion = [&](std::string &suggestion) {
+					const auto text_line = text_cursor.block().text().toStdString();
+					static constexpr char identifier_ender[] = "()[]{} \n\t+-*/&%<>|.,;=";
+					const std::size_t start = std::rend(text_line) - std::find_if(std::rend(text_line) - character, std::rend(text_line), [](char c) {
+												  return std::find(std::begin(identifier_ender), std::end(identifier_ender), c) != std::end(identifier_ender);
+											  });
+					const std::size_t end = std::end(text_line) - std::find_if(std::begin(text_line) + character, std::end(text_line), [](char c) {
+												return std::find(std::begin(identifier_ender), std::end(identifier_ender), c) != std::end(identifier_ender);
+											});
+					auto new_cursor = text_cursor;
+					new_cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, character - start);
+					new_cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, text_line.size() - end - start);
+					edit_window.setTextCursor(new_cursor);
+					edit_window.insertPlainText(QString::fromStdString(suggestion));
+				};
+				if (suggestions.size() == 1) {
+					apply_suggestion(suggestions.front());
+				} else {
+					//got multiple suggestions, make a combobox to choose
+					QMenu menu;
+					for (auto &suggestion : suggestions) {
+						QObject::connect(menu.addAction(suggestion.c_str()), &QAction::triggered,
+										 [&apply_suggestion, &suggestion] { apply_suggestion(suggestion); });
+					}
+					if (result.count("isIncomplete")) {
+						auto &is_incomplete = result["isIncomplete"];
+						if (is_incomplete.is_boolean()) {
+							if (static_cast<bool>(is_incomplete)) {
+								menu.addSection("...");
+							}
+						}
+					}
+					menu.exec(MainWindow::get_current_edit_window()->mapToGlobal(MainWindow::get_current_edit_window()->cursorRect().bottomLeft()));
+				}
+			}
 		}
-		//QMenu menu;
-		//menu.addAction("Test1");
-		//menu.addAction("Test2");
-		//menu.exec(MainWindow::get_current_edit_window()->mapToGlobal(MainWindow::get_current_edit_window()->cursorRect().bottomLeft()));
 	}));
 }
 
@@ -123,22 +167,41 @@ struct File_info {
 
 static std::vector<File_info> file_infos;
 
+static void send_to_clients(const LSP::Notification &notification) {
+	for (auto &[name, client] : LSP::Client::get_clients()) {
+		try {
+			client->notify(notification);
+		} catch (std::exception &e) {
+			MainWindow::get_main_window().set_status("Error notifying LSP client " + name + " with " + notification.method.c_str() + " " + e.what());
+		}
+	}
+}
+
 static void report_file_open_to_lsp_servers(const File_info &fileinfo) {
 	const std::string content = fileinfo.window->get_buffer().toStdString();
 	const LSP::Notification notification = {
 		.method = "textDocument/didOpen",
 		.params = {{"textDocument", {{"uri", "file://" + fileinfo.path}, {"languageId", "cpp"}, {"version", fileinfo.version}, {"text", content}}}},
 	};
-	for (auto &[name, client] : LSP::Client::get_clients()) {
-		try {
-			client->notify(notification);
-			//QMessageBox::information(nullptr, "Opening file", QString::fromStdString(notification.params.dump(4)));
-		} catch (std::exception &e) {
-			MainWindow::get_main_window().set_status("Error notifying LSP client " + name + e.what());
-		}
-	}
+	send_to_clients(notification);
 }
-//static void report_file_change_to_lsp_servers(std::string_view filename, std::string_view diff) {}
+static void report_file_change_to_lsp_servers(File_info &fileinfo, QString old_text, QString new_text) {
+	if (old_text == new_text) {
+		return;
+	}
+	//TODO: Calculate a proper diff instead of just retransferring everything on every change
+	const LSP::Notification notification = {
+		.method = "textDocument/didChange",
+		.params =
+			{
+				{"textDocument", {{"uri", "file://" + fileinfo.path}, {"version", ++fileinfo.version}}},
+				{"contentChanges", {{{"text", new_text.toStdString()}}}},
+			},
+	};
+	//QMessageBox::information(nullptr, "Change event", QString::fromStdString(notification.params.dump(4)));
+	send_to_clients(notification);
+}
+
 static void report_file_close_to_lsp_servers(const File_info &fileinfo) {
 	const std::string content = fileinfo.window->get_buffer().toStdString();
 	const LSP::Notification notification = {
@@ -155,16 +218,26 @@ static void report_file_close_to_lsp_servers(const File_info &fileinfo) {
 	}
 }
 
+static auto get_file_info_iterator_for(Edit_window &w) {
+	auto pos = std::find_if(std::begin(file_infos), std::end(file_infos), [&w](const File_info &fi) { return &w == fi.window; });
+	assert(pos != std::end(file_infos));
+	return pos;
+}
+
 void LSP_feature::setup_all() {
 	apply_to_each([](LSP_feature &f) { f.do_setup(f); });
-	connections.push_back(QObject::connect(&MainWindow::get_main_window(), &MainWindow::file_opened, [](Edit_window *w, std::string path) {
-		file_infos.push_back({std::move(path), w});
+	connections.push_back(QObject::connect(&MainWindow::get_main_window(), &MainWindow::file_opened, [](Edit_window &w, std::string path) {
+		file_infos.push_back({std::move(path), &w});
 		report_file_open_to_lsp_servers(file_infos.back());
-		connections.push_back(QObject::connect(w, &Edit_window::destroyed, [w] {
-			auto pos = std::find_if(std::begin(file_infos), std::end(file_infos), [w](const File_info &fi) { return w == fi.window; });
-			assert(pos != std::end(file_infos));
-			report_file_close_to_lsp_servers(*pos);
-			file_infos.erase(pos);
+		connections.push_back(QObject::connect(&w, &Edit_window::destroyed, [&w] {
+			auto file_info_it = get_file_info_iterator_for(w);
+			report_file_close_to_lsp_servers(*file_info_it);
+			file_infos.erase(file_info_it);
+		}));
+		connections.push_back(QObject::connect(&w, &Edit_window::textChanged, [&w, current_text = w.get_buffer()]() mutable {
+			auto new_text = w.get_buffer();
+			report_file_change_to_lsp_servers(*get_file_info_iterator_for(w), current_text, new_text);
+			current_text = std::move(new_text);
 		}));
 	}));
 }
@@ -178,4 +251,72 @@ void LSP_feature::close_all() {
 
 void LSP_feature::add_all(QWidget &w) {
 	apply_to_each([&w](LSP_feature &f) { w.addAction(&f.action); });
+}
+
+nlohmann::json LSP_feature::get_init_params() {
+	nlohmann::json workspace_client_capabilities = {
+		{"applyEdit", false},
+		{"workspaceEdit", {{"documentChanges", false}, {"resourceOperations", {"create", "rename", "delete"}}, {"failureHandling", {"abort"}}}},
+		{"didChangeConfiguration", {{"dynamicRegistration", false}}},
+		{"didChangeWatchedFiles", {{"dynamicRegistration", false}}},
+		{"symbol", {{"dynamicRegistration", false}}},
+		{"executeCommand", {{"dynamicRegistration", false}}},
+		{"workspaceFolders", false},
+		{"configuration", false},
+	};
+	nlohmann::json text_document_client_capabilities = {
+		{"synchronization", {{"dynamicRegistration", false}, {"willSave", false}, {"willSaveWaitUntil", false}, {"didSave", false}}},
+		{"completion",
+		 {{"dynamicRegistration", false},
+		  {"completionItem",
+		   {{"snippetSupport", false},
+			{"commitCharactersSupport", false},
+			{"documentationFormat", {"plaintext", "markdown"}},
+			{"deprecatedSupport", true},
+			{"preselectSupport", true}}},
+		  {"contextSupport", true}}},
+		{"hover", {{"dynamicRegistration", false}, {"contentFormat", {"plaintext", "markdown"}}}},
+		{"signatureHelp", {{"dynamicRegistration", false}, {"signatureInformation", {{"documentationFormat", {"plaintext", "markdown"}}}}}},
+		{"references", {{"dynamicRegistration", false}}},
+		{"documentHighlight", {{"dynamicRegistration", false}}},
+		{"documentSymbol",
+		 {{"dynamicRegistration", false},
+		  {"symbolKind",
+		   {{"valueSet",
+			 {
+				 "File",   "Module",	"Namespace", "Package",	"Class",	"Method", "Property", "Field",		  "Constructor",
+				 "Enum",   "Interface", "Function",  "Variable",   "Constant", "String", "Number",   "Boolean",		  "Array",
+				 "Object", "Key",		"Null",		 "EnumMember", "Struct",   "Event",  "Operator", "TypeParameter",
+			 }}}},
+		  {"hierarchicalDocumentSymbolSupport", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"rangeFormatting", {{"dynamicRegistration", false}}},
+		{"onTypeFormatting", {{"dynamicRegistration", false}}},
+		{"definition", {{"dynamicRegistration", false}}},
+		{"typeDefinition", {{"dynamicRegistration", false}}},
+		{"implementation", {{"dynamicRegistration", false}}},
+		{"codeAction", {{"dynamicRegistration", false}}},
+		{"codeLens", {{"dynamicRegistration", false}}},
+		{"documentLink", {{"dynamicRegistration", false}}},
+		{"colorProvider", {{"dynamicRegistration", false}}},
+		{"rename", {{"dynamicRegistration", false}, {"prepareSupport", false}}},
+		{"publishDiagnostics", {{"relatedInformation", true}}},
+		{"foldingRange", {{"dynamicRegistration", false}, {"rangeLimit", 100}, {"lineFoldingOnly", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+		{"formatting", {{"dynamicRegistration", false}}},
+	};
+	nlohmann::json client_capabilities = {
+		{"workspace", std::move(workspace_client_capabilities)},
+		{"textDocument", std::move(text_document_client_capabilities)},
+		{"experimental", nullptr},
+	};
+	return {
+		{"processId", getpid()},
+		{"rootUri", nullptr}, //TODO: change this to project directory once we have such a thing
+		{"capabilities", std::move(client_capabilities)},
+		{"trace", "off"},
+	};
 }

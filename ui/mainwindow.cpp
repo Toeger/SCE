@@ -193,7 +193,7 @@ void MainWindow::add_file_tab(const QString &filename) {
 	file.open(QFile::ReadOnly);
 	if (file.isOpen()) {
 		file_edit->setPlainText(file.readAll());
-		emit file_opened(file_edit.get(), filename.toStdString());
+		emit file_opened(*file_edit.get(), filename.toStdString());
 	} else {
 		file_edit->setPlaceholderText(tr("Failed reading file %1").arg(filename));
 	}

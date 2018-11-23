@@ -28,6 +28,7 @@ struct LSP_feature {
 	static void setup_all();
 	static void close_all();
 	static void add_all(QWidget &w);
+	static nlohmann::json get_init_params();
 
 	private:
 	void (*const do_setup)(LSP_feature &);
