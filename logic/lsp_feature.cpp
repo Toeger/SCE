@@ -18,7 +18,9 @@ static void set_up_completion_provider(LSP_feature &f) {
 	connections.push_back(QObject::connect(&action, &QAction::triggered, [&f] {
 		if (f.clients.empty()) {
 			MainWindow::get_main_window().set_status(
-				QObject::tr("Warning: Action \"%1\" triggered, but no LSP server selected for that action.").arg(f.description));
+				QObject::tr("Warning: Action \"%1\" triggered, but no LSP server selected for that action."
+							"<br><a href=\"add server\">Add an LSP server</a> or <a href=\"lsp features\">activate an LSP feature</a>.")
+					.arg(f.description));
 			return;
 		}
 		/* textDocument/completion {
@@ -55,7 +57,6 @@ static void set_up_completion_provider(LSP_feature &f) {
 								 {"textDocument", {{"uri", "file://" + MainWindow::get_current_path().toStdString()}}},
 								 {"position", {{"line", line}, {"character", character}}}};
 
-		//QMessageBox::information(nullptr, "Json Params", params.dump(4).c_str());
 		LSP::Response response;
 		try {
 			LSP::Request request{.method = "textDocument/completion", .params = std::move(params)};
@@ -131,7 +132,7 @@ static void set_up_completion_provider(LSP_feature &f) {
 										 [&apply_suggestion, &suggestion] { apply_suggestion(suggestion); });
 					}
 					if (suggestion_list_incomplete) {
-						menu.addAction("...");
+						menu.addAction("..."); //TODO: Attach the "Load more suggestions" action
 					}
 					menu.exec(MainWindow::get_current_edit_window()->mapToGlobal(MainWindow::get_current_edit_window()->cursorRect().bottomLeft()));
 				}

@@ -16,6 +16,7 @@
 #include <QFontDialog>
 #include <QFontMetrics>
 #include <QTabBar>
+#include <QTimer>
 #include <cassert>
 #include <iostream>
 #include <sce.pb.h>
@@ -121,13 +122,34 @@ void MainWindow::close_rpc_server() {
 }
 
 void MainWindow::set_status(QString text) {
-	/* Reading speed:
+	/* Average reading speed:
 	 * ~200 words per minute
 	 * ~1600 characters per minute
 	 * ~26.6 characters per second
 	 * To give people enough time to figure out a message carefully, we assume 10 characters per second
 	 */
-	ui->statusBar->showMessage(text, std::max(3000, 1000 + text.size() * 100));
+	constexpr auto characters_per_second = 10;
+	constexpr auto seconds = 1000;
+	thread_check();
+	auto label = std::make_unique<QLabel>(text);
+	label->setFont(ui->statusBar->font());
+	label->setTextInteractionFlags(Qt::TextBrowserInteraction);
+	static const QRegExp html_tag_regex{"<[^>]*>"};
+	QTimer::singleShot(std::max(3 * seconds, 1 * seconds + text.replace(html_tag_regex, "").size() * seconds / characters_per_second), [this, w = label.get()] {
+		thread_check();
+		if (status_widget.get() == w) {
+			status_widget = nullptr;
+		}
+	});
+	connect(label.get(), &QLabel::linkActivated, [this](const QString &link) {
+		if (link == "add server") {
+			on_action_Edit_triggered();
+		} else if (link == "lsp features") {
+			on_actionLSP_Setup_triggered();
+		}
+	});
+	status_widget = std::move(label);
+	ui->statusBar->addWidget(status_widget.get());
 }
 
 void MainWindow::on_actionOpen_File_triggered() {

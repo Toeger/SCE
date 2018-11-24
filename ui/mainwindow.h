@@ -79,6 +79,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	RPC_server rpc_server;
 
 	private:
+	std::unique_ptr<QWidget> status_widget;
 	Ui::MainWindow *_; //Qt Designer only works correctly if it finds this string
 
 	friend struct MainWindow_tester;
