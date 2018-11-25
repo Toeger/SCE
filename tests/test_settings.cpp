@@ -1,3 +1,4 @@
+#include "TMP/type_list.h"
 #include "logic/settings.h"
 #include "test.h"
 
@@ -13,7 +14,7 @@ TEST_CASE("Testing settings", "[settings]") {
 		REQUIRE(std::adjacent_find(std::begin(names), std::end(names)) == std::end(names));
 	}
 	WHEN("Checking that the number of key names matches the number of key types") {
-		REQUIRE(Settings::Key_names.size() == std::tuple_size<Settings::Key_types>::value);
+		REQUIRE(Settings::Key_names.size() == Settings::Key_types::size);
 	}
 	WHEN("Testing the settings keeper") {
 		auto get_sorted_keys = [] {
@@ -38,8 +39,8 @@ TEST_CASE("Testing settings", "[settings]") {
 			QSettings{}.setValue(test_key_add, "");
 			QSettings{}.setValue(test_key_modify_value, "something");
 		}
-		CHECK_FALSE(QSettings{}.allKeys().contains(test_key_add));                       //make sure added keys are removed
-		CHECK(QSettings{}.allKeys().contains(test_key_remove));                          //make sure removed keys are restored
+		CHECK_FALSE(QSettings{}.allKeys().contains(test_key_add));						 //make sure added keys are removed
+		CHECK(QSettings{}.allKeys().contains(test_key_remove));							 //make sure removed keys are restored
 		REQUIRE(QSettings{}.value(test_key_remove).toString() == test_key_remove_value); //with the right value
 		QSettings{}.remove(test_key_remove);
 		REQUIRE(QSettings{}.value(test_key_modify).toString() == test_key_modify_value); //make sure modified keys are restored to their original value

@@ -6,7 +6,6 @@
 #include <QString>
 #include <array>
 #include <chrono>
-#include <tuple>
 
 class QJsonObject;
 

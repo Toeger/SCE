@@ -2,6 +2,7 @@
 #define SETTINGS_H
 
 #include "external/TMP/traits.h"
+#include "external/TMP/type_list.h"
 #include "tool.h"
 
 #include <QSettings>
@@ -11,15 +12,7 @@
 #include <array>
 #include <map>
 #include <string>
-#include <tuple>
 #include <vector>
-
-template <typename T, typename Tuple>
-struct has_type;
-template <typename T, typename... Us>
-struct has_type<T, std::tuple<Us...>> : std::disjunction<std::is_same<T, Us>...> {};
-template <class T, class... Us>
-constexpr bool has_type_v = has_type<T, Us...>::value;
 
 //helpers for QSettings' persistent storage
 namespace Settings {
@@ -27,7 +20,7 @@ namespace Settings {
 		1. Add a value to the Key enum.
 		2. Add a name to the Key_names.
 		3. Add the type of the value to Key_types.
-		The indexes must match (Key_names[key] must produce the correct name for that key and tuple_element_t<key, Key_types> must give us the right type).
+		The indexes must match (Key_names[key] must produce the correct name for that key and Key_types::at<key> must give us the right type).
 		TODO: Someone figure out how to do this in 1 step without overhead or ugly macros.
 		If you add new types you will also need to add cases for the get and set functions in order to (de)serialize those types.
 	*/
@@ -45,8 +38,8 @@ namespace Settings {
 	const std::array Key_names = {
 		"files", "current_file", "font", "tools", "lsp_functions",
 	};
-	using Key_types = std::tuple<QStringList /*files*/, int /*current_file*/, QString /*font*/, std::vector<Tool> /*tools*/,
-								 std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>> /*lsp_functions*/;
+	using Key_types = TMP::Type_list<QStringList /*files*/, int /*current_file*/, QString /*font*/, std::vector<Tool> /*tools*/,
+									 std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>> /*lsp_functions*/;
 
 	//get and set values in a semi-type-safe manner
 	template <class Return_type>
@@ -84,13 +77,13 @@ namespace Settings {
 			return Return_type{v};
 		}
 	}
-	template <Key::Key key, class Default_type, class Return_type = std::tuple_element_t<key, Key_types>>
+	template <Key::Key key, class..., class Default_type, class Return_type = Key_types::at<key>>
 	Return_type get(const Default_type &default_value) {
 		return get<Return_type>(QSettings{}.value(Key_names[key], default_value));
 	}
-	template <Key::Key key, class Return_type = std::tuple_element_t<key, Key_types>>
+	template <Key::Key key, class..., class Return_type = Key_types::at<key>>
 	Return_type get() {
-		static_assert(has_type_v<Return_type, Key_types>, "Missing code to deal with this Return_type");
+		static_assert(Key_types::contains_v<Return_type>, "Missing code to deal with this Return_type");
 		return get<key>(QVariant{});
 	}
 
@@ -122,7 +115,7 @@ namespace Settings {
 			return t;
 		}
 	}
-	template <Key::Key key, class T = std::tuple_element_t<key, Key_types>>
+	template <Key::Key key, class T = typename Key_types::at<key>>
 	void set(const T &t) {
 		QSettings{}.setValue(Key_names[key], to_variant(t));
 	}
