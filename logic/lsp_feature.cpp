@@ -179,24 +179,28 @@ struct File_info {
 
 static std::vector<File_info> file_infos;
 
-static void send_to_clients(const LSP::Notification &notification) {
+static void send_to_lsp_server(const LSP::Notification &notification, LSP::Client &client) {
+	client.notify(notification);
+}
+
+static void send_to_all_lsp_servers(const LSP::Notification &notification) {
 	for (auto &[name, client] : LSP::Client::get_clients()) {
 		try {
-			client->notify(notification);
+			send_to_lsp_server(notification, *client);
 		} catch (std::exception &e) {
 			MainWindow::get_main_window().set_status("Error notifying LSP client " + name + " with " + notification.method.c_str() + " " + e.what());
 		}
 	}
 }
 
-static void report_file_open_to_lsp_servers(const File_info &fileinfo) {
+static LSP::Notification get_file_open_notification(const File_info &fileinfo) {
 	const std::string content = fileinfo.window->get_buffer().toStdString();
-	const LSP::Notification notification = {
+	return {
 		.method = "textDocument/didOpen",
 		.params = {{"textDocument", {{"uri", "file://" + fileinfo.path}, {"languageId", "cpp"}, {"version", fileinfo.version}, {"text", content}}}},
 	};
-	send_to_clients(notification);
 }
+
 static void report_file_change_to_lsp_servers(File_info &fileinfo, QString old_text, QString new_text) {
 	if (old_text == new_text) {
 		return;
@@ -210,8 +214,7 @@ static void report_file_change_to_lsp_servers(File_info &fileinfo, QString old_t
 				{"contentChanges", {{{"text", new_text.toStdString()}}}},
 			},
 	};
-	//QMessageBox::information(nullptr, "Change event", QString::fromStdString(notification.params.dump(4)));
-	send_to_clients(notification);
+	send_to_all_lsp_servers(notification);
 }
 
 static void report_file_close_to_lsp_servers(const File_info &fileinfo) {
@@ -236,11 +239,10 @@ static auto get_file_info_iterator_for(Edit_window &w) {
 	return pos;
 }
 
-void LSP_feature::setup_all() {
+void LSP_feature::init_all_features() {
 	apply_to_each([](LSP_feature &f) { f.do_setup(f); });
 	connections.push_back(QObject::connect(&MainWindow::get_main_window(), &MainWindow::file_opened, [](Edit_window &w, std::string path) {
 		file_infos.push_back({std::move(path), &w});
-		report_file_open_to_lsp_servers(file_infos.back());
 		connections.push_back(QObject::connect(&w, &Edit_window::destroyed, [&w] {
 			auto file_info_it = get_file_info_iterator_for(w);
 			report_file_close_to_lsp_servers(*file_info_it);
@@ -251,10 +253,11 @@ void LSP_feature::setup_all() {
 			report_file_change_to_lsp_servers(*get_file_info_iterator_for(w), current_text, new_text);
 			current_text = std::move(new_text);
 		}));
+		send_to_all_lsp_servers(get_file_open_notification(file_infos.back()));
 	}));
 }
 
-void LSP_feature::close_all() {
+void LSP_feature::exit_all_features() {
 	for (auto connection : connections) {
 		QObject::disconnect(connection);
 	}
@@ -263,6 +266,12 @@ void LSP_feature::close_all() {
 
 void LSP_feature::add_all(QWidget &w) {
 	apply_to_each([&w](LSP_feature &f) { w.addAction(&f.action); });
+}
+
+void LSP_feature::add_lsp_server(LSP::Client &client) {
+	for (auto &file_info : file_infos) {
+		send_to_lsp_server(get_file_open_notification(file_info), client);
+	}
 }
 
 nlohmann::json LSP_feature::get_init_params() {

@@ -10,8 +10,10 @@
 #include <optional>
 #include <string>
 
+#include "logic/lsp_feature.h"
 #include "logic/process_reader.h"
 #include "logic/tool.h"
+#include "threading/thread_call.h"
 
 namespace LSP {
 	struct Request {
@@ -58,6 +60,7 @@ namespace LSP {
 			auto it = clients.find(tool.path);
 			if (it == std::end(clients)) {
 				it = clients.emplace(tool.path, std::make_shared<Client>(tool)).first;
+				Utility::async_gui_thread_execute([server = it->second] { LSP_feature::add_lsp_server(*server); });
 			}
 			return it->second;
 		}

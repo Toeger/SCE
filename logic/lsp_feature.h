@@ -2,14 +2,19 @@
 #define LSP_FEATURE_H
 
 #include "external/TMP/callable.h"
-#include "interop/language_server_protocol.h"
+#include "external/json.hpp"
 
 #include <QAction>
 #include <QKeySequence>
 #include <QString>
 #include <memory>
 #include <string_view>
+#include <type_traits>
 #include <vector>
+
+namespace LSP {
+	struct Client;
+}
 
 struct LSP_feature {
 	const std::string_view name;
@@ -25,9 +30,12 @@ struct LSP_feature {
 
 	static LSP_feature *lookup(std::string_view name);
 	static void apply_to_each(TMP::Function_ref<void(LSP_feature &)> callback);
-	static void setup_all();
-	static void close_all();
+	//init and exit should be covered by RAII, but is not, because we cannot use Qt stuff like connections until a QApplication exists, so we have to delay init
+	static void init_all_features();
+	static void exit_all_features();
 	static void add_all(QWidget &w);
+
+	static void add_lsp_server(LSP::Client &client);
 	static nlohmann::json get_init_params();
 
 	private:

@@ -56,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent)
 	main_window = this;
 	ui->setupUi(this);
 	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
-	LSP_feature::setup_all();
+	LSP_feature::init_all_features();
 	LSP_feature_setup_widget::update_lsp_features_from_settings();
 	load_last_files();
 }
@@ -66,7 +66,7 @@ MainWindow::~MainWindow() {
 		disconnect(connection);
 	}
 	save_last_files();
-	LSP_feature::close_all();
+	LSP_feature::exit_all_features();
 }
 
 Edit_window *MainWindow::get_current_edit_window() {
