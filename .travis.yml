@@ -9,7 +9,7 @@ services:
 
 before_install:
     # last line
-    - alias ll='while read i; do echo -en "\\r\\033[K$i"; done'
+    - alias -g ll='while read i; do echo -en "\\r\\033[K$i"; done'
     - set -o pipefail
     # set sources
     - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
