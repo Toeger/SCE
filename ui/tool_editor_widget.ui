@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>699</width>
-    <height>458</height>
+    <height>591</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -55,231 +55,246 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <layout class="QGridLayout" name="tool_properties_gridLayout">
-       <item row="10" column="1">
-        <widget class="QLabel" name="current_file_path_explanation_label">
-         <property name="text">
-          <string>Full path to current file</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QComboBox" name="output_comboBox"/>
-       </item>
-       <item row="0" column="0">
-        <widget class="Helptext_label_widget" name="type_label">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="text">
-          <string>Type</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="Helptext_label_widget" name="working_dir_label">
-         <property name="text">
-          <string>Working Dir</string>
-         </property>
-        </widget>
-       </item>
-       <item row="12" column="0">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="working_dir_lineEdit">
-         <property name="placeholderText">
-          <string>Where to run the tool</string>
-         </property>
-         <property name="clearButtonEnabled">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <layout class="QHBoxLayout" name="path_horizontalLayout">
-         <item>
-          <widget class="QLineEdit" name="path_lineEdit">
-           <property name="placeholderText">
-            <string>Path to executable</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="path_browse_pushButton">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>...</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="type_comboBox">
-         <item>
-          <property name="text">
-           <string>Generic</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>LSP Server</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="Helptext_label_widget" name="arguments_label">
-         <property name="text">
-          <string>Arguments</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0">
-        <widget class="Helptext_label_widget" name="timeout_label">
-         <property name="text">
-          <string>Timeout</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
-        <widget class="Helptext_label_widget" name="activation_label">
-         <property name="text">
-          <string>Activation</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLineEdit" name="input_lineEdit">
-         <property name="placeholderText">
-          <string>Standard input</string>
-         </property>
-         <property name="clearButtonEnabled">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="Helptext_label_widget" name="input_label">
-         <property name="toolTip">
-          <string/>
-         </property>
-         <property name="text">
-          <string>Standard Input</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="0">
-        <widget class="Helptext_label_widget" name="current_file_path_placeholder_label">
-         <property name="text">
-          <string>$FilePath</string>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="1">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QComboBox" name="activation_comboBox"/>
-         </item>
-         <item>
-          <widget class="QKeySequenceEdit" name="activation_keySequenceEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="6" column="1">
-        <widget class="QComboBox" name="error_comboBox"/>
-       </item>
-       <item row="8" column="1">
-        <widget class="QDoubleSpinBox" name="timeout_doubleSpinBox">
-         <property name="suffix">
-          <string>s</string>
-         </property>
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <double>86400.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="arguments_lineEdit">
-         <property name="placeholderText">
-          <string>Command line arguments</string>
-         </property>
-         <property name="clearButtonEnabled">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="Helptext_label_widget" name="error_label">
-         <property name="text">
-          <string>Standard Error</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="Helptext_label_widget" name="path_label">
-         <property name="text">
-          <string>Path</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="0" colspan="2">
-        <widget class="QLabel" name="variables_label">
-         <property name="text">
-          <string>Variables</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="Helptext_label_widget" name="output_label">
-         <property name="text">
-          <string>Standard Output</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="0">
-        <widget class="Helptext_label_widget" name="selection_placeholder_label">
-         <property name="text">
-          <string>$Selection</string>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="1">
-        <widget class="QLabel" name="selection_explanation_label">
-         <property name="text">
-          <string>Currently selected text</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QGroupBox" name="enabled_groupBox">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="title">
+        <string>Enabled</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <layout class="QGridLayout" name="tool_properties_gridLayout">
+          <item row="7" column="1">
+           <widget class="QComboBox" name="output_comboBox"/>
+          </item>
+          <item row="10" column="0">
+           <widget class="Helptext_label_widget" name="timeout_label">
+            <property name="text">
+             <string>Timeout</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="type_comboBox">
+            <item>
+             <property name="text">
+              <string>Generic</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>LSP Server</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="Helptext_label_widget" name="type_label">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Type</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QDoubleSpinBox" name="timeout_doubleSpinBox">
+            <property name="suffix">
+             <string>s</string>
+            </property>
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="maximum">
+             <double>86400.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1">
+           <widget class="QLabel" name="current_file_path_explanation_label">
+            <property name="text">
+             <string>Full path to current file</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="Helptext_label_widget" name="error_label">
+            <property name="text">
+             <string>Standard Error</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0" colspan="2">
+           <widget class="QLabel" name="variables_label">
+            <property name="text">
+             <string>Variables</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="Helptext_label_widget" name="output_label">
+            <property name="text">
+             <string>Standard Output</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLineEdit" name="working_dir_lineEdit">
+            <property name="placeholderText">
+             <string>Where to run the tool</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
+           <widget class="Helptext_label_widget" name="selection_placeholder_label">
+            <property name="text">
+             <string>$Selection</string>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <layout class="QHBoxLayout" name="path_horizontalLayout">
+            <item>
+             <widget class="QLineEdit" name="path_lineEdit">
+              <property name="placeholderText">
+               <string>Path to executable</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="path_browse_pushButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="4" column="0">
+           <widget class="Helptext_label_widget" name="working_dir_label">
+            <property name="text">
+             <string>Working Dir</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="Helptext_label_widget" name="arguments_label">
+            <property name="text">
+             <string>Arguments</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="Helptext_label_widget" name="input_label">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Standard Input</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="Helptext_label_widget" name="activation_label">
+            <property name="text">
+             <string>Activation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QComboBox" name="activation_comboBox"/>
+            </item>
+            <item>
+             <widget class="QKeySequenceEdit" name="activation_keySequenceEdit"/>
+            </item>
+           </layout>
+          </item>
+          <item row="13" column="1">
+           <widget class="QLabel" name="selection_explanation_label">
+            <property name="text">
+             <string>Currently selected text</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QComboBox" name="error_comboBox"/>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLineEdit" name="input_lineEdit">
+            <property name="placeholderText">
+             <string>Standard input</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="Helptext_label_widget" name="path_label">
+            <property name="text">
+             <string>Path</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QLineEdit" name="arguments_lineEdit">
+            <property name="placeholderText">
+             <string>Command line arguments</string>
+            </property>
+            <property name="clearButtonEnabled">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="Helptext_label_widget" name="current_file_path_placeholder_label">
+            <property name="text">
+             <string>$FilePath</string>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">

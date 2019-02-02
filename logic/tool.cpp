@@ -6,6 +6,7 @@
 #include <QStringList>
 
 #define TOOL_MEMBERS /*someone please replace this with something sane*/                                                                                       \
+	X(enabled)                                                                                                                                                 \
 	X(type)                                                                                                                                                    \
 	X(path)                                                                                                                                                    \
 	X(arguments)                                                                                                                                               \

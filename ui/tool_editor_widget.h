@@ -27,20 +27,20 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 	public slots:
 	void update_tools_list();
 	W_SLOT(update_tools_list)
-	void update_current_tool();
-	W_SLOT(update_current_tool)
-	void update_current_tool_name();
-	W_SLOT(update_current_tool_name)
+	void update_current_tool_from_ui();
+	W_SLOT(update_current_tool_from_ui)
+	void update_tool_name(int index);
+	W_SLOT(update_tool_name)
 
 	private:
 	void closeEvent(QCloseEvent *event) override;
 	void keyPressEvent(QKeyEvent *event) override;
-	void load_tools_from_settings();
-	void save_tools_to_settings() const;
+	void save_tools_to_settings();
 	bool need_to_save();
 	void set_tool_ui(Tool::Tool_type type);
 
-	std::vector<Tool> tools;
+	std::vector<Tool> saved_tools; //the tools that are saved in settings
+	std::vector<Tool> ui_tools;	//the tools that may have been changed in the UI but not saved in settings yet
 	std::unique_ptr<Ui::Tool_editor_widget> ui;
 
 	private slots:

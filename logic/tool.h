@@ -37,6 +37,7 @@ struct Tool { //how to use an external tool such as a compiler. It specifies inp
 	QKeySequence activation_keyboard_shortcut{};
 	std::chrono::milliseconds timeout{};
 	bool use_tty_mode = true;
+	bool enabled = true;
 
 	QString to_string() const;
 	static Tool from_string(const QString &data);
