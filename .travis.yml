@@ -9,8 +9,11 @@ services:
 
 before_install:
     # last line
-    - alias -g ll='while read i; do echo -en "\\r\\033[K$i"; done'
     - set -o pipefail
+    # quietly
+    - wget https://github.com/Toeger/quietly/raw/master/quietly
+    - chmod +x quietly
+    - sudo mv quietly /usr/bin
     # set sources
     - sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
     - sudo add-apt-repository -y ppa:beineri/opt-qt-5.11.2-xenial
@@ -31,8 +34,6 @@ before_install:
     - PACKAGES=${PACKAGES}"python3.5 "
     # Qt
     - PACKAGES=${PACKAGES}"qt511-meta-minimal mesa-common-dev "
-    # protobuf
-    - git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc | ll
     # cmake
     - PACKAGES=${PACKAGES}"cmake "
     # Update sources
@@ -41,7 +42,7 @@ before_install:
 install:
     # install packages
     - echo "Installing "${PACKAGES}
-    - sudo apt-get install ${PACKAGES} | ll
+    - sudo quietly apt-get install ${PACKAGES}
     # gcc
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
@@ -57,9 +58,10 @@ install:
     - which clang++
     - which g++
     # protobuf
+    - quietly git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc
     - cd grpc && mkdir build && cd build
-    - cmake .. -G Ninja | ll || { printf "Output log:\n-----------\n" && cat CMakeFiles/CMakeOutput.log && printf "Error log\n---------\n" && cat CMakeFiles/CMakeError.log && false; }
-    - sudo ninja install | ll
+    - quietly cmake .. -G Ninja
+    - sudo quietly ninja install
     - sudo cp grpc_* /usr/local/bin
     - sudo cp *.a /usr/local/lib
     - cd ../..
@@ -95,7 +97,7 @@ before_script:
     - echo $PATH
     # set up python environment
     - mkdir build && cd build
-    - cmake -G Ninja .. | ll || { printf "Output log:\n-----------\n" && cat CMakeFiles/CMakeOutput.log && printf "Error log\n---------\n" && cat CMakeFiles/CMakeError.log && false; }
+    - quietly cmake -G Ninja ..
     - ninja python_environment
     - cd .. && rm -R build
 
