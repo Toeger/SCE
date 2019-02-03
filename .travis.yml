@@ -20,7 +20,7 @@ before_install:
     # tell apt to allow parallel downloads and retry on a failed network connection
     - sudo sh -c "printf 'Acquire::Queue-Mode "host";\\nAcquire::Retries 10;\\n' >> /etc/apt/apt.conf"
     # gcc
-    - PACKAGES=${PACKAGES}"gcc-8 g++-8 "
+    - PACKAGES=${PACKAGES}"gcc-7 g++-7 "
     # gdb
     - PACKAGES=${PACKAGES}"gdb "
     # ninja
@@ -44,8 +44,8 @@ install:
     - echo "Installing "${PACKAGES}
     - sudo quietly apt-get install ${PACKAGES}
     # gcc
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
-    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
+    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
+    - sudo update-alternatives --install /usr/g++bin/gcc gcc /usr/bin/gcc-7 90
     # clang
     - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 90
     - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6.0 90
