@@ -58,13 +58,9 @@ install:
     - which clang++
     - which g++
     # protobuf
-    - pwd
     - quietly git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc
-    - pwd
     - cd grpc && mkdir build && cd build
-    - pwd
     - CXX=clang++ CC=clang quietly cmake .. -G Ninja
-    - pwd
     - sudo quietly ninja install
     - sudo cp grpc_* /usr/local/bin
     - sudo cp *.a /usr/local/lib
@@ -97,8 +93,11 @@ before_script:
     - clangd --version
     - echo $PATH
     # set up python environment
+    - pwd
     - mkdir build && cd build
+    - pwd
     - quietly cmake -G Ninja ..
+    - pwd
     - ninja python_environment
     - cd .. && rm -R build
 
