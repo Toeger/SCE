@@ -56,13 +56,13 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 		if (DEFINED ENV{TRAVIS})
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unreachable-code") #temporarily disable unreachable warning for clang-6.0.1
 		endif()
+		#disable annoying warnings
+		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-extra-semi")
+		endif()
 		if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-extra-semi-stmt")
 		endif()
-        #disable annoying warnings
-        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.9)
-             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-extra-semi")
-        endif()
 	endif()
 	#disable annoying warnings
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-missing-braces -Wno-sign-compare")
@@ -139,9 +139,7 @@ set(SCE_SRC
 set(SCE_TEST_SRC
 	${SCE_SRC}
 	tests/test.cpp
-	tests/test_edit_window.cpp
 	tests/test_language_server_protocol.cpp
-	tests/test_lsp_feature.cpp
 	tests/test_mainwindow.cpp
 	tests/test_notification_server.cpp
 	tests/test_process_reader.cpp
