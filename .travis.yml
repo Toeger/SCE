@@ -69,9 +69,6 @@ install:
     - echo $GRPC_LIBS
 
 before_script:
-    # Display
-    - export DISPLAY=:99.0
-    - sh -e /etc/init.d/xvfb start
     # Qt
     - source /opt/qt511/bin/qt511-env.sh
     - export QT_FATAL_WARNINGS=1
@@ -102,8 +99,7 @@ before_script:
     - cd .. && rm -R build
 
 script:
-    #disable ccache here because of permission issues
-    - ./run_all_test_configurations.sh
+    - xvfb-run sh run_all_test_configurations.sh
 
 after_script:
     # ccache stats
