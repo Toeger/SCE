@@ -60,7 +60,7 @@ install:
     # protobuf
     - quietly git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc
     - cd grpc && mkdir build && cd build
-    - quietly -sh CXX=clang++ CC=clang cmake .. -G Ninja
+    - CXX=clang++ CC=clang quietly cmake .. -G Ninja
     - sudo quietly ninja install
     - sudo cp grpc_* /usr/local/bin
     - sudo cp *.a /usr/local/lib
