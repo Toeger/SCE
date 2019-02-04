@@ -2,7 +2,7 @@ language: cpp
 dist: xenial
 
 cache:
-    ccache: true
+    ccache: false
 
 services:
   - xvfb
