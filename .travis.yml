@@ -99,7 +99,7 @@ before_script:
     - cd .. && rm -R build
 
 script:
-    - xvfb-run sh run_all_test_configurations.sh
+    - xvfb-run -a sh run_all_test_configurations.sh
 
 after_script:
     # ccache stats
