@@ -12,10 +12,15 @@
 
 static std::vector<QMetaObject::Connection> connections;
 
+template <class... Args>
+void autoconnect(Args &&... args) {
+	connections.push_back(QObject::connect(args...));
+}
+
 static void set_up_completion_provider(LSP_feature &f) {
 	auto &action = f.action;
 	action.setShortcuts({f.activation1, f.activation2});
-	connections.push_back(QObject::connect(&action, &QAction::triggered, [&f] {
+	autoconnect(&action, &QAction::triggered, [&f] {
 		if (f.clients.empty()) {
 			MainWindow::get_main_window().set_status(
 				QObject::tr("Warning: Action \"%1\" triggered, but no LSP server selected for that action."
@@ -138,7 +143,7 @@ static void set_up_completion_provider(LSP_feature &f) {
 				}
 			}
 		}
-	}));
+	});
 }
 
 static LSP_feature lsp_features[] = {{
@@ -201,17 +206,20 @@ static LSP::Notification get_file_open_notification(const File_info &fileinfo) {
 	};
 }
 
-static void report_file_change_to_lsp_servers(File_info &fileinfo, QString old_text, QString new_text) {
-	if (old_text == new_text) {
-		return;
-	}
-	//TODO: Calculate a proper diff instead of just retransferring everything on every change
+static void report_file_change_to_lsp_servers(File_info &fileinfo, const Edit_window::Edit &edit) {
 	const LSP::Notification notification = {
 		.method = "textDocument/didChange",
 		.params =
 			{
 				{"textDocument", {{"uri", "file://" + fileinfo.path}, {"version", ++fileinfo.version}}},
-				{"contentChanges", {{{"text", new_text.toStdString()}}}},
+				{"contentChanges",
+				 {{
+					 {"text", edit.added},
+					 {"range",
+					  {{"start", {{"line", edit.start.line}, {"character", edit.start.character}}},
+					   {"end", {{"line", edit.end.line}, {"character", edit.end.character}}}}},
+					 {"rangeLength", edit.length},
+				 }}},
 			},
 	};
 	send_to_all_lsp_servers(notification);
@@ -241,20 +249,16 @@ static auto get_file_info_iterator_for(Edit_window &w) {
 
 void LSP_feature::init_all_features() {
 	apply_to_each([](LSP_feature &f) { f.do_setup(f); });
-	connections.push_back(QObject::connect(&MainWindow::get_main_window(), &MainWindow::file_opened, [](Edit_window &w, std::string path) {
+	autoconnect(&MainWindow::get_main_window(), &MainWindow::file_opened, [](Edit_window &w, std::string path) {
 		file_infos.push_back({std::move(path), &w});
-		connections.push_back(QObject::connect(&w, &Edit_window::destroyed, [&w] {
+		autoconnect(&w, &Edit_window::destroyed, [&w] {
 			auto file_info_it = get_file_info_iterator_for(w);
 			report_file_close_to_lsp_servers(*file_info_it);
 			file_infos.erase(file_info_it);
-		}));
-		connections.push_back(QObject::connect(&w, &Edit_window::textChanged, [&w, current_text = w.get_buffer()]() mutable {
-			auto new_text = w.get_buffer();
-			report_file_change_to_lsp_servers(*get_file_info_iterator_for(w), current_text, new_text);
-			current_text = std::move(new_text);
-		}));
+		});
+		autoconnect(&w, &Edit_window::edited, [&w](const Edit_window::Edit &edit) { report_file_change_to_lsp_servers(*get_file_info_iterator_for(w), edit); });
 		send_to_all_lsp_servers(get_file_open_notification(file_infos.back()));
-	}));
+	});
 }
 
 void LSP_feature::exit_all_features() {
@@ -277,7 +281,7 @@ void LSP_feature::add_lsp_server(LSP::Client &client) {
 nlohmann::json LSP_feature::get_init_params() {
 	nlohmann::json workspace_client_capabilities = {
 		{"applyEdit", false},
-		{"workspaceEdit", {{"documentChanges", false}, {"resourceOperations", {"create", "rename", "delete"}}, {"failureHandling", {"abort"}}}},
+		{"workspaceEdit", {{"documentChanges", true}, {"resourceOperations", {"create", "rename", "delete"}}, {"failureHandling", {"abort"}}}},
 		{"didChangeConfiguration", {{"dynamicRegistration", false}}},
 		{"didChangeWatchedFiles", {{"dynamicRegistration", false}}},
 		{"symbol", {{"dynamicRegistration", false}}},
@@ -286,9 +290,9 @@ nlohmann::json LSP_feature::get_init_params() {
 		{"configuration", false},
 	};
 	nlohmann::json text_document_client_capabilities = {
-		{"synchronization", {{"dynamicRegistration", false}, {"willSave", false}, {"willSaveWaitUntil", false}, {"didSave", false}}},
+		{"synchronization", {{"dynamicRegistration", true}, {"willSave", true}, {"willSaveWaitUntil", true}, {"didSave", true}}},
 		{"completion",
-		 {{"dynamicRegistration", false},
+		 {{"dynamicRegistration", true},
 		  {"completionItem",
 		   {{"snippetSupport", false},
 			{"commitCharactersSupport", false},
@@ -323,11 +327,6 @@ nlohmann::json LSP_feature::get_init_params() {
 		{"rename", {{"dynamicRegistration", false}, {"prepareSupport", false}}},
 		{"publishDiagnostics", {{"relatedInformation", true}}},
 		{"foldingRange", {{"dynamicRegistration", false}, {"rangeLimit", 100}, {"lineFoldingOnly", false}}},
-		{"formatting", {{"dynamicRegistration", false}}},
-		{"formatting", {{"dynamicRegistration", false}}},
-		{"formatting", {{"dynamicRegistration", false}}},
-		{"formatting", {{"dynamicRegistration", false}}},
-		{"formatting", {{"dynamicRegistration", false}}},
 	};
 	nlohmann::json client_capabilities = {
 		{"workspace", std::move(workspace_client_capabilities)},
