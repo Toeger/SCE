@@ -140,7 +140,7 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		std::optional<nlohmann::json> capabilities;
 		try {
 			capabilities = LSP::Client::get_client_from_cache(tool)->capabilities;
-		} catch (const std::runtime_error &e) {
+		} catch (const std::exception &e) {
 			add_features({QObject::tr("Failed getting capabilities for %1: %2").arg(tool.get_name()).arg(e.what()), tool_index++});
 			continue;
 		}

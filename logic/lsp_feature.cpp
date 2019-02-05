@@ -66,7 +66,7 @@ static void set_up_completion_provider(LSP_feature &f) {
 		try {
 			LSP::Request request{.method = "textDocument/completion", .params = std::move(params)};
 			response = f.clients.front()->call(request);
-		} catch (const std::runtime_error &e) {
+		} catch (const std::exception &e) {
 			MainWindow::get_main_window().set_status(e.what());
 			return;
 		}

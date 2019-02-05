@@ -7,6 +7,7 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QPlainTextEdit>
+#include <QPushButton>
 #include <cassert>
 #include <memory>
 
@@ -72,7 +73,7 @@ static void run_action(const Tool &tool) {
 	std::string error;
 	try {
 		Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join();
-	} catch (const std::runtime_error &e) {
+	} catch (const std::exception &e) {
 		QMessageBox::critical(&MainWindow::get_main_window(), "SCE - " + tool.get_name(),
 							  QObject::tr("The tool %1 activated by %2 failed to execute: %3").arg(tool.get_name()).arg(tool.activation).arg(e.what()));
 	} catch (...) {

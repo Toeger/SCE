@@ -163,7 +163,7 @@ LSP::Client::~Client() {
 			std::clog << Color::red << "Failed shutting down LSP server: " << error.message << Color::no_color << '\n';
 			return;
 		}
-	} catch (const std::runtime_error &error) {
+	} catch (const std::exception &error) {
 		std::clog << Color::red << "Failed shutting down LSP server: " << error.what() << Color::no_color << '\n';
 		return;
 	}
@@ -172,7 +172,7 @@ LSP::Client::~Client() {
 	notification.method = "exit";
 	try {
 		notify(notification);
-	} catch (const std::runtime_error &error) {
+	} catch (const std::exception &error) {
 		std::clog << Color::red << "Failed shutting down LSP server: " << error.what() << Color::no_color << '\n';
 	}
 }
