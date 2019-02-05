@@ -176,6 +176,9 @@ void Process_reader::run_process(Tool tool, QStringList arguments, std::promise<
 	Pipe exec_fail;
 	Pipe standard_input;
 
+	tool.working_directory = resolve_placeholders(tool.working_directory);
+	tool.path = resolve_placeholders(tool.path);
+
 	const int child_pid = fork();
 	if (child_pid == -1) {
 		state = Process_reader::State::error;
@@ -275,8 +278,7 @@ Process_reader::Process_reader(Tool tool, std::function<void(std::string_view)> 
 	process_handler = std::async(std::launch::async, &Process_reader::run_process, std::move(tool), std::move(arguments), std::move(standard_input_promise),
 								 std::ref(state), std::move(output_callback), std::move(error_callback), std::move(completion_callback));
 	try {
-		standard_input = standard_input_future.get();
-
+		standard_input = Utility::get_future_value(std::move(standard_input_future));
 		std::string write_data = resolve_placeholders(tool.input).toStdString();
 		send_input(write_data);
 	} catch (...) {
