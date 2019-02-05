@@ -5,6 +5,7 @@
 #include "ui/mainwindow.h"
 
 #include <QAction>
+#include <QMessageBox>
 #include <QPlainTextEdit>
 #include <cassert>
 #include <memory>
@@ -69,7 +70,15 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 static void run_action(const Tool &tool) {
 	std::string output;
 	std::string error;
-	Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join();
+	try {
+		Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join();
+	} catch (const std::runtime_error &e) {
+		QMessageBox::critical(&MainWindow::get_main_window(), "SCE - " + tool.get_name(),
+							  QObject::tr("The tool %1 activated by %2 failed to execute: %3").arg(tool.get_name()).arg(tool.activation).arg(e.what()));
+	} catch (...) {
+		QMessageBox::critical(&MainWindow::get_main_window(), "SCE - " + tool.get_name(),
+							  QObject::tr("The tool %1 activated by %2 failed to execute.").arg(tool.get_name()).arg(tool.activation));
+	}
 	show_output(output, tool.output, tool.get_name(), false);
 	show_output(error, tool.error, tool.get_name(), true);
 }
@@ -78,7 +87,9 @@ void Tool_actions::set_actions(const std::vector<Tool> &tools) {
 	actions.resize(tools.size());
 	std::transform(std::begin(tools), std::end(tools), std::begin(actions), [](const Tool &tool) {
 		auto action = std::make_unique<QAction>();
-		action->setShortcut(tool.activation);
+		if (tool.activation == Tool_activation::keyboard_shortcut) {
+			action->setShortcut(tool.activation_keyboard_shortcut);
+		}
 		QObject::connect(action.get(), &QAction::triggered, [tool] { run_action(tool); });
 		for (auto &widget : widgets) {
 			widget->addAction(action.get());
