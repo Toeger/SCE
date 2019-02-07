@@ -93,12 +93,9 @@ before_script:
     - clangd --version
     - echo $PATH
     # set up python environment
-    - pwd
     - mkdir build && cd build
-    - pwd
     - quietly cmake -G Ninja ..
-    - pwd
-    - ninja python_environment
+    - quietly ninja python_environment
     - cd .. && rm -R build
 
 script:
