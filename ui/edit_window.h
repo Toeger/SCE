@@ -36,16 +36,37 @@ class Edit_window final : public QPlainTextEdit, private Thread_check {
 	QString get_id() const;
 	QString get_buffer() const;
 
+	struct Edit {
+		struct Position {
+			int line;
+			int character;
+		};
+		Position start;
+		Position end;
+		int length;
+		std::string added;
+	};
+
+	void edited(const Edit &edit) W_SIGNAL(edited, edit);
+
 	private:
 	void wheelEvent(QWheelEvent *we) override;
 	bool event(QEvent *event) override;
 
 	std::vector<QMetaObject::Connection> connections;
+
+	template <class... Args>
+	void autoconnect(Args &&... args) {
+		connections.push_back(QObject::connect(args...));
+	}
+
 	int zoom_remainder{};
 	std::vector<std::unique_ptr<QAction>> actions;
 	std::unique_ptr<QSyntaxHighlighter> syntax_highlighter;
 	std::vector<Note> notes;
 	uint32_t state{};
 };
+
+W_REGISTER_ARGTYPE(Edit_window::Edit)
 
 #endif // EDIT_WINDOW_H

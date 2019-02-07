@@ -8,18 +8,60 @@
 #include <QAction>
 #include <QColor>
 #include <QEvent>
+#include <QTextDocument>
 #include <QToolTip>
 #include <QWheelEvent>
+#include <iostream>
 #include <memory>
 
 W_OBJECT_IMPL(Edit_window)
+
+static Edit_window::Edit::Position get_line_and_character(QTextDocument &document, int position) {
+	const auto &block = document.findBlock(position);
+	const auto character_position = position - block.position();
+	std::cerr << "Block at position " << position << " has text \"" << block.text().toStdString() << "\"\n"
+			  << "Position " << position << " is line " << block.blockNumber() << " character " << character_position << '\n';
+	return {.line = block.blockNumber(), .character = character_position};
+}
 
 Edit_window::Edit_window() {
 	auto highlighter = std::make_unique<Syntax_highligher>(document());
 	highlighter->load_rules(TEST_DATA_PATH "c++-syntax.json");
 	syntax_highlighter = std::move(highlighter);
 	Tool_actions::add_widget(this);
-	connections.push_back(connect(this, &QPlainTextEdit::textChanged, [this] { state++; }));
+	autoconnect(this, &QPlainTextEdit::textChanged, [this] { state++; });
+	autoconnect(document(), &QTextDocument::contentsChange, [this](int position, int chars_removed, int chars_added) {
+		auto &document = *this->document();
+		document.undo();
+		const auto start_pos = get_line_and_character(document, position);
+		const auto end_pos = chars_removed == 0 ? start_pos : get_line_and_character(document, position + chars_removed);
+		document.redo();
+		std::string text;
+		if (chars_added) {
+			auto block = document.findBlock(position);
+			const int character = position - block.position();
+			text.reserve(chars_added);
+			text = block.text().mid(character, chars_added).toStdString();
+			while (text.size() < chars_added) {
+				block = block.next();
+				text.push_back('\n');
+				auto block_text = block.text();
+				if (text.size() + block_text.size() >= chars_added) {
+					block_text.resize(chars_added - text.size());
+				}
+				text += block_text.toStdString();
+			}
+		}
+		Edit edit{
+			.start = start_pos,
+			.end = end_pos,
+			.length = chars_removed,
+			.added = std::move(text),
+		};
+		std::clog << "Document changed: removed " << edit.length << " characters from " << edit.start.line << ":" << edit.start.character << " to "
+				  << edit.end.line << ":" << edit.end.character << " and replaced it with " << chars_added << " characters \"" << edit.added << "\"\n";
+		edited(std::move(edit));
+	});
 }
 
 Edit_window::~Edit_window() {
