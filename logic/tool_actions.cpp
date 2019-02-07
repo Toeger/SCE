@@ -74,11 +74,19 @@ static void run_action(const Tool &tool) {
 	try {
 		Process_reader{tool, [&output](std::string_view sv) { output += sv; }, [&error](std::string_view sv) { error += sv; }}.join();
 	} catch (const std::exception &e) {
-		QMessageBox::critical(&MainWindow::get_main_window(), "SCE - " + tool.get_name(),
-							  QObject::tr("The tool %1 activated by %2 failed to execute: %3").arg(tool.get_name()).arg(tool.activation).arg(e.what()));
-	} catch (...) {
-		QMessageBox::critical(&MainWindow::get_main_window(), "SCE - " + tool.get_name(),
-							  QObject::tr("The tool %1 activated by %2 failed to execute.").arg(tool.get_name()).arg(tool.activation));
+		QMessageBox mb{&MainWindow::get_main_window()};
+		mb.setWindowTitle(QObject::tr("SCE - tool execution error"));
+		mb.setText(QObject::tr("The tool \"%1\" activated by \"%2\" failed to execute: %3")
+					   .arg(tool.get_name())
+					   .arg(Tool_activation::get_texts()[tool.activation])
+					   .arg(e.what()));
+		mb.setIcon(QMessageBox::Icon::Critical);
+		auto tool_settings_button = mb.addButton(QObject::tr("Open tool settings"), QMessageBox::ButtonRole::HelpRole);
+		mb.addButton(QMessageBox::StandardButton::Ok);
+		mb.exec();
+		if (mb.clickedButton() == tool_settings_button) {
+			MainWindow::get_main_window().on_action_Setup_tools_triggered(tool);
+		}
 	}
 	show_output(output, tool.output, tool.get_name(), false);
 	show_output(error, tool.error, tool.get_name(), true);

@@ -315,24 +315,7 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>path_lineEdit</sender>
-   <signal>editingFinished()</signal>
-   <receiver>Tool_editor_widget</receiver>
-   <slot>update_current_tool()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>354</x>
-     <y>61</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>427</x>
-     <y>5</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>update_tools_list()</slot>
   <slot>update_current_tool()</slot>

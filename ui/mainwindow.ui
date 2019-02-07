@@ -39,7 +39,7 @@
      <x>0</x>
      <y>0</y>
      <width>875</width>
-     <height>25</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -61,7 +61,7 @@
     <property name="title">
      <string>&amp;Tools</string>
     </property>
-    <addaction name="action_Edit"/>
+    <addaction name="action_Setup_tools"/>
     <addaction name="actionLSP_Setup"/>
     <addaction name="separator"/>
     <addaction name="action_Test"/>
@@ -105,7 +105,7 @@
     <string>&amp;Tab Width</string>
    </property>
   </action>
-  <action name="action_Edit">
+  <action name="action_Setup_tools">
    <property name="text">
     <string>&amp;Setup tools ...</string>
    </property>

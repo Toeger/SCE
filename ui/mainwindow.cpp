@@ -143,13 +143,28 @@ void MainWindow::set_status(QString text) {
 	});
 	connect(label.get(), &QLabel::linkActivated, [this](const QString &link) {
 		if (link == "add server") {
-			on_action_Edit_triggered();
+			on_action_Setup_tools_triggered();
 		} else if (link == "lsp features") {
 			on_actionLSP_Setup_triggered();
 		}
 	});
 	status_widget = std::move(label);
 	ui->statusBar->addWidget(status_widget.get());
+}
+
+void MainWindow::on_action_Setup_tools_triggered() {
+	if (tool_editor_widget != nullptr && tool_editor_widget->isVisible()) {
+		tool_editor_widget->activateWindow();
+	} else {
+		tool_editor_widget = std::make_unique<Tool_editor_widget>();
+		tool_editor_widget->show();
+	}
+	QApplication::processEvents();
+}
+
+void MainWindow::on_action_Setup_tools_triggered(const Tool &tool) {
+	on_action_Setup_tools_triggered();
+	tool_editor_widget->select_tool(tool);
 }
 
 void MainWindow::on_actionOpen_File_triggered() {
@@ -240,15 +255,6 @@ void MainWindow::on_action_Font_triggered() {
 	}
 	Settings::set<Settings::Key::font>(font.toString());
 	apply_to_all_edit_windows([&font](Edit_window *edit) { edit->setFont(font); }, ui);
-}
-
-void MainWindow::on_action_Edit_triggered() {
-	if (tool_editor_widget != nullptr && tool_editor_widget->isVisible()) {
-		tool_editor_widget->activateWindow();
-	} else {
-		tool_editor_widget = std::make_unique<Tool_editor_widget>();
-		tool_editor_widget->show();
-	}
 }
 
 void MainWindow::on_actionLSP_Setup_triggered() {

@@ -15,6 +15,9 @@ namespace Ui {
 }
 
 struct QComboBox;
+struct Tool;
+
+W_REGISTER_ARGTYPE(Tool)
 
 //This window is to specify how to use external tools such as compilers.
 class Tool_editor_widget : public QWidget, private Thread_check {
@@ -31,6 +34,10 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 	W_SLOT(update_current_tool_from_ui)
 	void update_tool_name(int index);
 	W_SLOT(update_tool_name)
+	void update_current_tool_name();
+	W_SLOT(update_current_tool_name)
+	void select_tool(const Tool &tool);
+	W_SLOT(select_tool)
 
 	private:
 	void closeEvent(QCloseEvent *event) override;

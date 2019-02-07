@@ -18,9 +18,11 @@ class Edit_window;
 class Tool_editor_widget;
 class LSP_feature_setup_widget;
 class Keyboard_shortcuts_widget;
+struct Tool;
 
 W_REGISTER_ARGTYPE(Edit_window &)
 W_REGISTER_ARGTYPE(std::string)
+W_REGISTER_ARGTYPE(const Tool *)
 
 class MainWindow : public QMainWindow, private Thread_check {
 	W_OBJECT(MainWindow)
@@ -38,8 +40,15 @@ class MainWindow : public QMainWindow, private Thread_check {
 
 	public slots:
 	void close_notification_server();
+	W_SLOT(close_notification_server)
 	void close_rpc_server();
+	W_SLOT(close_rpc_server)
 	void set_status(QString text);
+	W_SLOT(set_status)
+	void on_action_Setup_tools_triggered();
+	W_SLOT(on_action_Setup_tools_triggered, ())
+	void on_action_Setup_tools_triggered(const Tool &tool);
+	W_SLOT(on_action_Setup_tools_triggered, (const Tool &))
 
 	signals:
 	void file_opened(Edit_window &edit_window, std::string path) W_SIGNAL(file_opened, edit_window, path);
@@ -48,8 +57,6 @@ class MainWindow : public QMainWindow, private Thread_check {
 	private slots:
 	void on_actionOpen_File_triggered();
 	W_SLOT(on_actionOpen_File_triggered)
-	void on_action_Edit_triggered();
-	W_SLOT(on_action_Edit_triggered)
 	void on_actionLSP_Setup_triggered();
 	W_SLOT(on_actionLSP_Setup_triggered)
 	void on_action_Font_triggered();

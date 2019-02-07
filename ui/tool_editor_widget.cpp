@@ -270,6 +270,17 @@ void Tool_editor_widget::update_tool_name(int index) {
 	}
 }
 
+void Tool_editor_widget::update_current_tool_name() {
+	update_tool_name(current_tool_list_row);
+}
+
+void Tool_editor_widget::select_tool(const Tool &tool) {
+	if (const auto &items = ui->tools_listWidget->findItems(tool.get_name(), Qt::MatchFlag::MatchFixedString | Qt::MatchCaseSensitive); not items.isEmpty()) {
+		ui->tools_listWidget->setCurrentItem(items.first());
+	}
+	//TODO: Figure out how to react to failing to select a tool
+}
+
 void Tool_editor_widget::on_add_pushButton_clicked() {
 	ui_tools.emplace_back();
 	update_tools_list();
