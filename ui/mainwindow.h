@@ -22,7 +22,6 @@ struct Tool;
 
 W_REGISTER_ARGTYPE(Edit_window &)
 W_REGISTER_ARGTYPE(std::string)
-W_REGISTER_ARGTYPE(const Tool *)
 
 class MainWindow : public QMainWindow, private Thread_check {
 	W_OBJECT(MainWindow)
@@ -37,6 +36,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	static void report_error(std::string_view message, std::string_view error);
 	Edit_window *get_edit_window(std::string_view id);
 	static bool currently_in_gui_thread();
+	void open_setup_tools_at(const Tool &tool);
 
 	public slots:
 	void close_notification_server();
@@ -46,9 +46,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void set_status(QString text);
 	W_SLOT(set_status)
 	void on_action_Setup_tools_triggered();
-	W_SLOT(on_action_Setup_tools_triggered, ())
-	void on_action_Setup_tools_triggered(const Tool &tool);
-	W_SLOT(on_action_Setup_tools_triggered, (const Tool &))
+	W_SLOT(on_action_Setup_tools_triggered)
 
 	signals:
 	void file_opened(Edit_window &edit_window, std::string path) W_SIGNAL(file_opened, edit_window, path);

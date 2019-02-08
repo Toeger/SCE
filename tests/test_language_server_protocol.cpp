@@ -3,7 +3,6 @@
 #include "test.h"
 
 #include <iostream>
-#include <regex>
 #include <sstream>
 
 TEST_CASE("Testing Language Server Protocol", "[lsp]") {

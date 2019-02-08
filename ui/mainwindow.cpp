@@ -111,6 +111,12 @@ bool MainWindow::currently_in_gui_thread() {
 	return main_window->is_in_same_thread();
 }
 
+void MainWindow::open_setup_tools_at(const Tool &tool) {
+	thread_check();
+	on_action_Setup_tools_triggered();
+	tool_editor_widget->select_tool(tool);
+}
+
 void MainWindow::close_notification_server() {
 	thread_check();
 	notification_server.clear_listening_endpoints();
@@ -160,11 +166,6 @@ void MainWindow::on_action_Setup_tools_triggered() {
 		tool_editor_widget->show();
 	}
 	QApplication::processEvents();
-}
-
-void MainWindow::on_action_Setup_tools_triggered(const Tool &tool) {
-	on_action_Setup_tools_triggered();
-	tool_editor_widget->select_tool(tool);
 }
 
 void MainWindow::on_actionOpen_File_triggered() {

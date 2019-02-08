@@ -85,7 +85,7 @@ static void run_action(const Tool &tool) {
 		mb.addButton(QMessageBox::StandardButton::Ok);
 		mb.exec();
 		if (mb.clickedButton() == tool_settings_button) {
-			MainWindow::get_main_window().on_action_Setup_tools_triggered(tool);
+			MainWindow::get_main_window().open_setup_tools_at(tool);
 		}
 	}
 	show_output(output, tool.output, tool.get_name(), false);
