@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Tools Setup</string>
+   <string>SCE - Tools Setup</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout_4">
    <item>
@@ -68,30 +68,6 @@
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
          <layout class="QGridLayout" name="tool_properties_gridLayout">
-          <item row="7" column="1">
-           <widget class="QComboBox" name="output_comboBox"/>
-          </item>
-          <item row="10" column="0">
-           <widget class="Helptext_label_widget" name="timeout_label">
-            <property name="text">
-             <string>Timeout</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="type_comboBox">
-            <item>
-             <property name="text">
-              <string>Generic</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>LSP Server</string>
-             </property>
-            </item>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="Helptext_label_widget" name="type_label">
             <property name="toolTip">
@@ -99,6 +75,60 @@
             </property>
             <property name="text">
              <string>Type</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="Helptext_label_widget" name="current_path_placeholder_label">
+            <property name="text">
+             <string notr="true">$Path</string>
+            </property>
+            <property name="textInteractionFlags">
+             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QComboBox" name="activation_comboBox"/>
+            </item>
+            <item>
+             <widget class="QKeySequenceEdit" name="activation_keySequenceEdit"/>
+            </item>
+           </layout>
+          </item>
+          <item row="5" column="0">
+           <widget class="Helptext_label_widget" name="arguments_label">
+            <property name="text">
+             <string>Arguments</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QComboBox" name="error_comboBox"/>
+          </item>
+          <item row="8" column="0">
+           <widget class="Helptext_label_widget" name="error_label">
+            <property name="text">
+             <string>Standard Error</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="Helptext_label_widget" name="input_label">
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Standard Input</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="1">
+           <widget class="QLabel" name="selection_explanation_label">
+            <property name="text">
+             <string>Currently selected text</string>
             </property>
            </widget>
           </item>
@@ -116,33 +146,19 @@
            </widget>
           </item>
           <item row="12" column="1">
-           <widget class="QLabel" name="current_file_path_explanation_label">
+           <widget class="QLabel" name="current_path_explanation_label">
             <property name="text">
-             <string>Full path to current file</string>
+             <string>Path to current file</string>
             </property>
            </widget>
           </item>
-          <item row="8" column="0">
-           <widget class="Helptext_label_widget" name="error_label">
-            <property name="text">
-             <string>Standard Error</string>
-            </property>
-           </widget>
+          <item row="7" column="1">
+           <widget class="QComboBox" name="output_comboBox"/>
           </item>
-          <item row="11" column="0" colspan="2">
-           <widget class="QLabel" name="variables_label">
+          <item row="4" column="0">
+           <widget class="Helptext_label_widget" name="working_dir_label">
             <property name="text">
-             <string>Variables</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="Helptext_label_widget" name="output_label">
-            <property name="text">
-             <string>Standard Output</string>
+             <string>Working Dir</string>
             </property>
            </widget>
           </item>
@@ -156,10 +172,17 @@
             </property>
            </widget>
           </item>
-          <item row="13" column="0">
+          <item row="2" column="0">
+           <widget class="Helptext_label_widget" name="path_label">
+            <property name="text">
+             <string>Path</string>
+            </property>
+           </widget>
+          </item>
+          <item row="14" column="0">
            <widget class="Helptext_label_widget" name="selection_placeholder_label">
             <property name="text">
-             <string>$Selection</string>
+             <string notr="true">$Selection</string>
             </property>
             <property name="textInteractionFlags">
              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
@@ -190,56 +213,19 @@
             </item>
            </layout>
           </item>
-          <item row="4" column="0">
-           <widget class="Helptext_label_widget" name="working_dir_label">
-            <property name="text">
-             <string>Working Dir</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="Helptext_label_widget" name="arguments_label">
-            <property name="text">
-             <string>Arguments</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="Helptext_label_widget" name="input_label">
-            <property name="toolTip">
-             <string/>
-            </property>
-            <property name="text">
-             <string>Standard Input</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0">
-           <widget class="Helptext_label_widget" name="activation_label">
-            <property name="text">
-             <string>Activation</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="type_comboBox">
             <item>
-             <widget class="QComboBox" name="activation_comboBox"/>
+             <property name="text">
+              <string>Generic</string>
+             </property>
             </item>
             <item>
-             <widget class="QKeySequenceEdit" name="activation_keySequenceEdit"/>
+             <property name="text">
+              <string>LSP Server</string>
+             </property>
             </item>
-           </layout>
-          </item>
-          <item row="13" column="1">
-           <widget class="QLabel" name="selection_explanation_label">
-            <property name="text">
-             <string>Currently selected text</string>
-            </property>
            </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QComboBox" name="error_comboBox"/>
           </item>
           <item row="6" column="1">
            <widget class="QLineEdit" name="input_lineEdit">
@@ -248,13 +234,6 @@
             </property>
             <property name="clearButtonEnabled">
              <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="Helptext_label_widget" name="path_label">
-            <property name="text">
-             <string>Path</string>
             </property>
            </widget>
           </item>
@@ -268,13 +247,51 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="7" column="0">
+           <widget class="Helptext_label_widget" name="output_label">
+            <property name="text">
+             <string>Standard Output</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0" colspan="2">
+           <widget class="QLabel" name="variables_label">
+            <property name="text">
+             <string>Variables</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="Helptext_label_widget" name="timeout_label">
+            <property name="text">
+             <string>Timeout</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="Helptext_label_widget" name="activation_label">
+            <property name="text">
+             <string>Activation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="0">
            <widget class="Helptext_label_widget" name="current_file_path_placeholder_label">
             <property name="text">
-             <string>$FilePath</string>
+             <string notr="true">$FilePath</string>
             </property>
             <property name="textInteractionFlags">
              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+            </property>
+           </widget>
+          </item>
+          <item row="13" column="1">
+           <widget class="QLabel" name="current_file_path_explanation_label">
+            <property name="text">
+             <string>Filepath to current file</string>
             </property>
            </widget>
           </item>

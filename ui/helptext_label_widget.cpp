@@ -14,8 +14,9 @@ Helptext_label_widget::Helptext_label_widget(QWidget *parent)
 	layout->setMargin(0);
 	button = new QPushButton;
 	button->setIcon(QIcon::fromTheme("help-faq"));
-	QObject::connect(button, &QPushButton::clicked,
-					 [this] { QMessageBox::information(button, title, help_text.index() == 0 ? std::get<0>(help_text) : std::get<1>(help_text)()); });
+	QObject::connect(button, &QPushButton::clicked, [this] {
+		QMessageBox::information(button, "SCE - " + title, help_text.index() == 0 ? std::get<0>(help_text) : std::get<1>(help_text)());
+	});
 	layout->addWidget(button);
 	layout->setAlignment(label, Qt::AlignLeft);
 	layout->setAlignment(button, Qt::AlignLeft);

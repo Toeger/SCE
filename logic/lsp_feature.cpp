@@ -4,7 +4,6 @@
 #include "ui/mainwindow.h"
 
 #include <QMenu>
-#include <QMessageBox>
 #include <QTextBlock>
 #include <algorithm>
 #include <array>
@@ -234,7 +233,6 @@ static void report_file_close_to_lsp_servers(const File_info &fileinfo) {
 	for (auto &[name, client] : LSP::Client::get_clients()) {
 		try {
 			client->notify(notification);
-			//QMessageBox::information(nullptr, "Closing file", QString::fromStdString(notification.params.dump(4)));
 		} catch (std::exception &e) {
 			MainWindow::get_main_window().set_status("Error notifying LSP client " + name + e.what());
 		}

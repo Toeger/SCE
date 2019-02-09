@@ -4,17 +4,37 @@
 #include "logic/tool_actions.h"
 #include "mainwindow.h"
 #include "tests/test.h"
+#include "threading/thread_call.h"
 #include "ui_tool_editor_widget.h"
+#include "utility/utility.h"
 
 #include <QCloseEvent>
 #include <QDoubleSpinBox>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QGroupBox>
 #include <QMessageBox>
 #include <QStringList>
 #include <tuple>
 
 W_OBJECT_IMPL(Tool_editor_widget)
+
+QString resolve_placeholders(QString string) {
+	auto [current_path, current_selection] =
+		Utility::sync_gui_thread_execute([] { return std::make_pair(MainWindow::get_current_path(), MainWindow::get_current_selection()); });
+	struct Placeholder_value {
+		QString placeholder;
+		QString value;
+	} const placeholder_values[] = {
+		{"$Path", QFileInfo(current_path).path()},
+		{"$FilePath", current_path},
+		{"$Selection", current_selection},
+	};
+	for (const auto &placeholder_value : placeholder_values) {
+		string.replace(placeholder_value.placeholder, placeholder_value.value);
+	}
+	return string;
+}
 
 namespace {
 	//this lists the association between ui elements and Tool members
@@ -142,7 +162,12 @@ Tool_editor_widget::Tool_editor_widget(QWidget *parent)
 	//set up variable text for tool options
 	{
 		std::pair<Helptext_label_widget *, std::function<QString()>> dyn_labels[] = {
-			{ui->current_file_path_placeholder_label, [] { return tr("Currently set to %1.").arg(MainWindow::get_current_path()); }},
+			{ui->current_path_placeholder_label,
+			 [helptext = ui->current_path_placeholder_label] { return tr("Currently set to \"%1\".").arg(resolve_placeholders(helptext->label->text())); }},
+			{ui->current_file_path_placeholder_label,
+			 [helptext = ui->current_file_path_placeholder_label] {
+				 return tr("Currently set to \"%1\".").arg(resolve_placeholders(helptext->label->text()));
+			 }},
 			{ui->selection_placeholder_label, [] {
 				 const auto &selection = MainWindow::get_current_selection();
 				 if (selection.isEmpty()) {
@@ -221,6 +246,8 @@ void Tool_editor_widget::set_tool_ui(Tool::Tool_type type) {
 		ui->timeout_label,
 		ui->timeout_doubleSpinBox,
 		ui->variables_label,
+		ui->current_path_placeholder_label,
+		ui->current_path_explanation_label,
 		ui->current_file_path_placeholder_label,
 		ui->current_file_path_explanation_label,
 		ui->selection_placeholder_label,

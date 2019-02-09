@@ -16,8 +16,11 @@ namespace Ui {
 
 struct QComboBox;
 struct Tool;
+class QString;
 
 W_REGISTER_ARGTYPE(Tool)
+
+QString resolve_placeholders(QString s);
 
 //This window is to specify how to use external tools such as compilers.
 class Tool_editor_widget : public QWidget, private Thread_check {
