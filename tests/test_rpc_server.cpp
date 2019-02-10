@@ -1,6 +1,7 @@
 #include "logic/process_reader.h"
 #include "test.h"
 
+#include <QString>
 #include <grpc++/grpc++.h>
 #include <iterator>
 #include <memory>

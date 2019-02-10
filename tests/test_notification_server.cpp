@@ -1,5 +1,6 @@
 #include "interop/notification_server.h"
 #include "logic/process_reader.h"
+#include "logic/tool.h"
 #include "test.h"
 #include "utility/color.h"
 
