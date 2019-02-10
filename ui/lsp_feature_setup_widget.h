@@ -5,23 +5,26 @@
 #include "logic/tool.h"
 #include "threading/gui_pointer.h"
 #include "threading/thread_call.h"
+#include "threading/thread_check.h"
 
 #include <QWidget>
 #include <future>
 #include <memory>
 
+class Project;
+
 namespace Ui {
 	class LSP_feature_setup_widget;
 }
 
-class LSP_feature_setup_widget : public QWidget {
+class LSP_feature_setup_widget : public QWidget, Thread_check {
 	W_OBJECT(LSP_feature_setup_widget)
 
 	public:
 	explicit LSP_feature_setup_widget(QWidget *parent = nullptr);
 	~LSP_feature_setup_widget() override;
 	Utility::Thread_caller<LSP_feature_setup_widget> thread_caller{this};
-	static void update_lsp_features_from_settings();
+	static void update_lsp_features_from_settings(const Project &project);
 
 	private slots:
 	void feature_checkbox_clicked(int row, int column);

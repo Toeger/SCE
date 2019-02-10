@@ -39,13 +39,8 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 			break;
 		case Tool_output_target::popup: {
 			auto edit = new QPlainTextEdit(&MainWindow::get_main_window());
-			/* Note: in theory the mainwindow owns the edit window and cleans up resources when it is closed.
-			 * In practice if you close the mainwindow before the edit window this actually works.
-			 * If you close the edit window first, however, LeakSanitizer reports 64 bytes leaked in 2 objects.
-			 * I don't want to and probably can't fix Qt, so I'll just accept it as the price one has to pay for Qt.
-			 */
 			edit->setWindowFlag(Qt::WindowType::Window);
-			edit->setWindowTitle((is_error ? "Error: " : "Output: ") + title);
+			edit->setWindowTitle("SCE - " + (is_error ? QObject::tr("Error: ") : QObject::tr("Output: ")) + title);
 			edit->setReadOnly(true);
 			edit->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);
 			edit->setFont(Settings::get<Settings::Key::font>("console"));
@@ -54,6 +49,7 @@ static void show_output(std::string_view output, Tool_output_target::Type output
 			cursor.movePosition(QTextCursor::Start);
 			edit->setTextCursor(cursor);
 			edit->resize(MainWindow::get_current_edit_window()->size()); //TODO: make the edit window exactly as big as it needs to be
+			edit->setWindowIcon(QIcon::fromTheme(is_error ? "dialog-error" : "dialog-information"));
 			edit->show();
 		} break;
 		case Tool_output_target::paste:

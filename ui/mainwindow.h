@@ -19,9 +19,12 @@ class Tool_editor_widget;
 class LSP_feature_setup_widget;
 class Keyboard_shortcuts_widget;
 struct Tool;
+class Project;
 
 W_REGISTER_ARGTYPE(Edit_window &)
+W_REGISTER_ARGTYPE(Edit_window *)
 W_REGISTER_ARGTYPE(std::string)
+W_REGISTER_ARGTYPE(QCloseEvent *)
 
 class MainWindow : public QMainWindow, private Thread_check {
 	W_OBJECT(MainWindow)
@@ -37,6 +40,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	Edit_window *get_edit_window(std::string_view id);
 	static bool currently_in_gui_thread();
 	void open_setup_tools_at(const Tool &tool);
+	const std::vector<Project> &get_current_projects() const;
 
 	public slots:
 	void close_notification_server();
@@ -66,7 +70,11 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void on_action_Keyboard_shortcuts_triggered();
 	W_SLOT(on_action_Keyboard_shortcuts_triggered)
 	void closeEvent(QCloseEvent *event) override;
+	W_SLOT(closeEvent)
 	void edit_buffer_changed(Edit_window *edit_window);
+	W_SLOT(edit_buffer_changed)
+	void on_actionOpen_Project_Folder_triggered();
+	W_SLOT(on_actionOpen_Project_Folder_triggered)
 
 	private:
 	void load_last_files();
@@ -82,6 +90,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	std::unique_ptr<Keyboard_shortcuts_widget> keyboard_shortcuts_widget;
 	Notification_server notification_server;
 	RPC_server rpc_server;
+	std::vector<Project> projects;
 
 	private:
 	std::unique_ptr<QWidget> status_widget;

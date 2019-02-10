@@ -3,6 +3,7 @@
 #include "external/verdigris/wobjectimpl.h"
 #include "keyboard_shortcuts_widget.h"
 #include "logic/lsp_feature.h"
+#include "logic/project.h"
 #include "logic/settings.h"
 #include "logic/tool_actions.h"
 #include "lsp_feature_setup_widget.h"
@@ -57,7 +58,6 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->setupUi(this);
 	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
 	LSP_feature::init_all_features();
-	LSP_feature_setup_widget::update_lsp_features_from_settings();
 	load_last_files();
 }
 
@@ -117,6 +117,10 @@ void MainWindow::open_setup_tools_at(const Tool &tool) {
 	tool_editor_widget->select_tool(tool);
 }
 
+const std::vector<Project> &MainWindow::get_current_projects() const {
+	return projects;
+}
+
 void MainWindow::close_notification_server() {
 	thread_check();
 	notification_server.clear_listening_endpoints();
@@ -169,7 +173,7 @@ void MainWindow::on_action_Setup_tools_triggered() {
 }
 
 void MainWindow::on_actionOpen_File_triggered() {
-	for (const auto &filename : QFileDialog::getOpenFileNames(this, tr("Select File(s) to open"))) {
+	for (const auto &filename : QFileDialog::getOpenFileNames(this, tr("Select File(s) to open"), Settings::get<Settings::Key::last_open_dialog_path>())) {
 		add_file_tab(filename);
 	}
 }
@@ -285,4 +289,14 @@ void MainWindow::on_action_Keyboard_shortcuts_triggered() {
 		keyboard_shortcuts_widget = std::make_unique<Keyboard_shortcuts_widget>();
 		keyboard_shortcuts_widget->show();
 	}
+}
+
+void MainWindow::on_actionOpen_Project_Folder_triggered() {
+	const auto &dir = QFileDialog::getExistingDirectory(this, "SCE - " + tr("Open project directory"), Settings::get<Settings::Key::last_open_dialog_path>());
+	if (dir.isEmpty()) {
+		return;
+	}
+	Settings::set<Settings::Key::last_open_dialog_path>(dir);
+	projects.push_back({dir.toStdString()});
+	LSP_feature_setup_widget::update_lsp_features_from_settings(projects.back());
 }

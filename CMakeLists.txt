@@ -107,10 +107,11 @@ set(SCE_SRC
 	interop/rpc_server.cpp
 	logic/lsp_feature.cpp
 	logic/process_reader.cpp
+	logic/project.cpp
 	logic/settings.cpp
 	logic/syntax_highligher.cpp
-	logic/tool.cpp
 	logic/tool_actions.cpp
+	logic/tool.cpp
 	main.cpp
 	sce.grpc.pb.cc
 	sce.grpc.pb.h

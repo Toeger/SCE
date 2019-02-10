@@ -3,6 +3,7 @@
 #include "external/verdigris/wobjectimpl.h"
 #include "interop/language_server_protocol.h"
 #include "logic/lsp_feature.h"
+#include "logic/project.h"
 #include "logic/settings.h"
 #include "threading/thread_call.h"
 #include "ui_lsp_feature_setup_widget.h"
@@ -11,6 +12,7 @@
 #include <QKeyEvent>
 #include <QPushButton>
 #include <QSpacerItem>
+#include <QString>
 #include <algorithm>
 #include <variant>
 
@@ -31,7 +33,7 @@ LSP_feature_setup_widget::~LSP_feature_setup_widget() {
 	}
 }
 
-void LSP_feature_setup_widget::update_lsp_features_from_settings() {
+void LSP_feature_setup_widget::update_lsp_features_from_settings(const Project &project) {
 	auto lsp_tools = Settings::get<Settings::Key::tools>();
 	lsp_tools.erase(std::remove_if(std::begin(lsp_tools), std::end(lsp_tools), [](const Tool &tool) { return tool.type != Tool::Tool_type::LSP_server; }),
 					std::end(lsp_tools));
@@ -51,7 +53,7 @@ void LSP_feature_setup_widget::update_lsp_features_from_settings() {
 					continue;
 				}
 				try {
-					feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it));
+					feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it, "file://" + project.root_dir));
 				} catch (std::exception &e) {
 					MainWindow::get_main_window().set_status(QString{"Failed loading lsp tool %1: Error: %2"}.arg(lsp_tool_it->get_name()).arg(e.what()));
 				}
@@ -127,7 +129,7 @@ struct LSP_feature_table {
 };
 
 static void set_lsp_features(const std::vector<Tool> &tools, const std::function<void(int)> &set_progress_percentage,
-							 const std::function<void(LSP_feature_info)> &add_features, const std::function<void()> &done_callback) {
+							 const std::function<void(LSP_feature_info)> &add_features, const std::function<void()> &done_callback, const Project &project) {
 	if (tools.empty()) {
 		return;
 	}
@@ -139,7 +141,7 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		set_progress_percentage(current_steps++ * 100 / max_steps);
 		std::optional<nlohmann::json> capabilities;
 		try {
-			capabilities = LSP::Client::get_client_from_cache(tool)->capabilities;
+			capabilities = LSP::Client::get_client_from_cache(tool, "file://" + project.root_dir)->capabilities;
 		} catch (const std::exception &e) {
 			add_features({QObject::tr("Failed getting capabilities for %1: %2").arg(tool.get_name()).arg(e.what()), tool_index++});
 			continue;
@@ -184,7 +186,9 @@ void LSP_feature_setup_widget::feature_checkbox_clicked(int row, int column) {
 
 void LSP_feature_setup_widget::on_buttonBox_accepted() {
 	save_lsp_settings_from_gui();
-	update_lsp_features_from_settings();
+	for (auto &project : MainWindow::get_main_window().get_current_projects()) {
+		update_lsp_features_from_settings(project);
+	}
 	close();
 }
 
@@ -203,7 +207,9 @@ void LSP_feature_setup_widget::keyPressEvent(QKeyEvent *event) {
 
 void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 	tools = Settings::get<Settings::Key::tools>();
-	tools.erase(std::remove_if(std::begin(tools), std::end(tools), [](const Tool &tool) { return tool.type != Tool::Tool_type::LSP_server; }), std::end(tools));
+	tools.erase(
+		std::remove_if(std::begin(tools), std::end(tools), [](const Tool &tool) { return tool.type != Tool::Tool_type::LSP_server || not tool.enabled; }),
+		std::end(tools));
 	if (tools.empty()) {
 		return;
 	}
@@ -239,8 +245,12 @@ void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 			load_lsp_settings_to_gui();
 		});
 	};
-	feature_loader = std::async(std::launch::async, &set_lsp_features, std::ref(tools), std::move(set_progress_callback), std::move(add_features_callback),
-								std::move(done_callback));
+	feature_loader = std::async(std::launch::async, [tools = std::move(tools), set_progress_callback, add_features_callback, done_callback,
+													 projects = MainWindow::get_main_window().get_current_projects()] {
+		for (const auto &project : projects) {
+			set_lsp_features(tools, set_progress_callback, add_features_callback, done_callback, project);
+		}
+	});
 }
 
 void LSP_feature_setup_widget::load_lsp_settings_to_gui() {

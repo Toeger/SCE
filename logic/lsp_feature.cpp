@@ -1,5 +1,7 @@
-#include "lsp_feature.h"
+#include <utility>
+
 #include "interop/language_server_protocol.h"
+#include "lsp_feature.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
 
@@ -15,6 +17,25 @@ template <class... Args>
 void autoconnect(Args &&... args) {
 	connections.push_back(QObject::connect(args...));
 }
+
+enum CompletionTriggerKind {
+	/**
+	 * Completion was triggered by typing an identifier (24x7 code
+	 * complete), manual invocation (e.g Ctrl+Space) or via API.
+	 */
+	Invoked = 1,
+
+	/**
+	 * Completion was triggered by a trigger character specified by
+	 * the `triggerCharacters` properties of the `CompletionRegistrationOptions`.
+	 */
+	TriggerCharacter = 2,
+
+	/**
+	 * Completion was re-triggered as the current completion list is incomplete.
+	 */
+	TriggerForIncompleteCompletions3
+};
 
 static void set_up_completion_provider(LSP_feature &f) {
 	auto &action = f.action;
@@ -57,7 +78,7 @@ static void set_up_completion_provider(LSP_feature &f) {
 		const auto &text_cursor = edit_window.textCursor();
 		const int line = text_cursor.blockNumber();
 		const int character = text_cursor.positionInBlock();
-		nlohmann::json params = {{"context", {{"triggerKind", {{"CompletionTriggerKind", "Invoked"}}} /*triggerCharacter = none*/}},
+		nlohmann::json params = {{"context", {{"triggerKind", CompletionTriggerKind::Invoked} /*triggerCharacter = none*/}},
 								 {"textDocument", {{"uri", "file://" + MainWindow::get_current_path().toStdString()}}},
 								 {"position", {{"line", line}, {"character", character}}}};
 
@@ -155,7 +176,7 @@ static LSP_feature lsp_features[] = {{
 LSP_feature::LSP_feature(std::string_view pname, QString pdescription, LSP_feature::Multi_client_support pmulti_client_support,
 						 void (*const pdo_setup)(LSP_feature &), std::vector<std::shared_ptr<LSP::Client> > pclients)
 	: name{pname}
-	, description{pdescription}
+	, description{std::move(pdescription)}
 	, multi_client_support{pmulti_client_support}
 	, clients{pclients}
 	, activation1{QKeySequence::fromString("CTRL+SPACE")}
@@ -276,7 +297,7 @@ void LSP_feature::add_lsp_server(LSP::Client &client) {
 	}
 }
 
-nlohmann::json LSP_feature::get_init_params() {
+nlohmann::json LSP_feature::get_init_params(std::string_view project_path) {
 	nlohmann::json workspace_client_capabilities = {
 		{"applyEdit", false},
 		{"workspaceEdit", {{"documentChanges", true}, {"resourceOperations", {"create", "rename", "delete"}}, {"failureHandling", {"abort"}}}},
@@ -333,7 +354,7 @@ nlohmann::json LSP_feature::get_init_params() {
 	};
 	return {
 		{"processId", getpid()},
-		{"rootUri", nullptr}, //TODO: change this to project directory once we have such a thing
+		{"rootUri", project_path},
 		{"capabilities", std::move(client_capabilities)},
 		{"trace", "off"},
 	};

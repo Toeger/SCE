@@ -36,7 +36,7 @@ struct LSP_feature {
 	static void add_all(QWidget &w);
 
 	static void add_lsp_server(LSP::Client &client);
-	static nlohmann::json get_init_params();
+	static nlohmann::json get_init_params(std::string_view project_path);
 
 	private:
 	void (*const do_setup)(LSP_feature &);

@@ -120,7 +120,7 @@ static LSP_response parse_lsp_message(std::string_view data) {
 	return response;
 }
 
-LSP::Client::Client(Tool tool)
+LSP::Client::Client(Tool tool, std::string_view project_path)
 	: process_reader{[ltool = std::move(tool)]() mutable {
 						 ltool.use_tty_mode = false; //never use tty mode with LSP tools
 						 return std::move(ltool);
@@ -141,7 +141,7 @@ LSP::Client::Client(Tool tool)
 					 [](std::string_view error) { std::clog << Color::red << mwv(error) << Color::no_color; }} {
 	Request request;
 	request.method = "initialize";
-	request.params = LSP_feature::get_init_params();
+	request.params = LSP_feature::get_init_params(project_path);
 	auto response = call(request);
 	if (response.error) {
 		auto &error = response.error.value();

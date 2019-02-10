@@ -80,9 +80,6 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen_Project_Folder">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>Open &amp;Project Folder</string>
    </property>

@@ -50,16 +50,16 @@ namespace LSP {
 	};
 
 	struct Client {
-		Client(Tool tool);
+		Client(Tool tool, std::string_view project_path);
 		~Client();
 		Response call(const Request &request, const std::chrono::milliseconds &timeout = std::chrono::milliseconds{3000});
 		void notify(const Notification &notification);
 		nlohmann::json capabilities;
 
-		static std::shared_ptr<Client> get_client_from_cache(const Tool &tool) {
+		static std::shared_ptr<Client> get_client_from_cache(const Tool &tool, std::string_view project_path) {
 			auto it = clients.find(tool.path);
 			if (it == std::end(clients)) {
-				it = clients.emplace(tool.path, std::make_shared<Client>(tool)).first;
+				it = clients.emplace(tool.path, std::make_shared<Client>(tool, project_path)).first;
 				Utility::async_gui_thread_execute([server = it->second] { LSP_feature::add_lsp_server(*server); });
 			}
 			return it->second;
