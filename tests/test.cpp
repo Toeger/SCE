@@ -14,6 +14,7 @@
 #include <cassert>
 #include <csignal>
 #include <functional>
+#include <iostream>
 #include <sce.pb.h>
 #include <string_view>
 
@@ -30,6 +31,8 @@ static void message_handler(QtMsgType type, const QMessageLogContext &context, c
 		case QtCriticalMsg:
 		case QtFatalMsg:
 		case QtWarningMsg:
+			std::cerr << msg.toStdString() << '\n';
+			std::cerr << context.file << ':' << context.line << '\n';
 			__builtin_trap();
 		case QtDebugMsg:
 		case QtInfoMsg:;
