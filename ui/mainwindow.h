@@ -17,7 +17,7 @@ class Tool_editor_widget;
 class LSP_feature_setup_widget;
 class Keyboard_shortcuts_widget;
 struct Tool;
-class Project;
+struct Project;
 struct Notification_server;
 struct RPC_server;
 

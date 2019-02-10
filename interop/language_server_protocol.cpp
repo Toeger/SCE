@@ -121,7 +121,7 @@ static LSP_response parse_lsp_message(std::string_view data) {
 	return response;
 }
 
-LSP::Client::Client(Tool tool, std::string_view project_path)
+LSP::Client::Client(Tool tool, const Project &project)
 	: process_reader{[ltool = std::move(tool)]() mutable {
 						 ltool.use_tty_mode = false; //never use tty mode with LSP tools
 						 return std::move(ltool);
@@ -142,7 +142,7 @@ LSP::Client::Client(Tool tool, std::string_view project_path)
 					 [](std::string_view error) { std::clog << Color::red << mwv(error) << Color::no_color; }} {
 	Request request;
 	request.method = "initialize";
-	request.params = LSP_feature::get_init_params(project_path);
+	request.params = LSP_feature::get_init_params(project);
 	auto response = call(request);
 	if (response.error) {
 		auto &error = response.error.value();
@@ -194,10 +194,10 @@ void LSP::Client::notify(const LSP::Notification &notification) {
 	process_reader.send_input(lsp_message);
 }
 
-std::shared_ptr<LSP::Client> LSP::Client::get_client_from_cache(const Tool &tool, std::string_view project_path) {
+std::shared_ptr<LSP::Client> LSP::Client::get_client_from_cache(const Tool &tool, const Project &project) {
 	auto it = clients.find(tool.path);
 	if (it == std::end(clients)) {
-		it = clients.emplace(tool.path, std::make_shared<Client>(tool, project_path)).first;
+		it = clients.emplace(tool.path, std::make_shared<Client>(tool, project)).first;
 		Utility::async_gui_thread_execute([server = it->second] { LSP_feature::add_lsp_server(*server); });
 	}
 	return it->second;

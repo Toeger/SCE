@@ -34,14 +34,20 @@ namespace Settings {
 			tools,
 			lsp_functions,
 			last_open_dialog_path,
+			build_folder,
 		};
 	}
 	const std::array Key_names = {
 		"files", "current_file", "font", "tools", "lsp_functions", "last_open_dialog_path",
 	};
-	using Key_types =
-		TMP::Type_list<QStringList /*files*/, int /*current_file*/, QString /*font*/, std::vector<Tool> /*tools*/,
-					   std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>, QString /*last_open_dialog_path*/> /*lsp_functions*/;
+	using Key_types = TMP::Type_list<QStringList,																	//files
+									 int,																			//current_file
+									 QString,																		//font
+									 std::vector<Tool>,																//tools
+									 std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>, //lsp_functions
+									 QString,																		//last_open_dialog_path
+									 QString																		//build_folder
+									 >;
 
 	//get and set values in a semi-type-safe manner
 	template <class Return_type>

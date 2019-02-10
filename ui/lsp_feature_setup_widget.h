@@ -10,7 +10,7 @@
 #include <future>
 #include <memory>
 
-class Project;
+struct Project;
 struct Tool;
 
 namespace Ui {

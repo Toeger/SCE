@@ -15,6 +15,8 @@ namespace LSP {
 	struct Client;
 }
 
+struct Project;
+
 struct LSP_feature {
 	const std::string_view name;
 	const QString description;
@@ -35,7 +37,7 @@ struct LSP_feature {
 	static void add_all(QWidget &w);
 
 	static void add_lsp_server(LSP::Client &client);
-	static nlohmann::json get_init_params(std::string_view project_path);
+	static nlohmann::json get_init_params(const Project &project);
 
 	private:
 	void (*const do_setup)(LSP_feature &);

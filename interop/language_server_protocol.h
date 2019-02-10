@@ -13,6 +13,7 @@
 #include "logic/process_reader.h"
 
 struct Tool;
+struct Project;
 
 namespace LSP {
 	struct Request {
@@ -49,13 +50,13 @@ namespace LSP {
 	};
 
 	struct Client {
-		Client(Tool tool, std::string_view project_path);
+		Client(Tool tool, const Project &project);
 		~Client();
 		Response call(const Request &request, const std::chrono::milliseconds &timeout = std::chrono::milliseconds{3000});
 		void notify(const Notification &notification);
 		nlohmann::json capabilities;
 
-		static std::shared_ptr<Client> get_client_from_cache(const Tool &tool, std::string_view project_path);
+		static std::shared_ptr<Client> get_client_from_cache(const Tool &tool, const Project &project);
 		static std::shared_ptr<Client> lookup_client_from_path(const QString &path);
 		static std::map<QString, std::shared_ptr<Client>> &get_clients();
 

@@ -2,6 +2,7 @@
 
 #include "interop/language_server_protocol.h"
 #include "lsp_feature.h"
+#include "project.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
 
@@ -298,7 +299,7 @@ void LSP_feature::add_lsp_server(LSP::Client &client) {
 	}
 }
 
-nlohmann::json LSP_feature::get_init_params(std::string_view project_path) {
+nlohmann::json LSP_feature::get_init_params(const Project &project) {
 	nlohmann::json workspace_client_capabilities = {
 		{"applyEdit", false},
 		{"workspaceEdit", {{"documentChanges", true}, {"resourceOperations", {"create", "rename", "delete"}}, {"failureHandling", {"abort"}}}},
@@ -355,7 +356,7 @@ nlohmann::json LSP_feature::get_init_params(std::string_view project_path) {
 	};
 	return {
 		{"processId", getpid()},
-		{"rootUri", project_path},
+		{"rootUri", project.project_path},
 		{"capabilities", std::move(client_capabilities)},
 		{"trace", "off"},
 	};
