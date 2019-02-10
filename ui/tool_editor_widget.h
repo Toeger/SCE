@@ -2,7 +2,6 @@
 #define TOOL_EDITOR_WIDGET_H
 
 #include "external/verdigris/wobjectdefs.h"
-#include "helptext_label_widget.h"
 #include "logic/tool.h"
 #include "threading/thread_check.h"
 
@@ -15,7 +14,6 @@ namespace Ui {
 }
 
 struct QComboBox;
-struct Tool;
 class QString;
 
 W_REGISTER_ARGTYPE(Tool)

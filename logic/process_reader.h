@@ -1,8 +1,6 @@
 #ifndef PROCESS_READER_H
 #define PROCESS_READER_H
 
-#include "threading/thread_safe.h"
-#include "tool.h"
 #include "utility/pipe.h"
 
 #include <atomic>
@@ -11,7 +9,9 @@
 #include <string_view>
 
 class QPlainTextEdit;
+class QStringList;
 class QString;
+struct Tool;
 
 namespace detail {
 	QStringList create_arguments_list(const QString &args_string);

@@ -2,7 +2,6 @@
 #define THREAD_CALL_H
 
 #include <QApplication>
-#include <QCoreApplication>
 #include <QEvent>
 #include <QObject>
 #include <chrono>

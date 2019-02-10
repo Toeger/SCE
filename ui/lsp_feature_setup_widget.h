@@ -2,7 +2,6 @@
 #define LSP_FEATURE_SETUP_WIDGET_H
 
 #include "external/verdigris/wobjectdefs.h"
-#include "logic/tool.h"
 #include "threading/gui_pointer.h"
 #include "threading/thread_call.h"
 #include "threading/thread_check.h"
@@ -12,6 +11,7 @@
 #include <memory>
 
 class Project;
+struct Tool;
 
 namespace Ui {
 	class LSP_feature_setup_widget;

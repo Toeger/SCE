@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <initializer_list>
+#include <unistd.h>
 
 static std::vector<QMetaObject::Connection> connections;
 

@@ -2,7 +2,6 @@
 #define EDIT_WINDOW_H
 
 #include "external/verdigris/wobjectdefs.h"
-#include "logic/tool.h"
 #include "threading/thread_check.h"
 
 #include <QPlainTextEdit>

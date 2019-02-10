@@ -2,8 +2,6 @@
 #define MAINWINDOW_H
 
 #include "external/verdigris/wobjectdefs.h"
-#include "interop/notification_server.h"
-#include "interop/rpc_server.h"
 #include "threading/thread_check.h"
 
 #include <QMainWindow>
@@ -20,6 +18,8 @@ class LSP_feature_setup_widget;
 class Keyboard_shortcuts_widget;
 struct Tool;
 class Project;
+struct Notification_server;
+struct RPC_server;
 
 W_REGISTER_ARGTYPE(Edit_window &)
 W_REGISTER_ARGTYPE(Edit_window *)
@@ -88,8 +88,8 @@ class MainWindow : public QMainWindow, private Thread_check {
 	std::unique_ptr<Tool_editor_widget> tool_editor_widget;
 	std::unique_ptr<LSP_feature_setup_widget> lsp_feature_setup_widget;
 	std::unique_ptr<Keyboard_shortcuts_widget> keyboard_shortcuts_widget;
-	Notification_server notification_server;
-	RPC_server rpc_server;
+	std::unique_ptr<Notification_server> notification_server;
+	std::unique_ptr<RPC_server> rpc_server;
 	std::vector<Project> projects;
 
 	private:

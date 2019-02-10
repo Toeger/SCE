@@ -1,11 +1,12 @@
 #ifndef HELPTEXT_LABEL_WIDGET
 #define HELPTEXT_LABEL_WIDGET
 
-#include <QHBoxLayout>
 #include <QLabel>
-#include <QPushButton>
 #include <functional>
 #include <variant>
+
+class QPushButton;
+class QHBoxLayout;
 
 struct Helptext_label_widget : public QWidget {
 	Helptext_label_widget(QWidget *parent = nullptr);

@@ -10,10 +10,9 @@
 #include <optional>
 #include <string>
 
-#include "logic/lsp_feature.h"
 #include "logic/process_reader.h"
-#include "logic/tool.h"
-#include "threading/thread_call.h"
+
+struct Tool;
 
 namespace LSP {
 	struct Request {
@@ -56,26 +55,9 @@ namespace LSP {
 		void notify(const Notification &notification);
 		nlohmann::json capabilities;
 
-		static std::shared_ptr<Client> get_client_from_cache(const Tool &tool, std::string_view project_path) {
-			auto it = clients.find(tool.path);
-			if (it == std::end(clients)) {
-				it = clients.emplace(tool.path, std::make_shared<Client>(tool, project_path)).first;
-				Utility::async_gui_thread_execute([server = it->second] { LSP_feature::add_lsp_server(*server); });
-			}
-			return it->second;
-		}
-
-		static std::shared_ptr<Client> lookup_client_from_path(const QString &path) {
-			const auto it = clients.find(path);
-			if (it == std::end(clients)) {
-				return nullptr;
-			}
-			return it->second;
-		}
-
-		static std::map<QString, std::shared_ptr<Client>> &get_clients() {
-			return clients;
-		}
+		static std::shared_ptr<Client> get_client_from_cache(const Tool &tool, std::string_view project_path);
+		static std::shared_ptr<Client> lookup_client_from_path(const QString &path);
+		static std::map<QString, std::shared_ptr<Client>> &get_clients();
 
 		private:
 		Process_reader process_reader;

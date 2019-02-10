@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "edit_window.h"
 #include "external/verdigris/wobjectimpl.h"
+#include "interop/notification_server.h"
+#include "interop/rpc_server.h"
 #include "keyboard_shortcuts_widget.h"
 #include "logic/lsp_feature.h"
 #include "logic/project.h"
@@ -16,6 +18,7 @@
 #include <QFont>
 #include <QFontDialog>
 #include <QFontMetrics>
+#include <QLabel>
 #include <QTabBar>
 #include <QTimer>
 #include <cassert>
@@ -53,7 +56,9 @@ static void apply_to_all_edit_windows(const Function &function, std::unique_ptr<
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow{parent}
-	, ui{std::make_unique<Ui::MainWindow>()} {
+	, ui{std::make_unique<Ui::MainWindow>()}
+	, notification_server{std::make_unique<Notification_server>()}
+	, rpc_server{std::make_unique<RPC_server>()} {
 	main_window = this;
 	ui->setupUi(this);
 	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
@@ -123,12 +128,12 @@ const std::vector<Project> &MainWindow::get_current_projects() const {
 
 void MainWindow::close_notification_server() {
 	thread_check();
-	notification_server.clear_listening_endpoints();
+	notification_server->clear_listening_endpoints();
 }
 
 void MainWindow::close_rpc_server() {
 	thread_check();
-	rpc_server.close();
+	rpc_server->close();
 }
 
 void MainWindow::set_status(QString text) {
@@ -201,7 +206,7 @@ void MainWindow::edit_buffer_changed(Edit_window *edit_window) {
 			sce::proto::FileState &file_state = *edit_notification.mutable_filestate();
 			file_state.set_id(edit_window->get_id().toStdString());
 			file_state.set_state(edit_window->get_state());
-			notification_server.send_notification(edit_notification);
+			notification_server->send_notification(edit_notification);
 		}));
 	}
 	timer_it->second.start(timer_delay_ms);

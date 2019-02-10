@@ -1,8 +1,10 @@
 #include "helptext_label_widget.h"
 
 #include <QEvent>
+#include <QHBoxLayout>
 #include <QHelpEvent>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QToolTip>
 #include <iostream>
 

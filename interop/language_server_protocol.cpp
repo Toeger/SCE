@@ -1,5 +1,6 @@
 #include "language_server_protocol.h"
 #include "logic/lsp_feature.h"
+#include "logic/tool.h"
 #include "threading/thread_call.h"
 #include "utility/color.h"
 #include "utility/utility.h"
@@ -191,4 +192,25 @@ void LSP::Client::notify(const LSP::Notification &notification) {
 	const auto lsp_message = make_lsp_message_string(notification.method, notification.params, true);
 	std::clog << Color::yellow << mwv(lsp_message) << Color::no_color << '\n';
 	process_reader.send_input(lsp_message);
+}
+
+std::shared_ptr<LSP::Client> LSP::Client::get_client_from_cache(const Tool &tool, std::string_view project_path) {
+	auto it = clients.find(tool.path);
+	if (it == std::end(clients)) {
+		it = clients.emplace(tool.path, std::make_shared<Client>(tool, project_path)).first;
+		Utility::async_gui_thread_execute([server = it->second] { LSP_feature::add_lsp_server(*server); });
+	}
+	return it->second;
+}
+
+std::shared_ptr<LSP::Client> LSP::Client::lookup_client_from_path(const QString &path) {
+	const auto it = clients.find(path);
+	if (it == std::end(clients)) {
+		return nullptr;
+	}
+	return it->second;
+}
+
+std::map<QString, std::shared_ptr<LSP::Client> > &LSP::Client::get_clients() {
+	return clients;
 }
