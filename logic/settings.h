@@ -33,13 +33,15 @@ namespace Settings {
 			font,
 			tools,
 			lsp_functions,
+			last_open_dialog_path,
 		};
 	}
 	const std::array Key_names = {
-		"files", "current_file", "font", "tools", "lsp_functions",
+		"files", "current_file", "font", "tools", "lsp_functions", "last_open_dialog_path",
 	};
-	using Key_types = TMP::Type_list<QStringList /*files*/, int /*current_file*/, QString /*font*/, std::vector<Tool> /*tools*/,
-									 std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>> /*lsp_functions*/;
+	using Key_types =
+		TMP::Type_list<QStringList /*files*/, int /*current_file*/, QString /*font*/, std::vector<Tool> /*tools*/,
+					   std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>, QString /*last_open_dialog_path*/> /*lsp_functions*/;
 
 	//get and set values in a semi-type-safe manner
 	template <class Return_type>
@@ -77,14 +79,15 @@ namespace Settings {
 			return Return_type{v};
 		}
 	}
-	template <Key::Key key, class..., class Default_type, class Return_type = Key_types::at<key>>
-	Return_type get(const Default_type &default_value) {
-		return get<Return_type>(QSettings{}.value(Key_names[key], default_value));
+	template <Key::Key key, class Default_type>
+	auto get(const Default_type &default_value) {
+		static_assert(Key_types::contains_v<Key_types::at<key>>, "Missing code to deal with this Return_type");
+		return get<Key_types::at<key>>(QSettings{}.value(Key_names[key], default_value));
 	}
-	template <Key::Key key, class..., class Return_type = Key_types::at<key>>
-	Return_type get() {
-		static_assert(Key_types::contains_v<Return_type>, "Missing code to deal with this Return_type");
-		return get<key>(QVariant{});
+	template <Key::Key key>
+	auto get() {
+		static_assert(Key_types::contains_v<Key_types::at<key>>, "Missing code to deal with this Return_type");
+		return get<Key_types::at<key>>(QSettings{}.value(Key_names[key]));
 	}
 
 	template <class T>
