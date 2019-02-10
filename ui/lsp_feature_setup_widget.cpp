@@ -53,7 +53,7 @@ void LSP_feature_setup_widget::update_lsp_features_from_settings(const Project &
 					continue;
 				}
 				try {
-					feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it, "file://" + project.root_dir));
+					feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it, "file://" + project.project_path));
 				} catch (std::exception &e) {
 					MainWindow::get_main_window().set_status(QString{"Failed loading lsp tool %1: Error: %2"}.arg(lsp_tool_it->get_name()).arg(e.what()));
 				}
@@ -141,7 +141,7 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		set_progress_percentage(current_steps++ * 100 / max_steps);
 		std::optional<nlohmann::json> capabilities;
 		try {
-			capabilities = LSP::Client::get_client_from_cache(tool, "file://" + project.root_dir)->capabilities;
+			capabilities = LSP::Client::get_client_from_cache(tool, "file://" + project.project_path)->capabilities;
 		} catch (const std::exception &e) {
 			add_features({QObject::tr("Failed getting capabilities for %1: %2").arg(tool.get_name()).arg(e.what()), tool_index++});
 			continue;
@@ -245,7 +245,7 @@ void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 			load_lsp_settings_to_gui();
 		});
 	};
-	feature_loader = std::async(std::launch::async, [tools = std::move(tools), set_progress_callback, add_features_callback, done_callback,
+	feature_loader = std::async(std::launch::async, [this, set_progress_callback, add_features_callback, done_callback,
 													 projects = MainWindow::get_main_window().get_current_projects()] {
 		for (const auto &project : projects) {
 			set_lsp_features(tools, set_progress_callback, add_features_callback, done_callback, project);
