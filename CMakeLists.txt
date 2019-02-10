@@ -65,7 +65,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
 		endif()
 	endif()
 	#disable annoying warnings
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces -Wno-sign-compare -Wno-mismatched-tags")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces -Wno-sign-compare")
 	#treat some warnings not as errors
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-parameter -Wno-error=attributes -Wno-error=unused-function")
 	#stop clang from complaining about unused flags. TODO: figure out why those flags are considered unused.
