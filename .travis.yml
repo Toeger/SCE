@@ -2,7 +2,7 @@ language: cpp
 dist: bionic
 
 cache:
-    ccache: false
+    ccache: true
 
 services:
     - xvfb
@@ -67,7 +67,6 @@ install:
 
 before_script:
     # Qt
-    - source /opt/qt511/bin/qt511-env.sh
     - export QT_FATAL_WARNINGS=1
     # Sanitizer settings
     - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-8
@@ -100,4 +99,4 @@ script:
 
 after_script:
     # ccache stats
-    #   - ccache -s
+    - ccache -s
