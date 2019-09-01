@@ -5,7 +5,7 @@ cache:
     ccache: false
 
 services:
-  - xvfb
+    - xvfb
 
 before_install:
     # last line
@@ -28,7 +28,7 @@ before_install:
     # boost
     - PACKAGES=${PACKAGES}"libboost-all-dev "
     # LSP server clangd
-    - PACKAGES=${PACKAGES}"clang-tools-6.0 "
+    - PACKAGES=${PACKAGES}"clang-tools-7 "
     # python
     - PACKAGES=${PACKAGES}"python2.7 "
     - PACKAGES=${PACKAGES}"python3.5 "
@@ -47,10 +47,10 @@ install:
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
     # clang
-    - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-6.0 90
-    - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-6.0 90
+    - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-7.0 90
+    - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-7 90
     # clangd
-    - sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-6.0 90
+    - sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-7 90
     # ccache
     - which clang++
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang++
