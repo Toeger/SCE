@@ -184,8 +184,7 @@ add_custom_target(MISC_FILES
 )
 
 add_custom_target(python_environment
-	${CMAKE_SOURCE_DIR}/testdata/interop_scripts/setup_python.sh python2
-	COMMAND ${CMAKE_SOURCE_DIR}/testdata/interop_scripts/setup_python.sh python3
+	${CMAKE_SOURCE_DIR}/testdata/interop_scripts/setup_python.sh python3
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/testdata/interop_scripts
 	COMMENT "Setting up python environment"
 )

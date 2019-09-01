@@ -27,8 +27,7 @@ before_install:
     # LSP server clangd
     - PACKAGES=${PACKAGES}"clang-tools-8 "
     # python
-    - PACKAGES=${PACKAGES}"python2.7 "
-    - PACKAGES=${PACKAGES}"python3.5 "
+    - PACKAGES=${PACKAGES}"python3 "
     # Qt
     - PACKAGES=${PACKAGES}"qtbase5-dev mesa-common-dev "
     # cmake
@@ -82,8 +81,6 @@ before_script:
     - cmake --version
     - ninja --version
     - python --version
-    - python2 --version
-    - python3 --version
     - gdb --version
     - ld --version
     - clangd --version

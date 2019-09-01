@@ -60,10 +60,6 @@ TEST_CASE("Testing RPC server", "[rpc_server]") {
 			REQUIRE(expected_error == error.str());
 			REQUIRE(expected_output == output.str());
 		};
-
-		//python2
-		test_sh_script(R"(run_python_script.sh "python2 rpc_call.py")", "testresponse", "");
-		//python3
 		test_sh_script(R"(run_python_script.sh "python3 rpc_call.py")", "testresponse", "");
 	}
 }
