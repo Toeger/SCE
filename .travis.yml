@@ -2,7 +2,7 @@ language: cpp
 dist: bionic
 
 cache:
-    ccache: true
+    ccache: false
 
 services:
     - xvfb
@@ -99,4 +99,4 @@ script:
 
 after_script:
     # ccache stats
-    - ccache -s
+    #- ccache -s
