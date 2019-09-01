@@ -30,7 +30,7 @@ before_install:
     - PACKAGES=${PACKAGES}"python2.7 "
     - PACKAGES=${PACKAGES}"python3.5 "
     # Qt
-    - PACKAGES=${PACKAGES}"qt511-meta-minimal mesa-common-dev "
+    - PACKAGES=${PACKAGES}"qtbase5-dev mesa-common-dev "
     # cmake
     - PACKAGES=${PACKAGES}"cmake "
     # Update sources
