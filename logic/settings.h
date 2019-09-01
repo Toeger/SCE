@@ -37,9 +37,9 @@ namespace Settings {
 			build_folder,
 		};
 	}
-	const std::array Key_names = {
-		"files", "current_file", "font", "tools", "lsp_functions", "last_open_dialog_path",
-	};
+    const std::array Key_names = {
+        "files", "current_file", "font", "tools", "lsp_functions", "last_open_dialog_path", "build_folder",
+    };
 	using Key_types = TMP::Type_list<QStringList,																	//files
 									 int,																			//current_file
 									 QString,																		//font
