@@ -23,6 +23,7 @@ LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
 	, __(new Ui::LSP_feature_setup_widget)
 	, ui{__.get()} {
 	ui->setupUi(this);
+    ui->progressBar->hide();
 	ui->splitter->setSizes({1, 2});
 	update_gui_from_settings_and_LSP_servers();
 }
@@ -222,8 +223,6 @@ void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 	}
 	header_texts << tr("Off");
 	ui->lsp_features_tableWidget->setHorizontalHeaderLabels(header_texts);
-	ui->progressBar->setValue(0);
-	ui->progressBar->setVisible(true);
 	auto set_progress_callback = [this](int progress_percentage) {
 		Utility::sync_gui_thread_execute([this, progress_percentage] { ui->progressBar->setValue(progress_percentage); });
 	};
@@ -245,12 +244,15 @@ void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 			load_lsp_settings_to_gui();
 		});
 	};
+    ui->progressBar->setValue(0);
+    ui->progressBar->setVisible(true);
 	feature_loader = std::async(std::launch::async, [this, set_progress_callback, add_features_callback, done_callback,
 													 projects = MainWindow::get_main_window().get_current_projects()] {
-		for (const auto &project : projects) {
+        for (const auto &project : projects) {
 			set_lsp_features(tools, set_progress_callback, add_features_callback, done_callback, project);
 		}
-	});
+        Utility::async_gui_thread_execute([this] { ui->progressBar->setVisible(false); });
+    });
 }
 
 void LSP_feature_setup_widget::load_lsp_settings_to_gui() {
