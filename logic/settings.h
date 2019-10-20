@@ -22,7 +22,7 @@ namespace Settings {
     using Lsp_functions_type = std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>;
 #define DECLARE_SETTINGS                                                                                                                                       \
     X(QStringList, files), X(int, current_file), X(QString, font), X(std::vector<Tool>, tools), X(Lsp_functions_type, lsp_functions),                          \
-        X(QString, last_open_dialog_path), X(QString, default_build_folder)
+        X(QString, last_open_dialog_path), X(QString, build_folder)
     namespace Key {
         enum Key {
 #define X(TYPE, NAME) NAME
