@@ -13,6 +13,7 @@
 #include "ui_mainwindow.h"
 #include "utility/color.h"
 
+#include <QDockWidget>
 #include <QFile>
 #include <QFileDialog>
 #include <QFont>
@@ -21,6 +22,7 @@
 #include <QLabel>
 #include <QTabBar>
 #include <QTimer>
+#include <QTreeWidget>
 #include <cassert>
 #include <iostream>
 #include <sce.pb.h>
@@ -254,54 +256,90 @@ void MainWindow::add_file_tab(const QString &filename) {
 		connect(file_edit.get(), &QPlainTextEdit::textChanged, [edit_window = file_edit.get()] { main_window->edit_buffer_changed(edit_window); }));
 	LSP_feature::add_all(*file_edit);
 	auto index = ui->file_tabs->addTab(file_edit.release(), filename);
-	ui->file_tabs->setTabToolTip(index, filename);
+    ui->file_tabs->setTabToolTip(index, filename);
+}
+
+void MainWindow::add_project_to_project_list(const Project &project) {
+    assert(projects_window);
+    for (auto &item : project_list->findItems("", Qt::MatchFlag::MatchContains)) {
+        if (item->text(0) == project.project_path.path()) {
+            project_list->setItemSelected(item, true);
+            return;
+        }
+    }
+    auto project_item = new QTreeWidgetItem(project_list, {project.project_path.path()});
+    project_list->insertTopLevelItem(0, project_item);
+    auto files_item = new QTreeWidgetItem(project_item, {tr("Files")});
+    project_item->addChild(files_item);
 }
 
 void MainWindow::on_action_Font_triggered() {
-	bool success;
-	const auto font = QFontDialog::getFont(&success, this);
-	if (success == false) {
-		return;
+    bool success;
+    const auto font = QFontDialog::getFont(&success, this);
+    if (success == false) {
+        return;
 	}
-	Settings::set<Settings::Key::font>(font.toString());
-	apply_to_all_edit_windows([&font](Edit_window *edit) { edit->setFont(font); }, ui);
+    Settings::set<Settings::Key::font>(font.toString());
+    apply_to_all_edit_windows([&font](Edit_window *edit) { edit->setFont(font); }, ui);
 }
 
 void MainWindow::on_actionLSP_Setup_triggered() {
-	if (lsp_feature_setup_widget != nullptr && lsp_feature_setup_widget->isVisible()) {
-		lsp_feature_setup_widget->activateWindow();
-	} else {
-		lsp_feature_setup_widget = std::make_unique<LSP_feature_setup_widget>();
-		lsp_feature_setup_widget->show();
+    if (lsp_feature_setup_widget != nullptr && lsp_feature_setup_widget->isVisible()) {
+        lsp_feature_setup_widget->activateWindow();
+    } else {
+        lsp_feature_setup_widget = std::make_unique<LSP_feature_setup_widget>();
+        lsp_feature_setup_widget->show();
 	}
 }
 
 void MainWindow::on_action_Test_triggered() {
-	auto edit = get_current_edit_window();
-	Edit_window::Note note;
-	note.line = 1;
-	note.char_start = 3;
-	note.char_end = 7;
-	note.color = 0xff0000;
-	note.text = "Test notification";
-	edit->add_note(std::move(note));
+    auto edit = get_current_edit_window();
+    Edit_window::Note note;
+    note.line = 1;
+    note.char_start = 3;
+    note.char_end = 7;
+    note.color = 0xff0000;
+    note.text = "Test notification";
+    edit->add_note(std::move(note));
 }
 
 void MainWindow::on_action_Keyboard_shortcuts_triggered() {
-	if (keyboard_shortcuts_widget != nullptr && keyboard_shortcuts_widget->isVisible()) {
-		keyboard_shortcuts_widget->activateWindow();
-	} else {
-		keyboard_shortcuts_widget = std::make_unique<Keyboard_shortcuts_widget>();
-		keyboard_shortcuts_widget->show();
+    if (keyboard_shortcuts_widget != nullptr && keyboard_shortcuts_widget->isVisible()) {
+        keyboard_shortcuts_widget->activateWindow();
+    } else {
+        keyboard_shortcuts_widget = std::make_unique<Keyboard_shortcuts_widget>();
+        keyboard_shortcuts_widget->show();
 	}
 }
 
 void MainWindow::on_actionOpen_Project_Folder_triggered() {
-	const auto &dir = QFileDialog::getExistingDirectory(this, "SCE - " + tr("Open project directory"), Settings::get<Settings::Key::last_open_dialog_path>());
-	if (dir.isEmpty()) {
-		return;
+    const auto &dir = QFileDialog::getExistingDirectory(this, "SCE - " + tr("Open project directory"), Settings::get<Settings::Key::last_open_dialog_path>());
+    if (dir.isEmpty()) {
+        return;
 	}
-	Settings::set<Settings::Key::last_open_dialog_path>(dir);
-	projects.push_back({dir.toStdString()});
-	LSP_feature_setup_widget::update_lsp_features_from_settings(projects.back());
+    Settings::set<Settings::Key::last_open_dialog_path>(dir);
+    projects.push_back({dir});
+    LSP_feature_setup_widget::update_lsp_features_from_settings(projects.back());
+    on_actionProject_triggered(true);
+    add_project_to_project_list(projects.back());
+}
+
+void MainWindow::on_actionProject_triggered(bool triggered) {
+    if (not projects_window) {
+        projects_window = new QDockWidget(tr("Projects"), this);
+        projects_window->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+        project_list = new QTreeWidget(projects_window);
+        project_list->setHeaderHidden(true);
+        projects_window->setWidget(project_list);
+        addDockWidget(Qt::LeftDockWidgetArea, projects_window);
+        connect(projects_window, &QDockWidget::visibilityChanged, [this](bool visible) {
+            if (ui) {
+                ui->actionProject->setChecked(visible);
+            }
+        });
+        for (auto &project : projects) {
+            add_project_to_project_list(project);
+        }
+    }
+    projects_window->setVisible(triggered);
 }

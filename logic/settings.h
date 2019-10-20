@@ -22,7 +22,7 @@ namespace Settings {
     using Lsp_functions_type = std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>;
 #define DECLARE_SETTINGS                                                                                                                                       \
     X(QStringList, files), X(int, current_file), X(QString, font), X(std::vector<Tool>, tools), X(Lsp_functions_type, lsp_functions),                          \
-        X(QString, last_open_dialog_path), X(QString, build_folder)
+        X(QString, last_open_dialog_path), X(QString, default_build_folder)
     namespace Key {
         enum Key {
 #define X(TYPE, NAME) NAME
@@ -44,7 +44,9 @@ namespace Settings {
 	//get and set values in a semi-type-safe manner
 	template <class Return_type>
 	Return_type get(const QVariant &v) {
-		if constexpr (std::is_same_v<Return_type, int>) {
+        if constexpr (std::is_same_v<Return_type, bool>) {
+            return v.toInt();
+        } else if constexpr (std::is_same_v<Return_type, int>) {
 			return v.toInt();
 		} else if constexpr (std::is_same_v<Return_type, QStringList>) {
 			return v.toStringList();
@@ -90,7 +92,9 @@ namespace Settings {
 
 	template <class T>
 	QVariant to_variant(const T &t) {
-		if constexpr (TMP::is_type_specialization_v<T, std::vector>) {
+        if constexpr (std::is_same_v<T, bool>) {
+            return static_cast<int>(t);
+        } else if constexpr (TMP::is_type_specialization_v<T, std::vector>) {
 			QList<QVariant> list;
 			for (const auto &element : t) {
 				list.append(to_variant(element));

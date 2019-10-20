@@ -356,7 +356,7 @@ nlohmann::json LSP_feature::get_init_params(const Project &project) {
 	};
 	return {
 		{"processId", getpid()},
-		{"rootUri", project.project_path},
+        {"rootUri", "file://" + project.project_path.path().toStdString()},
 		{"capabilities", std::move(client_capabilities)},
 		{"trace", "off"},
 	};

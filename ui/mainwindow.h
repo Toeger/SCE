@@ -20,6 +20,8 @@ struct Tool;
 struct Project;
 struct Notification_server;
 struct RPC_server;
+class QDockWidget;
+class QTreeWidget;
 
 W_REGISTER_ARGTYPE(Edit_window &)
 W_REGISTER_ARGTYPE(Edit_window *)
@@ -73,13 +75,16 @@ class MainWindow : public QMainWindow, private Thread_check {
 	W_SLOT(closeEvent)
 	void edit_buffer_changed(Edit_window *edit_window);
 	W_SLOT(edit_buffer_changed)
-	void on_actionOpen_Project_Folder_triggered();
-	W_SLOT(on_actionOpen_Project_Folder_triggered)
+    void on_actionOpen_Project_Folder_triggered();
+    W_SLOT(on_actionOpen_Project_Folder_triggered)
+    void on_actionProject_triggered(bool);
+    W_SLOT(on_actionProject_triggered)
 
 	private:
 	void load_last_files();
 	void save_last_files();
 	void add_file_tab(const QString &filename);
+    void add_project_to_project_list(const Project &project);
 
 	int timer_delay_ms = 1000;
 	std::vector<QMetaObject::Connection> connections;
@@ -91,6 +96,8 @@ class MainWindow : public QMainWindow, private Thread_check {
 	std::unique_ptr<Notification_server> notification_server;
 	std::unique_ptr<RPC_server> rpc_server;
 	std::vector<Project> projects;
+    QDockWidget *projects_window = nullptr;
+    QTreeWidget *project_list = nullptr;
 
 	private:
 	std::unique_ptr<QWidget> status_widget;

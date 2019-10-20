@@ -1,18 +1,27 @@
 #include "project.h"
 #include "settings.h"
 
-#include <QDir>
+#include <QDir> //TODO: Replace with std::filesystem once it stops crashing for even trivial code
+#include <stdexcept>
 
-QString Project::get_default_build_path(std::string_view project_path) {
-	auto path = QDir{QString::fromLocal8Bit(project_path.data(), project_path.size())};
-	path.cd(Settings::get<Settings::Key::build_folder>("../build"));
-	return path.path();
+QDir Project::get_default_build_path(QDir project_path) {
+    project_path.cd(Settings::get<Settings::Key::default_build_folder>("../build"));
+    return project_path;
 }
 
-Project::Project(std::string p_project_path)
-	: project_path{std::move(p_project_path)}
-	, build_path{get_default_build_path(project_path).toStdString()} {}
+Project::Project(QDir p_project_path)
+    : Project{p_project_path, get_default_build_path(p_project_path)} {}
 
-Project::Project(std::string p_project_path, std::string p_build_path)
-	: project_path{std::move(p_project_path)}
-	, build_path{std::move(p_build_path)} {}
+Project::Project(QDir p_project_path, QDir p_build_path)
+    : project_path{std::move(p_project_path)}
+    , build_path{std::move(p_build_path)} {}
+
+void Project::update_from_disk() {
+    if (not project_path.exists()) {
+        throw std::runtime_error{"Failed updating project from disk because project path is invalid"};
+    }
+    if (project_file.filePath().isEmpty()) {
+    }
+    if (not project_file.exists()) {
+    }
+}

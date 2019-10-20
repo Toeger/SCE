@@ -39,7 +39,7 @@
      <x>0</x>
      <y>0</y>
      <width>875</width>
-     <height>24</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -55,7 +55,7 @@
     </property>
     <addaction name="action_Font"/>
     <addaction name="action_Tab_Width"/>
-    <addaction name="action_Keyboard_shortcuts"/>
+    <addaction name="action_Key_Bindings"/>
    </widget>
    <widget class="QMenu" name="menu_Tools">
     <property name="title">
@@ -66,9 +66,16 @@
     <addaction name="separator"/>
     <addaction name="action_Test"/>
    </widget>
+   <widget class="QMenu" name="menuWindows">
+    <property name="title">
+     <string>Windows</string>
+    </property>
+    <addaction name="actionProject"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
    <addaction name="menu_Tools"/>
+   <addaction name="menuWindows"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -81,7 +88,7 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen_Project_Folder">
    <property name="text">
-    <string>Open &amp;Project Folder</string>
+    <string>Open &amp;Project ...</string>
    </property>
   </action>
   <action name="actionOpen_File">
@@ -120,9 +127,22 @@
     <string>&amp;LSP Setup ...</string>
    </property>
   </action>
-  <action name="action_Keyboard_shortcuts">
+  <action name="action_Key_Bindings">
    <property name="text">
     <string>&amp;Key Bindings ...</string>
+   </property>
+  </action>
+  <action name="actionProject">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Project</string>
+   </property>
+  </action>
+  <action name="action_Project_Paths">
+   <property name="text">
+    <string>&amp;Project Paths</string>
    </property>
   </action>
  </widget>
