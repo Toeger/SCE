@@ -58,7 +58,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void file_opened(Edit_window &edit_window, std::string path) W_SIGNAL(file_opened, edit_window, path);
 	//Note: There is no file_closed signal. Use &Edit_window::destroyed instead.
 
-	private slots:
+    private slots:
 	void on_actionOpen_File_triggered();
 	W_SLOT(on_actionOpen_File_triggered)
 	void on_actionLSP_Setup_triggered();
@@ -69,8 +69,8 @@ class MainWindow : public QMainWindow, private Thread_check {
 	W_SLOT(on_action_Test_triggered)
 	void on_file_tabs_tabCloseRequested(int index);
 	W_SLOT(on_file_tabs_tabCloseRequested)
-	void on_action_Keyboard_shortcuts_triggered();
-	W_SLOT(on_action_Keyboard_shortcuts_triggered)
+    void on_action_Key_Bindings_triggered();
+    W_SLOT(on_action_Key_Bindings_triggered)
 	void closeEvent(QCloseEvent *event) override;
 	W_SLOT(closeEvent)
 	void edit_buffer_changed(Edit_window *edit_window);

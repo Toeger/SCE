@@ -303,7 +303,7 @@ void MainWindow::on_action_Test_triggered() {
     edit->add_note(std::move(note));
 }
 
-void MainWindow::on_action_Keyboard_shortcuts_triggered() {
+void MainWindow::on_action_Key_Bindings_triggered() {
     if (keyboard_shortcuts_widget != nullptr && keyboard_shortcuts_widget->isVisible()) {
         keyboard_shortcuts_widget->activateWindow();
     } else {
