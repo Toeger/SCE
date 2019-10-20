@@ -16,38 +16,30 @@
 
 //helpers for QSettings' persistent storage
 namespace Settings {
-	/* Note: If you need to add a setting you need to do 3 things:
-		1. Add a value to the Key enum.
-		2. Add a name to the Key_names.
-		3. Add the type of the value to Key_types.
-		The indexes must match (Key_names[key] must produce the correct name for that key and Key_types::at<key> must give us the right type).
-		TODO: Someone figure out how to do this in 1 step without overhead or ugly macros.
-		If you add new types you will also need to add cases for the get and set functions in order to (de)serialize those types.
-	*/
-
-	//use these key names instead of hardcoding strings to avoid typos and having a list of all settings available
-	namespace Key {
-		enum Key {
-			files,
-			current_file,
-			font,
-			tools,
-			lsp_functions,
-			last_open_dialog_path,
-			build_folder,
-		};
-	}
-    const std::array Key_names = {
-        "files", "current_file", "font", "tools", "lsp_functions", "last_open_dialog_path", "build_folder",
+    /* To add settings add X(TYPE, NAME) of the setting to the DECLARE_SETTINGS macro. For example add X(bool, open_fullscreen) to make that setting available.
+       If the type has a comma, for example std::map<int, QString> then use a typedef to hide the comma. Yes this is horrible, if you have a way to fix this
+       please do. */
+    using Lsp_functions_type = std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>;
+#define DECLARE_SETTINGS                                                                                                                                       \
+    X(QStringList, files), X(int, current_file), X(QString, font), X(std::vector<Tool>, tools), X(Lsp_functions_type, lsp_functions),                          \
+        X(QString, last_open_dialog_path), X(QString, default_build_folder)
+    namespace Key {
+        enum Key {
+#define X(TYPE, NAME) NAME
+            DECLARE_SETTINGS
+#undef X
+        };
+    } // namespace Key
+    constexpr std::array Key_names = {
+#define X(TYPE, NAME) #NAME
+        DECLARE_SETTINGS
+#undef X
     };
-	using Key_types = TMP::Type_list<QStringList,																	//files
-									 int,																			//current_file
-									 QString,																		//font
-									 std::vector<Tool>,																//tools
-									 std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>, //lsp_functions
-									 QString,																		//last_open_dialog_path
-									 QString																		//build_folder
-									 >;
+    using Key_types = TMP::Type_list<
+#define X(TYPE, NAME) TYPE
+        DECLARE_SETTINGS
+#undef X
+        >;
 
 	//get and set values in a semi-type-safe manner
 	template <class Return_type>
