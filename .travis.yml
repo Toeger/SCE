@@ -32,6 +32,8 @@ before_install:
     - PACKAGES=${PACKAGES}"qtbase5-dev mesa-common-dev "
     # cmake
     - PACKAGES=${PACKAGES}"cmake "
+    # grpc
+    - PACKAGES=${PACKAGES}"libgrpc++-dev protobuf-compiler "
     # Update sources
     - sudo apt-get update
 
@@ -53,16 +55,6 @@ install:
     - sudo ln -s $(which ccache) /usr/lib/ccache/clang
     - which clang++
     - which g++
-    # protobuf
-    - quietly git clone -b v1.10.x --single-branch --depth=1 --recursive https://github.com/grpc/grpc
-    - cd grpc && mkdir build && cd build
-    - CXX=clang++ CC=clang quietly cmake .. -G Ninja
-    - sudo quietly ninja install
-    - sudo cp grpc_* /usr/local/bin
-    - sudo cp *.a /usr/local/lib
-    - cd ../..
-    - export GRPC_LIBS=$(sh -e print_libs.sh)
-    - echo $GRPC_LIBS
 
 before_script:
     # Qt

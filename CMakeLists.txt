@@ -19,12 +19,6 @@ find_package(Boost 1.54 COMPONENTS system REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 # Set up protobuffer
-if (NOT DEFINED ENV{TRAVIS})
-	set(USR_PATH "/usr")
-else()
-	set(USR_PATH "/usr/local")
-endif()
-
 set(CMAKE_MODULE_PATH "${USR_PATH}/lib/grpc/cmake/;${USR_PATH}/lib/protobuf/cmake/;${CMAKE_MODULE_PATH}")
 find_package(Protobuf REQUIRED)
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS interop/sce.proto)
