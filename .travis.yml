@@ -16,22 +16,22 @@ before_install:
     - sudo mv quietly /usr/bin
     # set sources
     - sudo sh -c "printf 'Acquire::Queue-Mode "host";\\nAcquire::Retries 10;\\n' >> /etc/apt/apt.conf"
-    # gcc
-    - PACKAGES=${PACKAGES}"gcc-8 g++-8 "
-    # gdb
-    - PACKAGES=${PACKAGES}"gdb "
-    # ninja
-    - PACKAGES=${PACKAGES}"ninja-build "
-    # boost
-    - PACKAGES=${PACKAGES}"libboost-all-dev "
-    # LSP server clangd
-    - PACKAGES=${PACKAGES}"clang-tools-8 "
-    # python
-    - PACKAGES=${PACKAGES}"python3 "
-    # Qt
-    - PACKAGES=${PACKAGES}"qtbase5-dev mesa-common-dev "
-    # cmake
-    - PACKAGES=${PACKAGES}"cmake "
+    #### gcc
+    ###- PACKAGES=${PACKAGES}"gcc-8 g++-8 "
+    #### gdb
+    ###- PACKAGES=${PACKAGES}"gdb "
+    #### ninja
+    ###- PACKAGES=${PACKAGES}"ninja-build "
+    #### boost
+    ###- PACKAGES=${PACKAGES}"libboost-all-dev "
+    #### LSP server clangd
+    ###- PACKAGES=${PACKAGES}"clang-tools-8 "
+    #### python
+    ###- PACKAGES=${PACKAGES}"python3 "
+    #### Qt
+    ###- PACKAGES=${PACKAGES}"qtbase5-dev mesa-common-dev "
+    #### cmake
+    ###- PACKAGES=${PACKAGES}"cmake "
     # grpc
     - PACKAGES=${PACKAGES}"libgrpc-dev libgrpc++-dev libprotobuf-dev protobuf-compiler protobuf-compiler-grpc "
     # Update sources
@@ -41,6 +41,11 @@ install:
     # install packages
     - echo "Installing "${PACKAGES}
     - sudo quietly apt-get install ${PACKAGES}
+    # test
+    sudo apt install locate
+    sudo updatedb
+    locate grpc_cpp_plugin
+    false
     # gcc
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
