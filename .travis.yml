@@ -33,7 +33,7 @@ before_install:
     # cmake
     - PACKAGES=${PACKAGES}"cmake "
     # grpc
-    - PACKAGES=${PACKAGES}"libgrpc-dev libgrpc++-dev protobuf-compiler protobuf-compiler-grpc "
+    - PACKAGES=${PACKAGES}"libgrpc-dev libgrpc++-dev libprotobuf-dev protobuf-compiler protobuf-compiler-grpc "
     # Update sources
     - sudo apt-get update
 
