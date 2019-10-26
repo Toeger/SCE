@@ -14,8 +14,12 @@ RPC_server::RPC_server()
 				 .SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE)
 				 .AddListeningPort(default_rpc_address, grpc::InsecureServerCredentials())
 				 .RegisterService(&rpc_server)
-				 .BuildAndStart()}
-	, server_thread{std::async(std::launch::async, [this] { server->Wait(); })} {}
+                 .BuildAndStart()} {
+    if (not server) {
+        throw std::runtime_error{"Failed starting RPC server."};
+    }
+    server_thread = std::async(std::launch::async, [this] { server->Wait(); });
+}
 
 RPC_server::~RPC_server() {
 	close();
