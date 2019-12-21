@@ -66,12 +66,12 @@ MainWindow::MainWindow(QWidget *parent)
 	Tool_actions::set_actions(Settings::get<Settings::Key::tools>());
 	LSP_feature::init_all_features();
 	load_last_files();
+    if (Settings::get<Settings::Key::show_project_widget_on_startup>()) {
+        on_actionProject_triggered(true);
+    }
 }
 
 MainWindow::~MainWindow() {
-	for (auto &connection : connections) {
-		disconnect(connection);
-	}
 	save_last_files();
 	LSP_feature::exit_all_features();
 }
@@ -192,7 +192,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 	tool_editor_widget = nullptr;
 	lsp_feature_setup_widget = nullptr;
 	keyboard_shortcuts_widget = nullptr;
-	event->accept();
+    for (auto &connection : connections) {
+        disconnect(connection);
+    }
+    QMainWindow::closeEvent(event);
 }
 
 void MainWindow::edit_buffer_changed(Edit_window *edit_window) {
@@ -332,11 +335,10 @@ void MainWindow::on_actionProject_triggered(bool triggered) {
         project_list->setHeaderHidden(true);
         projects_window->setWidget(project_list);
         addDockWidget(Qt::LeftDockWidgetArea, projects_window);
-        connect(projects_window, &QDockWidget::visibilityChanged, [this](bool visible) {
-            if (ui) {
-                ui->actionProject->setChecked(visible);
-            }
-        });
+        connections.push_back(connect(projects_window, &QDockWidget::visibilityChanged, [this](bool visible) {
+            ui->actionProject->setChecked(visible);
+            Settings::set<Settings::Key::show_project_widget_on_startup>(visible);
+        }));
         for (auto &project : projects) {
             add_project_to_project_list(project);
         }
