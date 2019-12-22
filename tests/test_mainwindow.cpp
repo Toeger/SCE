@@ -1,4 +1,5 @@
 #include "test_mainwindow.h"
+
 #include "logic/settings.h"
 #include "test.h"
 #include "threading/thread_call.h"

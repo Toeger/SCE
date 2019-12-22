@@ -28,7 +28,9 @@ W_REGISTER_ARGTYPE(Edit_window *)
 W_REGISTER_ARGTYPE(std::string)
 W_REGISTER_ARGTYPE(QCloseEvent *)
 
-class MainWindow : public QMainWindow, private Thread_check {
+class MainWindow
+	: public QMainWindow
+	, private Thread_check {
 	W_OBJECT(MainWindow)
 
 	public:
@@ -58,7 +60,7 @@ class MainWindow : public QMainWindow, private Thread_check {
 	void file_opened(Edit_window &edit_window, std::string path) W_SIGNAL(file_opened, edit_window, path);
 	//Note: There is no file_closed signal. Use &Edit_window::destroyed instead.
 
-    private slots:
+	private slots:
 	void on_actionOpen_File_triggered();
 	W_SLOT(on_actionOpen_File_triggered)
 	void on_actionLSP_Setup_triggered();
@@ -69,22 +71,22 @@ class MainWindow : public QMainWindow, private Thread_check {
 	W_SLOT(on_action_Test_triggered)
 	void on_file_tabs_tabCloseRequested(int index);
 	W_SLOT(on_file_tabs_tabCloseRequested)
-    void on_action_Key_Bindings_triggered();
-    W_SLOT(on_action_Key_Bindings_triggered)
+	void on_action_Key_Bindings_triggered();
+	W_SLOT(on_action_Key_Bindings_triggered)
 	void closeEvent(QCloseEvent *event) override;
 	W_SLOT(closeEvent)
 	void edit_buffer_changed(Edit_window *edit_window);
 	W_SLOT(edit_buffer_changed)
-    void on_actionOpen_Project_Folder_triggered();
-    W_SLOT(on_actionOpen_Project_Folder_triggered)
-    void on_actionProject_triggered(bool);
-    W_SLOT(on_actionProject_triggered)
+	void on_actionOpen_Project_Folder_triggered();
+	W_SLOT(on_actionOpen_Project_Folder_triggered)
+	void on_actionProject_triggered(bool);
+	W_SLOT(on_actionProject_triggered)
 
 	private:
 	void load_last_files();
 	void save_last_files();
 	void add_file_tab(const QString &filename);
-    void add_project_to_project_list(const Project &project);
+	void add_project_to_project_list(const Project &project);
 
 	int timer_delay_ms = 1000;
 	std::vector<QMetaObject::Connection> connections;
@@ -96,8 +98,8 @@ class MainWindow : public QMainWindow, private Thread_check {
 	std::unique_ptr<Notification_server> notification_server;
 	std::unique_ptr<RPC_server> rpc_server;
 	std::vector<Project> projects;
-    QDockWidget *projects_window = nullptr;
-    QTreeWidget *project_list = nullptr;
+	QDockWidget *projects_window = nullptr;
+	QTreeWidget *project_list = nullptr;
 
 	private:
 	std::unique_ptr<QWidget> status_widget;

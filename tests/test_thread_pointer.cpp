@@ -75,11 +75,9 @@ TEST_CASE("Testing Thread_pointer", "[thread-pointer]") {
 	WHEN("Resetting thread") {
 		int i;
 		Thread_pointer tp = &i;
-		REQUIRE_NOTHROW(std::async(std::launch::async,
-								   [tp]() mutable {
-									   tp.onwer_thread = std::this_thread::get_id();
-									   *tp = 42;
-								   })
-							.get());
+		REQUIRE_NOTHROW(std::async(std::launch::async, [tp]() mutable {
+							tp.onwer_thread = std::this_thread::get_id();
+							*tp = 42;
+						}).get());
 	}
 }

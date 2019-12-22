@@ -112,31 +112,31 @@ TEST_CASE("Testing protobuffers", "[protobuffer]") {
 		}
 	}
 	WHEN("Serializing in C++ and deserializing in Python") {
-        const auto id = "TestID";
-        {
-            std::string buffer;
-            sce::proto::EditNotification edit_notification;
-            edit_notification.mutable_filestate()->set_id(id);
-            edit_notification.mutable_filestate()->set_state(42);
-            edit_notification.SerializeToString(&buffer);
-            std::ofstream f{"/tmp/SCE_test_serialization", std::ios::binary | std::ios::out};
-            f.write(buffer.data(), buffer.size());
-        }
-        Tool script;
-        script.path = "sh";
-        script.arguments = TEST_DATA_PATH "interop_scripts/run_python_script.sh python3" + QString{" " TEST_DATA_PATH "test_deserialize.py"};
-        script.working_directory = TEST_DATA_PATH "interop_scripts";
-        std::string output;
-        std::string error;
-        const auto start = std::chrono::high_resolution_clock::now();
-        Process_reader{script, [&output](std::string_view data) { output += data; }, [&error](std::string_view data) { error += data; }}.join();
-        const auto stop = std::chrono::high_resolution_clock::now() - start;
-        INFO(Color::cyan << "Running " << Color::no_color << script.path.toStdString() << ' ' << script.arguments.toStdString() << Color::cyan << "\ntook "
-                         << std::chrono::duration_cast<std::chrono::milliseconds>(stop).count() << "ms\n"
-                         << "and produced output \"" << Color::no_color << output << Color::cyan << "\"\nand error \"" << Color::no_color << error
-                         << Color::cyan << "\"\n"
-                         << Color::no_color);
-        REQUIRE(error == "");
-        REQUIRE(output == "Filestate id: "s + id);
-    }
+		const auto id = "TestID";
+		{
+			std::string buffer;
+			sce::proto::EditNotification edit_notification;
+			edit_notification.mutable_filestate()->set_id(id);
+			edit_notification.mutable_filestate()->set_state(42);
+			edit_notification.SerializeToString(&buffer);
+			std::ofstream f{"/tmp/SCE_test_serialization", std::ios::binary | std::ios::out};
+			f.write(buffer.data(), buffer.size());
+		}
+		Tool script;
+		script.path = "sh";
+		script.arguments = TEST_DATA_PATH "interop_scripts/run_python_script.sh python3" + QString{" " TEST_DATA_PATH "test_deserialize.py"};
+		script.working_directory = TEST_DATA_PATH "interop_scripts";
+		std::string output;
+		std::string error;
+		const auto start = std::chrono::high_resolution_clock::now();
+		Process_reader{script, [&output](std::string_view data) { output += data; }, [&error](std::string_view data) { error += data; }}.join();
+		const auto stop = std::chrono::high_resolution_clock::now() - start;
+		INFO(Color::cyan << "Running " << Color::no_color << script.path.toStdString() << ' ' << script.arguments.toStdString() << Color::cyan << "\ntook "
+						 << std::chrono::duration_cast<std::chrono::milliseconds>(stop).count() << "ms\n"
+						 << "and produced output \"" << Color::no_color << output << Color::cyan << "\"\nand error \"" << Color::no_color << error
+						 << Color::cyan << "\"\n"
+						 << Color::no_color);
+		REQUIRE(error == "");
+		REQUIRE(output == "Filestate id: "s + id);
+	}
 }

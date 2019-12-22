@@ -1,4 +1,5 @@
 #include "keyboard_shortcuts_widget.h"
+
 #include "external/verdigris/wobjectimpl.h"
 #include "logic/lsp_feature.h"
 #include "logic/settings.h"

@@ -21,7 +21,9 @@ W_REGISTER_ARGTYPE(Tool)
 QString resolve_placeholders(QString s);
 
 //This window is to specify how to use external tools such as compilers.
-class Tool_editor_widget : public QWidget, private Thread_check {
+class Tool_editor_widget
+	: public QWidget
+	, private Thread_check {
 	W_OBJECT(Tool_editor_widget)
 
 	public:
@@ -48,7 +50,7 @@ class Tool_editor_widget : public QWidget, private Thread_check {
 	void set_tool_ui(Tool::Tool_type type);
 
 	std::vector<Tool> saved_tools; //the tools that are saved in settings
-	std::vector<Tool> ui_tools;	//the tools that may have been changed in the UI but not saved in settings yet
+	std::vector<Tool> ui_tools;	   //the tools that may have been changed in the UI but not saved in settings yet
 	std::unique_ptr<Ui::Tool_editor_widget> ui;
 
 	private slots:

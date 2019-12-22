@@ -5,18 +5,18 @@
 #include <QJsonObject>
 #include <QStringList>
 
-#define TOOL_MEMBERS /*someone please replace this with something sane*/                                                                                       \
-	X(enabled)                                                                                                                                                 \
-	X(type)                                                                                                                                                    \
-	X(path)                                                                                                                                                    \
-	X(arguments)                                                                                                                                               \
-	X(input)                                                                                                                                                   \
-	X(output)                                                                                                                                                  \
-	X(error)                                                                                                                                                   \
-	X(activation)                                                                                                                                              \
-	X(activation_keyboard_shortcut)                                                                                                                            \
-	X(working_directory)                                                                                                                                       \
-	X(timeout)                                                                                                                                                 \
+#define TOOL_MEMBERS /*someone please replace this with something sane*/ \
+	X(enabled)                                                           \
+	X(type)                                                              \
+	X(path)                                                              \
+	X(arguments)                                                         \
+	X(input)                                                             \
+	X(output)                                                            \
+	X(error)                                                             \
+	X(activation)                                                        \
+	X(activation_keyboard_shortcut)                                      \
+	X(working_directory)                                                 \
+	X(timeout)                                                           \
 	X(use_tty_mode)
 
 static void write(const Tool::Tool_type &data, const QString &name, QJsonObject &json) {

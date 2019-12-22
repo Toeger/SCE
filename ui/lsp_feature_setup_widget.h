@@ -17,7 +17,9 @@ namespace Ui {
 	class LSP_feature_setup_widget;
 }
 
-class LSP_feature_setup_widget : public QWidget, Thread_check {
+class LSP_feature_setup_widget
+	: public QWidget
+	, Thread_check {
 	W_OBJECT(LSP_feature_setup_widget)
 
 	public:

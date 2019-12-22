@@ -1,4 +1,5 @@
 #include "language_server_protocol.h"
+
 #include "logic/lsp_feature.h"
 #include "logic/tool.h"
 #include "threading/thread_call.h"
@@ -36,7 +37,7 @@ static std::string make_lsp_message_string(std::string_view method, const nlohma
 			case nlohmann::json::value_t::boolean:		   ///< boolean value
 			case nlohmann::json::value_t::number_integer:  ///< number value (signed integer)
 			case nlohmann::json::value_t::number_unsigned: ///< number value (unsigned integer)
-			case nlohmann::json::value_t::number_float:	///< number value (floating-point)
+			case nlohmann::json::value_t::number_float:	   ///< number value (floating-point)
 				json["params"] = nlohmann::json::array_t{params};
 				break;
 			case nlohmann::json::value_t::null:		 ///< null value
@@ -211,6 +212,6 @@ std::shared_ptr<LSP::Client> LSP::Client::lookup_client_from_path(const QString 
 	return it->second;
 }
 
-std::map<QString, std::shared_ptr<LSP::Client> > &LSP::Client::get_clients() {
+std::map<QString, std::shared_ptr<LSP::Client>> &LSP::Client::get_clients() {
 	return clients;
 }

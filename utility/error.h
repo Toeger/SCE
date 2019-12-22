@@ -1,8 +1,8 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include <string>
 #include <cerrno>
+#include <string>
 
 std::string errno_error_description(int error_number = errno);
 

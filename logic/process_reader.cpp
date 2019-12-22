@@ -1,4 +1,5 @@
 #include "process_reader.h"
+
 #include "threading/thread_call.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
@@ -584,20 +585,22 @@ static void set_format(QTextCharFormat &format, std::string_view ansi_code) {
 }
 
 void Ansi_code_handling::set_text(QPlainTextEdit *text_edit, std::string_view text) {
-	process_control_sequence_text(text,
-								  [text_edit](std::string_view escape_sequence) {
-									  auto cursor = text_edit->textCursor();
-									  QTextCharFormat format = cursor.charFormat();
-									  set_format(format, escape_sequence);
-									  cursor.setCharFormat(format);
-									  text_edit->setTextCursor(cursor);
-									  //text_edit->textCursor().insertText(">>> " + QString::fromUtf8(escape_sequence.data(), escape_sequence.size()) + " <<<");
-								  },
-								  [text_edit](auto plaintext) { text_edit->textCursor().insertText(QString::fromUtf8(plaintext.data(), plaintext.size())); });
+	process_control_sequence_text(
+		text,
+		[text_edit](std::string_view escape_sequence) {
+			auto cursor = text_edit->textCursor();
+			QTextCharFormat format = cursor.charFormat();
+			set_format(format, escape_sequence);
+			cursor.setCharFormat(format);
+			text_edit->setTextCursor(cursor);
+			//text_edit->textCursor().insertText(">>> " + QString::fromUtf8(escape_sequence.data(), escape_sequence.size()) + " <<<");
+		},
+		[text_edit](auto plaintext) { text_edit->textCursor().insertText(QString::fromUtf8(plaintext.data(), plaintext.size())); });
 }
 
 QString Ansi_code_handling::strip_control_sequences_text(std::string_view text) {
 	std::string retval;
-	process_control_sequence_text(text, [](auto escape_sequence) { (void)escape_sequence; }, [&retval](auto plaintext) { retval += plaintext; });
+	process_control_sequence_text(
+		text, [](auto escape_sequence) { (void)escape_sequence; }, [&retval](auto plaintext) { retval += plaintext; });
 	return QString::fromUtf8(retval.data(), retval.size());
 }

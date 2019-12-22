@@ -1,4 +1,5 @@
 #include "tool_editor_widget.h"
+
 #include "external/verdigris/wobjectimpl.h"
 #include "logic/settings.h"
 #include "logic/tool_actions.h"
@@ -269,9 +270,9 @@ void Tool_editor_widget::update_tools_list() {
 	for (int i = 0; i < ui_tools.size(); i++) {
 		update_tool_name(i);
 	}
-    if (ui_tools.size() == 0) {
-        return;
-    }
+	if (ui_tools.size() == 0) {
+		return;
+	}
 	tool_to_ui(ui.get(), ui_tools[current_tool_list_row]);
 	ui->tools_listWidget->setCurrentRow(current_tool_list_row);
 }

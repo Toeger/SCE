@@ -40,9 +40,9 @@ struct QJsonObject_reference_with_proper_iterators {
 };
 
 void Syntax_highligher::load_rules(QString filename) {
-#define assume(X)                                                                                                                                              \
-	if ((X) == false) {                                                                                                                                        \
-		throw std::runtime_error("Failed loading syntax rules");                                                                                               \
+#define assume(X)                                                \
+	if ((X) == false) {                                          \
+		throw std::runtime_error("Failed loading syntax rules"); \
 	}
 	QFile rules_file{filename};
 	if (rules_file.open(QIODevice::ReadOnly) == false) {

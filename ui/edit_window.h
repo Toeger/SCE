@@ -15,7 +15,9 @@ class QSyntaxHighlighter;
 class QWheelEvent;
 
 //Widget for code editing
-class Edit_window final : public QPlainTextEdit, private Thread_check {
+class Edit_window final
+	: public QPlainTextEdit
+	, private Thread_check {
 	W_OBJECT(Edit_window)
 
 	public:

@@ -27,10 +27,10 @@ class Process_reader {
 	enum class State { running, error, finished };
 	State get_state() const;
 
-	Process_reader(Tool tool, //
-				   std::function<void(std::string_view)> output_callback = [](std::string_view) {},
-				   std::function<void(std::string_view)> error_callback = [](std::string_view) {},
-				   std::function<void(State)> completion_callback = [](State) {});
+	Process_reader(
+		Tool tool, //
+		std::function<void(std::string_view)> output_callback = [](std::string_view) {},
+		std::function<void(std::string_view)> error_callback = [](std::string_view) {}, std::function<void(State)> completion_callback = [](State) {});
 	Process_reader(const Process_reader &) = delete;
 	~Process_reader();
 	static bool run(QString executable, QString args, std::ostream &output, std::ostream &error, bool use_tty = true);

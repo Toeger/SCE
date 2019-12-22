@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_RUNNER
 
 #include "test.h"
+
 #include "test_mainwindow.h"
 #include "threading/thread_call.h"
 #include "ui/mainwindow.h"
@@ -27,28 +28,28 @@ static void broken_pipe_signal_handler(int) {
 static QtMessageHandler old_handler;
 
 static std::ostream &operator<<(std::ostream &os, QtMsgType type) {
-    switch (type) {
-        case QtCriticalMsg:
-            return os << "Critical Error";
-        case QtFatalMsg:
-            return os << "Fatal Error";
-        case QtWarningMsg:
-            return os << "Warning";
-        case QtDebugMsg:
-            return os << "Debug Message";
-        case QtInfoMsg:
-            return os << "Info Message";
-    }
-    return os << "Unknown Message Type";
+	switch (type) {
+		case QtCriticalMsg:
+			return os << "Critical Error";
+		case QtFatalMsg:
+			return os << "Fatal Error";
+		case QtWarningMsg:
+			return os << "Warning";
+		case QtDebugMsg:
+			return os << "Debug Message";
+		case QtInfoMsg:
+			return os << "Info Message";
+	}
+	return os << "Unknown Message Type";
 }
 
 static void message_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-    std::cerr << msg.toStdString() << '\n';
-    std::cerr << type << " in " << context.file << ':' << context.line << '\n';
+	std::cerr << msg.toStdString() << '\n';
+	std::cerr << type << " in " << context.file << ':' << context.line << '\n';
 	switch (type) {
-        case QtCriticalMsg:
-        case QtFatalMsg:
-            __builtin_trap();
+		case QtCriticalMsg:
+		case QtFatalMsg:
+			__builtin_trap();
 		case QtWarningMsg:
 		case QtDebugMsg:
 		case QtInfoMsg:;

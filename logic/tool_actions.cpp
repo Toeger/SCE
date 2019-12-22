@@ -1,4 +1,5 @@
 #include "tool_actions.h"
+
 #include "process_reader.h"
 #include "settings.h"
 #include "ui/edit_window.h"

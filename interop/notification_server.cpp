@@ -1,4 +1,5 @@
 #include "notification_server.h"
+
 #include "threading/thread_call.h"
 #include "ui/mainwindow.h"
 

@@ -1,6 +1,8 @@
 #ifndef LANGUAGE_SERVER_PROTOCOL_H
 #define LANGUAGE_SERVER_PROTOCOL_H
 
+#include "logic/process_reader.h"
+
 #include <atomic>
 #include <chrono>
 #include <future>
@@ -9,8 +11,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-
-#include "logic/process_reader.h"
 
 struct Tool;
 struct Project;

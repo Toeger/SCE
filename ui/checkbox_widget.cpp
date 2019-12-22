@@ -1,4 +1,5 @@
 #include "checkbox_widget.h"
+
 #include "external/verdigris/wobjectimpl.h"
 
 #include <QCheckBox>

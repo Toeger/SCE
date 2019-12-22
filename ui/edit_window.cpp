@@ -1,4 +1,5 @@
 #include "edit_window.h"
+
 #include "external/verdigris/wobjectimpl.h"
 #include "logic/settings.h"
 #include "logic/syntax_highligher.h"

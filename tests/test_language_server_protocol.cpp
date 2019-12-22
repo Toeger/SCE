@@ -10,13 +10,13 @@ TEST_CASE("Testing Language Server Protocol", "[lsp]") {
 	Tool tool;
 	tool.path = "clangd";
 	WHEN("Creating and destroying an LSP server") {
-        LSP::Client client{tool, {{"/tmp"}}};
+		LSP::Client client{tool, {{"/tmp"}}};
 	}
 	WHEN("Trying to create an LSP server that doesn't exist") {
 		tool.path = "nonexistant";
-        REQUIRE_THROWS(LSP::Client{tool, {{"/tmp"}}});
+		REQUIRE_THROWS(LSP::Client{tool, {{"/tmp"}}});
 	}
 	WHEN("Running the LSP server in another thread") {
-        std::async(std::launch::async, [&tool] { LSP::Client client{tool, {{"/tmp"}}}; });
+		std::async(std::launch::async, [&tool] { LSP::Client client{tool, {{"/tmp"}}}; });
 	}
 }

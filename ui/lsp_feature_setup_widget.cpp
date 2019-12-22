@@ -1,4 +1,5 @@
 #include "lsp_feature_setup_widget.h"
+
 #include "checkbox_widget.h"
 #include "external/verdigris/wobjectimpl.h"
 #include "interop/language_server_protocol.h"
@@ -23,7 +24,7 @@ LSP_feature_setup_widget::LSP_feature_setup_widget(QWidget *parent)
 	, __(new Ui::LSP_feature_setup_widget)
 	, ui{__.get()} {
 	ui->setupUi(this);
-    ui->progressBar->hide();
+	ui->progressBar->hide();
 	ui->splitter->setSizes({1, 2});
 	update_gui_from_settings_and_LSP_servers();
 }
@@ -54,7 +55,7 @@ void LSP_feature_setup_widget::update_lsp_features_from_settings(const Project &
 					continue;
 				}
 				try {
-                    feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it, project.project_path));
+					feature->clients.push_back(LSP::Client::get_client_from_cache(*lsp_tool_it, project.project_path));
 				} catch (std::exception &e) {
 					MainWindow::get_main_window().set_status(QString{"Failed loading lsp tool %1: Error: %2"}.arg(lsp_tool_it->get_name()).arg(e.what()));
 				}
@@ -142,7 +143,7 @@ static void set_lsp_features(const std::vector<Tool> &tools, const std::function
 		set_progress_percentage(current_steps++ * 100 / max_steps);
 		std::optional<nlohmann::json> capabilities;
 		try {
-            capabilities = LSP::Client::get_client_from_cache(tool, project.project_path)->capabilities;
+			capabilities = LSP::Client::get_client_from_cache(tool, project.project_path)->capabilities;
 		} catch (const std::exception &e) {
 			add_features({QObject::tr("Failed getting capabilities for %1: %2").arg(tool.get_name()).arg(e.what()), tool_index++});
 			continue;
@@ -244,15 +245,15 @@ void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 			load_lsp_settings_to_gui();
 		});
 	};
-    ui->progressBar->setValue(0);
-    ui->progressBar->setVisible(true);
+	ui->progressBar->setValue(0);
+	ui->progressBar->setVisible(true);
 	feature_loader = std::async(std::launch::async, [this, set_progress_callback, add_features_callback, done_callback,
 													 projects = MainWindow::get_main_window().get_current_projects()] {
-        for (const auto &project : projects) {
+		for (const auto &project : projects) {
 			set_lsp_features(tools, set_progress_callback, add_features_callback, done_callback, project);
 		}
-        Utility::async_gui_thread_execute([this] { ui->progressBar->setVisible(false); });
-    });
+		Utility::async_gui_thread_execute([this] { ui->progressBar->setVisible(false); });
+	});
 }
 
 void LSP_feature_setup_widget::load_lsp_settings_to_gui() {

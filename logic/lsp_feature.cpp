@@ -1,7 +1,6 @@
-#include <utility>
+#include "lsp_feature.h"
 
 #include "interop/language_server_protocol.h"
-#include "lsp_feature.h"
 #include "project.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
@@ -12,6 +11,7 @@
 #include <array>
 #include <initializer_list>
 #include <unistd.h>
+#include <utility>
 
 static std::vector<QMetaObject::Connection> connections;
 
@@ -176,7 +176,7 @@ static LSP_feature lsp_features[] = {{
 }};
 
 LSP_feature::LSP_feature(std::string_view pname, QString pdescription, LSP_feature::Multi_client_support pmulti_client_support,
-						 void (*const pdo_setup)(LSP_feature &), std::vector<std::shared_ptr<LSP::Client> > pclients)
+						 void (*const pdo_setup)(LSP_feature &), std::vector<std::shared_ptr<LSP::Client>> pclients)
 	: name{pname}
 	, description{std::move(pdescription)}
 	, multi_client_support{pmulti_client_support}
@@ -330,9 +330,9 @@ nlohmann::json LSP_feature::get_init_params(const Project &project) {
 		  {"symbolKind",
 		   {{"valueSet",
 			 {
-				 "File",   "Module",	"Namespace", "Package",	"Class",	"Method", "Property", "Field",		  "Constructor",
-				 "Enum",   "Interface", "Function",  "Variable",   "Constant", "String", "Number",   "Boolean",		  "Array",
-				 "Object", "Key",		"Null",		 "EnumMember", "Struct",   "Event",  "Operator", "TypeParameter",
+				 "File",   "Module",	"Namespace", "Package",	   "Class",	   "Method", "Property", "Field",		  "Constructor",
+				 "Enum",   "Interface", "Function",	 "Variable",   "Constant", "String", "Number",	 "Boolean",		  "Array",
+				 "Object", "Key",		"Null",		 "EnumMember", "Struct",   "Event",	 "Operator", "TypeParameter",
 			 }}}},
 		  {"hierarchicalDocumentSymbolSupport", false}}},
 		{"formatting", {{"dynamicRegistration", false}}},
@@ -356,7 +356,7 @@ nlohmann::json LSP_feature::get_init_params(const Project &project) {
 	};
 	return {
 		{"processId", getpid()},
-        {"rootUri", "file://" + project.project_path.path().toStdString()},
+		{"rootUri", "file://" + project.project_path.path().toStdString()},
 		{"capabilities", std::move(client_capabilities)},
 		{"trace", "off"},
 	};

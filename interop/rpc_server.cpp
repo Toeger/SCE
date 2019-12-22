@@ -1,4 +1,5 @@
 #include "rpc_server.h"
+
 #include "threading/thread_call.h"
 #include "ui/edit_window.h"
 #include "ui/mainwindow.h"
@@ -14,11 +15,11 @@ RPC_server::RPC_server()
 				 .SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE)
 				 .AddListeningPort(default_rpc_address, grpc::InsecureServerCredentials())
 				 .RegisterService(&rpc_server)
-                 .BuildAndStart()} {
-    if (not server) {
-        throw std::runtime_error{"Failed starting RPC server."};
-    }
-    server_thread = std::async(std::launch::async, [this] { server->Wait(); });
+				 .BuildAndStart()} {
+	if (not server) {
+		throw std::runtime_error{"Failed starting RPC server."};
+	}
+	server_thread = std::async(std::launch::async, [this] { server->Wait(); });
 }
 
 RPC_server::~RPC_server() {
