@@ -12,41 +12,50 @@
 #include <array>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <vector>
+
+struct Project;
 
 //helpers for QSettings' persistent storage
 namespace Settings {
-    /* To add settings add X(TYPE, NAME) of the setting to the DECLARE_SETTINGS macro. For example add X(bool, open_fullscreen) to make that setting available.
-       If the type has a comma, for example std::map<int, QString> then use a typedef to hide the comma. Yes this is horrible, if you have a way to fix this
-       please do. */
-    using Lsp_functions_type = std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>;
-#define DECLARE_SETTINGS                                                                                                                                       \
-    X(QStringList, files), X(int, current_file), X(QString, font), X(std::vector<Tool>, tools), X(Lsp_functions_type, lsp_functions),                          \
-        X(QString, last_open_dialog_path), X(QString, default_build_folder), X(bool, show_project_widget_on_startup)
-    namespace Key {
-        enum Key {
+	/* To add settings add X(TYPE, NAME) of the setting to the DECLARE_SETTINGS macro. For example add X(bool, open_fullscreen) to make that setting available.
+	   If the type has a comma, for example std::map<int, QString> then use a typedef to hide the comma. Yes this is horrible, if you have a way to fix this
+	   please do. If you want to add a custom add a function QVariant T::serialize(const T &t); and T T::deserialize(const QVariant &). If you can't */
+	using Lsp_functions_type = std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>;
+#define DECLARE_SETTINGS                                                                                                              \
+	X(QStringList, files), X(int, current_file), X(QString, font), X(std::vector<Tool>, tools), X(Lsp_functions_type, lsp_functions), \
+		X(QString, last_open_dialog_path), X(QString, default_build_folder), X(bool, show_project_widget_on_startup), X(std::vector<Project>, projects)
+	namespace Key {
+		enum Key {
 #define X(TYPE, NAME) NAME
-            DECLARE_SETTINGS
+			DECLARE_SETTINGS
 #undef X
-        };
-    } // namespace Key
-    constexpr std::array Key_names = {
+		};
+	} // namespace Key
+	constexpr std::array Key_names = {
 #define X(TYPE, NAME) #NAME
-        DECLARE_SETTINGS
+		DECLARE_SETTINGS
 #undef X
-    };
-    using Key_types = TMP::Type_list<
+	};
+	using Key_types = TMP::Type_list<
 #define X(TYPE, NAME) TYPE
-        DECLARE_SETTINGS
+		DECLARE_SETTINGS
 #undef X
-        >;
+		>;
+
+	template <class T>
+	constexpr auto has_serialization_functions(const T &) -> decltype((std::declval<const T>().serialize(), T::deserialize(QVariant{}), std::true_type{})) {}
+	constexpr std::false_type has_serialization_functions(...);
+	template <class T>
+	constexpr auto has_serialization_functions_v = decltype(has_serialization_functions(std::declval<T>()))::value;
 
 	//get and set values in a semi-type-safe manner
 	template <class Return_type>
 	Return_type get(const QVariant &v) {
-        if constexpr (std::is_same_v<Return_type, bool>) {
-            return v.toInt();
-        } else if constexpr (std::is_same_v<Return_type, int>) {
+		if constexpr (std::is_same_v<Return_type, bool>) {
+			return v.toInt();
+		} else if constexpr (std::is_same_v<Return_type, int>) {
 			return v.toInt();
 		} else if constexpr (std::is_same_v<Return_type, QStringList>) {
 			return v.toStringList();
@@ -75,6 +84,8 @@ namespace Settings {
 			} else {
 				return Return_type{v};
 			}
+		} else if constexpr (has_serialization_functions_v<Return_type>) {
+			return Return_type::deserialize(v);
 		} else {
 			return Return_type{v};
 		}
@@ -92,9 +103,9 @@ namespace Settings {
 
 	template <class T>
 	QVariant to_variant(const T &t) {
-        if constexpr (std::is_same_v<T, bool>) {
-            return static_cast<int>(t);
-        } else if constexpr (TMP::is_type_specialization_v<T, std::vector>) {
+		if constexpr (std::is_same_v<T, bool>) {
+			return static_cast<int>(t);
+		} else if constexpr (TMP::is_type_specialization_v<T, std::vector>) {
 			QList<QVariant> list;
 			for (const auto &element : t) {
 				list.append(to_variant(element));
@@ -116,6 +127,8 @@ namespace Settings {
 			return t.to_string();
 		} else if constexpr (std::is_same_v<T, std::string>) {
 			return QString::fromStdString(t);
+		} else if constexpr (has_serialization_functions_v<T>) {
+			return t.serialize();
 		} else {
 			return t;
 		}
