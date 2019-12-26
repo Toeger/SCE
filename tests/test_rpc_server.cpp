@@ -31,8 +31,9 @@ struct Test_RPC_server {
 					 .SetDefaultCompressionAlgorithm(GRPC_COMPRESS_NONE)
 					 .AddListeningPort(rpc_address, grpc::InsecureServerCredentials())
 					 .RegisterService(&rpc_server)
-					 .BuildAndStart()}
-		, server_thread{[this] { server->Wait(); }} {}
+					 .BuildAndStart()} {
+		server_thread = std::thread{[this] { server->Wait(); }};
+	}
 	~Test_RPC_server() {
 		server->Shutdown();
 		server_thread.join();
