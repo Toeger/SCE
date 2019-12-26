@@ -1,6 +1,7 @@
 #include "TMP/type_list.h"
 #include "logic/settings.h"
 #include "test.h"
+#include "threading/thread_call.h"
 
 #include <QSettings>
 #include <QVariant>
@@ -52,5 +53,44 @@ TEST_CASE("Testing settings", "[settings]") {
 		for (int key_index = 0; key_index < keys.size(); key_index++) {
 			REQUIRE(QSettings{}.value(keys[key_index]) == values[key_index]); //make sure the values are the same
 		}
+	}
+	WHEN("Testing std::unique_ptr") {
+		auto in_value = std::make_unique<int>(42);
+		auto variant = Settings::to_variant(in_value);
+		auto out_value = Settings::get<decltype(in_value)>(variant);
+		REQUIRE(*in_value == *out_value);
+	}
+	WHEN("Testing std::vector") {
+		auto in_value = std::vector{1, 2, 3, 4, 5};
+		auto variant = Settings::to_variant(in_value);
+		auto out_value = Settings::get<decltype(in_value)>(variant);
+		REQUIRE(in_value == out_value);
+	}
+	WHEN("Testing std::map") {
+		auto in_value = std::map<std::string, int>{{"zero", 0}, {"one", 1}, {"two", 2}};
+		auto variant = Settings::to_variant(in_value);
+		auto out_value = Settings::get<decltype(in_value)>(variant);
+		REQUIRE(in_value == out_value);
+	}
+	WHEN("Testing Thread_check_pointer") {
+		Utility::sync_gui_thread_execute([&] {
+			auto in_value = Thread_checker<int>{42};
+			auto variant = Settings::to_variant(in_value);
+			auto out_value = Settings::get<decltype(in_value)>(variant);
+			REQUIRE(in_value == out_value);
+		});
+	}
+	WHEN("Testing complex example") {
+		Utility::sync_gui_thread_execute([&] {
+			auto in_value = std::vector<Thread_checker<std::unique_ptr<int>>>{};
+			in_value.push_back({std::make_unique<int>(42)});
+			in_value.push_back({std::make_unique<int>(33)});
+			auto variant = Settings::to_variant(in_value);
+			auto out_value = Settings::get<decltype(in_value)>(variant);
+			REQUIRE(in_value.size() == out_value.size());
+			for (std::size_t i = 0; i < std::size(in_value); i++) {
+				REQUIRE(*in_value[i] == *out_value[i]);
+			}
+		});
 	}
 }

@@ -28,7 +28,7 @@ class Keyboard_shortcuts_widget : public QWidget {
 	void keyPressEvent(QKeyEvent *event) override;
 
 	std::unique_ptr<Ui::Keyboard_shortcuts_widget> __;
-	Gui_pointer<Ui::Keyboard_shortcuts_widget> ui;
+	Thread_checker<Ui::Keyboard_shortcuts_widget *> ui;
 	[[maybe_unused]] Ui::Keyboard_shortcuts_widget *_;
 };
 

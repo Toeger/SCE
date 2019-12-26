@@ -70,7 +70,7 @@ struct LSP_feature_info {
 };
 
 struct LSP_feature_table {
-	LSP_feature_table(Gui_pointer<QTableWidget> table_, Utility::Thread_caller<LSP_feature_setup_widget> &thread_caller)
+	LSP_feature_table(Thread_checker<QTableWidget *> table_, Utility::Thread_caller<LSP_feature_setup_widget> &thread_caller)
 		: table{table_} {
 		table->setRowCount(1);
 		table->setVerticalHeaderItem(0, new QTableWidgetItem{});
@@ -125,7 +125,7 @@ struct LSP_feature_table {
 	}
 
 	private:
-	Gui_pointer<QTableWidget> table;
+	Thread_checker<QTableWidget *> table;
 	std::map<QString, int> feature_to_row;
 	int row = 1;
 };
@@ -189,7 +189,7 @@ void LSP_feature_setup_widget::feature_checkbox_clicked(int row, int column) {
 void LSP_feature_setup_widget::on_buttonBox_accepted() {
 	save_lsp_settings_from_gui();
 	for (auto &project : MainWindow::get_main_window().get_current_projects()) {
-		update_lsp_features_from_settings(project);
+		update_lsp_features_from_settings(*project);
 	}
 	close();
 }
@@ -227,7 +227,7 @@ void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 	auto set_progress_callback = [this](int progress_percentage) {
 		Utility::sync_gui_thread_execute([this, progress_percentage] { ui->progressBar->setValue(progress_percentage); });
 	};
-	auto add_features_callback = [feature_table = LSP_feature_table{Gui_pointer(ui->lsp_features_tableWidget), thread_caller},
+	auto add_features_callback = [feature_table = LSP_feature_table{Thread_checker{ui->lsp_features_tableWidget}, thread_caller},
 								  this](LSP_feature_info &&info) mutable { feature_table.set(std::move(info), thread_caller); };
 	auto done_callback = [this] {
 		Utility::sync_gui_thread_execute([this] {
@@ -247,10 +247,9 @@ void LSP_feature_setup_widget::update_gui_from_settings_and_LSP_servers() {
 	};
 	ui->progressBar->setValue(0);
 	ui->progressBar->setVisible(true);
-	feature_loader = std::async(std::launch::async, [this, set_progress_callback, add_features_callback, done_callback,
-													 projects = MainWindow::get_main_window().get_current_projects()] {
-		for (const auto &project : projects) {
-			set_lsp_features(tools, set_progress_callback, add_features_callback, done_callback, project);
+	feature_loader = std::async(std::launch::async, [this, set_progress_callback, add_features_callback, done_callback] {
+		for (const auto &project : MainWindow::get_main_window().get_current_projects()) {
+			set_lsp_features(tools, set_progress_callback, add_features_callback, done_callback, *project);
 		}
 		Utility::async_gui_thread_execute([this] { ui->progressBar->setVisible(false); });
 	});

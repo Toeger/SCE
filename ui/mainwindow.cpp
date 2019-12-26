@@ -126,7 +126,7 @@ void MainWindow::open_setup_tools_at(const Tool &tool) {
 	tool_editor_widget->select_tool(tool);
 }
 
-const std::vector<Project> &MainWindow::get_current_projects() const {
+const std::vector<Thread_checker<std::unique_ptr<Project>>> &MainWindow::get_current_projects() const {
 	return projects;
 }
 
@@ -323,11 +323,18 @@ void MainWindow::on_actionOpen_Project_Folder_triggered() {
 		return;
 	}
 	Settings::set<Settings::Key::last_open_dialog_path>(dir);
-	projects.push_back({dir});
+	projects.push_back({std::make_unique<Project>(dir)});
 	Settings::set<Settings::Key::projects>(projects);
-	LSP_feature_setup_widget::update_lsp_features_from_settings(projects.back());
+	LSP_feature_setup_widget::update_lsp_features_from_settings(*projects.back());
 	on_actionProject_triggered(true);
-	add_project_to_project_list(projects.back());
+	add_project_to_project_list(*projects.back());
+}
+
+template <class T>
+static void add_menu_action(QMenu &menu, QString text, QIcon icon, T &&callback) {
+	auto action = new QAction(icon, text, &menu);
+	QObject::connect(action, &QAction::triggered, std::forward<T>(callback));
+	menu.addAction(action);
 }
 
 void MainWindow::on_actionProject_triggered(bool triggered) {
@@ -342,8 +349,22 @@ void MainWindow::on_actionProject_triggered(bool triggered) {
 			ui->actionProject->setChecked(visible);
 			Settings::set<Settings::Key::show_project_widget_on_startup>(visible);
 		}));
+		project_list->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+		connect(project_list, &QTreeWidget::customContextMenuRequested, [this](const QPoint &pos) {
+			auto clicked_item = project_list->itemAt(pos);
+			if (not clicked_item) {
+				return;
+			}
+			if (clicked_item->parent()) {
+				return;
+			}
+			QMenu menu;
+			add_menu_action(menu, tr("Close"), QIcon::fromTheme("list-remove"),
+							[this, clicked_item] { delete project_list->takeTopLevelItem(project_list->indexOfTopLevelItem(clicked_item)); });
+			menu.exec(project_list->mapToGlobal(pos));
+		});
 		for (auto &project : projects) {
-			add_project_to_project_list(project);
+			add_project_to_project_list(*project);
 		}
 	}
 	projects_window->setVisible(triggered);

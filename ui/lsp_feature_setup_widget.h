@@ -49,7 +49,7 @@ class LSP_feature_setup_widget
 	std::vector<Tool> tools;
 	std::future<void> feature_loader;
 	std::unique_ptr<Ui::LSP_feature_setup_widget> __;
-	Gui_pointer<Ui::LSP_feature_setup_widget> ui;
+	Thread_checker<Ui::LSP_feature_setup_widget *> ui;
 	[[maybe_unused]] Ui::LSP_feature_setup_widget *_; //Qt Designer only works correctly if it finds this string
 
 	friend struct LSP_feature_table;

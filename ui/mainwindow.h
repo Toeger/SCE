@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "external/verdigris/wobjectdefs.h"
+#include "threading/gui_pointer.h"
 #include "threading/thread_check.h"
 
 #include <QMainWindow>
@@ -44,7 +45,7 @@ class MainWindow
 	Edit_window *get_edit_window(std::string_view id);
 	static bool currently_in_gui_thread();
 	void open_setup_tools_at(const Tool &tool);
-	const std::vector<Project> &get_current_projects() const;
+	const std::vector<Thread_checker<std::unique_ptr<Project>>> &get_current_projects() const;
 
 	public slots:
 	void close_notification_server();
@@ -97,7 +98,7 @@ class MainWindow
 	std::unique_ptr<Keyboard_shortcuts_widget> keyboard_shortcuts_widget;
 	std::unique_ptr<Notification_server> notification_server;
 	std::unique_ptr<RPC_server> rpc_server;
-	std::vector<Project> projects;
+	std::vector<Thread_checker<std::unique_ptr<Project>>> projects; //need stable pointers
 	QDockWidget *projects_window = nullptr;
 	QTreeWidget *project_list = nullptr;
 

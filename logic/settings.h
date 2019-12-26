@@ -3,6 +3,8 @@
 
 #include "external/TMP/traits.h"
 #include "external/TMP/type_list.h"
+#include "project.h"
+#include "threading/gui_pointer.h"
 #include "tool.h"
 
 #include <QSettings>
@@ -11,21 +13,22 @@
 #include <algorithm>
 #include <array>
 #include <map>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-struct Project;
 
 //helpers for QSettings' persistent storage
 namespace Settings {
 	/* To add settings add X(TYPE, NAME) of the setting to the DECLARE_SETTINGS macro. For example add X(bool, open_fullscreen) to make that setting available.
 	   If the type has a comma, for example std::map<int, QString> then use a typedef to hide the comma. Yes this is horrible, if you have a way to fix this
-	   please do. If you want to add a custom add a function QVariant T::serialize(const T &t); and T T::deserialize(const QVariant &). If you can't */
+	   please do. If you want to add a custom add a function QVariant T::serialize(const T &t); and T T::deserialize(const QVariant &). If you can't, write a
+	   wrapper. */
 	using Lsp_functions_type = std::map<std::string /*feature*/, std::vector<std::string /*lsp_tool_name*/>>;
 #define DECLARE_SETTINGS                                                                                                              \
 	X(QStringList, files), X(int, current_file), X(QString, font), X(std::vector<Tool>, tools), X(Lsp_functions_type, lsp_functions), \
-		X(QString, last_open_dialog_path), X(QString, default_build_folder), X(bool, show_project_widget_on_startup), X(std::vector<Project>, projects)
+		X(QString, last_open_dialog_path), X(QString, default_build_folder), X(bool, show_project_widget_on_startup),                 \
+		X(std::vector<Thread_checker<std::unique_ptr<Project>>>, projects)
 	namespace Key {
 		enum Key {
 #define X(TYPE, NAME) NAME
@@ -74,22 +77,24 @@ namespace Settings {
 			});
 			return retval;
 		} else if constexpr (TMP::is_type_specialization_v<Return_type, std::map>) {
-			if constexpr (std::is_same_v<typename Return_type::key_type, std::string>) {
-				const auto &qmap = v.toMap();
-				Return_type map;
-				for (auto it = qmap.constBegin(); it != qmap.constEnd(); ++it) {
-					map[it.key().toStdString()] = get<typename Return_type::mapped_type>(it.value());
-				}
-				return map;
-			} else {
-				return Return_type{v};
+			static_assert(std::is_same_v<typename Return_type::key_type, std::string>, "Not supporting maps with not std::string as key, please fix");
+			const auto &qmap = v.toMap();
+			Return_type map;
+			for (auto it = qmap.constBegin(); it != qmap.constEnd(); ++it) {
+				map[it.key().toStdString()] = get<typename Return_type::mapped_type>(it.value());
 			}
+			return map;
+
+		} else if constexpr (TMP::is_type_specialization_v<Return_type, Thread_checker>) {
+			return Return_type{get<typename TMP::get_type_specialization_t<Return_type, Thread_checker>::template at<0>>(v)};
 		} else if constexpr (has_serialization_functions_v<Return_type>) {
 			return Return_type::deserialize(v);
+		} else if constexpr (TMP::is_type_specialization_v<Return_type, std::unique_ptr>) {
+			return std::make_unique<typename Return_type::element_type>(get<typename Return_type::element_type>(v));
 		} else {
 			return Return_type{v};
 		}
-	}
+	} // namespace Settings
 	template <Key::Key key, class Default_type>
 	auto get(const Default_type &default_value) {
 		static_assert(Key_types::contains_v<Key_types::at<key>>, "Missing code to deal with this Return_type");
@@ -123,12 +128,16 @@ namespace Settings {
 				map[qkey] = to_variant(value);
 			}
 			return map;
+		} else if constexpr (TMP::is_type_specialization_v<T, Thread_checker>) {
+			return to_variant(*t);
 		} else if constexpr (std::is_same_v<T, Tool>) {
 			return t.to_string();
 		} else if constexpr (std::is_same_v<T, std::string>) {
 			return QString::fromStdString(t);
 		} else if constexpr (has_serialization_functions_v<T>) {
 			return t.serialize();
+		} else if constexpr (TMP::is_type_specialization_v<T, std::unique_ptr>) {
+			return to_variant(*t);
 		} else {
 			return t;
 		}
